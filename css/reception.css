@@ -1,0 +1,84 @@
+/* 全体のスタイル */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-image: url('../image/restaurant-illustration.jpg'); /* レストランをイメージしたおしゃれなイラスト */
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* コンテナ中央寄せ */
+.reception-container {
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* タイトル */
+.title {
+    color: #ff4d4d;
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+/* 説明文 */
+.description {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
+/* 電話番号入力欄 */
+#phone {
+    width: 80%;
+    padding: 10px;
+    font-size: 1.2em;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* 受付登録ボタン */
+.register-button {
+    background-color: #ff4d4d; /* 赤色 */
+    color: white;
+    font-size: 1.5em; /* フォントサイズを1.5倍に拡大 */
+    padding: 15px 30px; /* ボタンの内側の余白を調整 */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.register-button:hover {
+    background-color: #cc0000; /* 濃い赤色 */
+}
+
+/* キーパッド */
+.keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.key {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 15px;
+    font-size: 1.5em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-align: center;
+}
+
+.key:hover {
+    background-color: #ddd;
+}
