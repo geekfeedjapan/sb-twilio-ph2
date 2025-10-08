@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配送トラッキングダッシュボード</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            width: 90%;
+            max-width: 900px;
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+
+        .dashboard-container h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 25px;
+            font-size: 2.5em;
+            grid-column: span 5;
+        }
+
+        .tracking-item {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+
+        .tracking-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transform: scale(1.02);
+        }
+
+        .tracking-item .status {
+            font-weight: bold;
+            color: #00d4ff;
+        }
+
+        .tracking-item .actions button {
+            padding: 8px 12px;
+            font-size: 0.9em;
+            border: none;
+            border-radius: 5px;
+            background: linear-gradient(135deg, #00d4ff, #007bff);
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .tracking-item .actions button:hover {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+        }
+
+        .header {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 1.8em;
+            color: #fff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h2>Twilio トラック運送</h2>
+    </header>
+    <div class="dashboard-container">
+        <h1>配送トラッキングダッシュボード</h1>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配送ID: 12345</p>
+                <p>配送先: 東京都新宿区</p>
+                <p>ドライバー: 田中一郎</p>
+            </div>
+            <div class="status">配送中</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配送ID: 67890</p>
+                <p>配送先: 大阪府大阪市</p>
+                <p>ドライバー: 山田花子</p>
+            </div>
+            <div class="status">配達完了</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配送ID: 11223</p>
+                <p>配送先: 北海道札幌市</p>
+                <p>ドライバー: 鈴木次郎</p>
+            </div>
+            <div class="status">配送前</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配送ID: 44556</p>
+                <p>配送先: 福岡県福岡市</p>
+                <p>ドライバー: 佐藤三郎</p>
+            </div>
+            <div class="status">配送中</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配送ID: 55678</p>
+                <p>配送先: 愛知県名古屋市</p>
+                <p>ドライバー: 高橋四郎</p>
+            </div>
+            <div class="status">配送前</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配送ID: 66789</p>
+                <p>配送先: 京都府京都市</p>
+                <p>ドライバー: 中村五郎</p>
+            </div>
+            <div class="status">配送中</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配送ID: 77890</p>
+                <p>配送先: 広島県広島市</p>
+                <p>ドライバー: 松本六郎</p>
+            </div>
+            <div class="status">配達完了</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配送ID: 88901</p>
+                <p>配送先: 宮城県仙台市</p>
+                <p>ドライバー: 小林七郎</p>
+            </div>
+            <div class="status">配送中</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配送ID: 99012</p>
+                <p>配送先: 鹿児島県鹿児島市</p>
+                <p>ドライバー: 斉藤八郎</p>
+            </div>
+            <div class="status">配送前</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配送ID: 10123</p>
+                <p>配送先: 青森県青森市</p>
+                <p>ドライバー: 藤田九郎</p>
+            </div>
+            <div class="status">配送中</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <!-- 沖縄の配送情報を削除 -->
+    </div>
+</body>
+</html>

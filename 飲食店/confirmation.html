@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>受付完了</title>
+    <link rel="stylesheet" href="reception.css">
+</head>
+<body>
+    <div class="reception-container">
+        <h1 class="title">受付完了</h1>
+        <p class="description">受付完了いたしました。<br>現在１０人待ちとなります。<br>ご案内はおよそ２０分後となります。</p>
+        <button class="call-button">電話発信</button>
+    </div>
+    <style>
+        .call-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .call-button:hover {
+            opacity: 1;
+        }
+    </style>
+</body>
+</html>

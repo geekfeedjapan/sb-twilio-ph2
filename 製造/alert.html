@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>設備異常アラート</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #ffcccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .alert-container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .alert-title {
+            color: #ff0000;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .alert-message {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .contact-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .contact-button:hover {
+            opacity: 1;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .notify-button {
+            padding: 12px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .notify-button:hover {
+            background: linear-gradient(135deg, #0056b3, #003f7f);
+        }
+    </style>
+</head>
+<body>
+    <div class="alert-container">
+        <h1 class="alert-title">設備異常発生！</h1>
+        <p class="alert-message">設備Aで異常が検出されました。<br>至急確認してください。</p>
+        <div class="button-container">
+            <button class="notify-button">電話通知</button>
+            <button class="notify-button">SMS通知</button>
+        </div>
+    </div>
+    <button class="contact-button" onclick="window.location.href='contacts.html'">連絡先一覧</button>
+</body>
+</html>
