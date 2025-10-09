@@ -43,6 +43,20 @@
             grid-column: span 5;
         }
 
+        .reservation-info {
+            grid-column: span 5;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .reservation-info h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.8em;
+            color: #00d4ff;
+        }
+
         .tracking-item {
             display: flex;
             flex-direction: column;
@@ -96,6 +110,13 @@
     </header>
     <div class="dashboard-container">
         <h1>タクシー配車ダッシュボード</h1>
+
+        <div class="reservation-info">
+            <h2>予約情報</h2>
+            <p><strong>お客様名:</strong> 山田太郎</p>
+            <p><strong>乗車住所:</strong> 東京都渋谷区</p>
+        </div>
+
         <div class="tracking-item">
             <div class="info">
                 <p>配車ID: 12345</p>
@@ -125,6 +146,83 @@
                 <p>ドライバー: 鈴木次郎</p>
             </div>
             <div class="status">配車前</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配車ID: 44556</p>
+                <p>乗車場所: 福岡県福岡市</p>
+                <p>ドライバー: 佐藤三郎</p>
+            </div>
+            <div class="status">配車中</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配車ID: 55678</p>
+                <p>乗車場所: 愛知県名古屋市</p>
+                <p>ドライバー: 高橋四郎</p>
+            </div>
+            <div class="status">配車前</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配車ID: 66789</p>
+                <p>乗車場所: 京都府京都市</p>
+                <p>ドライバー: 中村五郎</p>
+            </div>
+            <div class="status">配車中</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配車ID: 77890</p>
+                <p>乗車場所: 広島県広島市</p>
+                <p>ドライバー: 松本六郎</p>
+            </div>
+            <div class="status">配車完了</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配車ID: 88901</p>
+                <p>乗車場所: 宮城県仙台市</p>
+                <p>ドライバー: 小林七郎</p>
+            </div>
+            <div class="status">配車中</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配車ID: 99012</p>
+                <p>乗車場所: 鹿児島県鹿児島市</p>
+                <p>ドライバー: 藤井八郎</p>
+            </div>
+            <div class="status">配車前</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配車ID: 10123</p>
+                <p>乗車場所: 青森県青森市</p>
+                <p>ドライバー: 藤田九郎</p>
+            </div>
+            <div class="status">配車中</div>
             <div class="actions">
                 <button onclick="location.href='details.html'">詳細</button>
             </div>
