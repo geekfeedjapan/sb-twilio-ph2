@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>タクシー配車詳細</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0f0f0, #d9d9d9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .details-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .details-container h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+
+        .details-container p {
+            margin: 10px 0;
+            color: #555;
+            font-size: 1em;
+        }
+
+        .details-container .comments {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        .contact-actions {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .contact-actions h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .contact-button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .contact-button:hover {
+            background: linear-gradient(135deg, #0056b3, #003f7f);
+        }
+    </style>
+</head>
+<body>
+    <div class="details-container">
+        <h1>タクシー配車詳細</h1>
+        <p><strong>配車ID:</strong> 12345</p>
+        <p><strong>乗車場所:</strong> 東京都新宿区</p>
+        <p><strong>ドライバー:</strong> 田中一郎</p>
+        <p><strong>電話番号:</strong> 090-1234-5678</p>
+        <p><strong>車両番号:</strong> 東京500 あ 1234</p>
+        <div class="comments">
+            <p><strong>お客様からのコメント:</strong></p>
+            <p>「玄関前に停めてください。」</p>
+        </div>
+        <div class="contact-actions">
+            <h2>ドライバーに連絡</h2>
+            <button class="contact-button" onclick="alert('電話をかけます')">電話</button>
+            <button class="contact-button" onclick="alert('SMSを送信します')">SMS</button>
+        </div>
+    </div>
+</body>
+</html>

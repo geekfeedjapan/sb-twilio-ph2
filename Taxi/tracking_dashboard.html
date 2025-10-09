@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>タクシー配車ダッシュボード</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            width: 90%;
+            max-width: 900px;
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+
+        .dashboard-container h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 25px;
+            font-size: 2.5em;
+            grid-column: span 5;
+        }
+
+        .tracking-item {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+
+        .tracking-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transform: scale(1.02);
+        }
+
+        .tracking-item .status {
+            font-weight: bold;
+            color: #00d4ff;
+        }
+
+        .tracking-item .actions button {
+            padding: 8px 12px;
+            font-size: 0.9em;
+            border: none;
+            border-radius: 5px;
+            background: linear-gradient(135deg, #00d4ff, #007bff);
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .tracking-item .actions button:hover {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+        }
+
+        .header {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 1.8em;
+            color: #fff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h2>Twilio タクシー配車</h2>
+    </header>
+    <div class="dashboard-container">
+        <h1>タクシー配車ダッシュボード</h1>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配車ID: 12345</p>
+                <p>乗車場所: 東京都新宿区</p>
+                <p>ドライバー: 田中一郎</p>
+            </div>
+            <div class="status">配車中</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配車ID: 67890</p>
+                <p>乗車場所: 大阪府大阪市</p>
+                <p>ドライバー: 山田花子</p>
+            </div>
+            <div class="status">配車完了</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+        <div class="tracking-item">
+            <div class="info">
+                <p>配車ID: 11223</p>
+                <p>乗車場所: 北海道札幌市</p>
+                <p>ドライバー: 鈴木次郎</p>
+            </div>
+            <div class="status">配車前</div>
+            <div class="actions">
+                <button onclick="location.href='details.html'">詳細</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
