@@ -6,7 +6,7 @@
     <title>通知先登録</title>
     <style>
         body {
-            font-family: 'Meiryo', Arial, sans-serif; /* Updated font */
+            font-family: 'Meiryo', Arial, sans-serif;
             margin: 0;
             padding: 20px;
             background-color: #f4f4f4;
@@ -43,6 +43,12 @@
 
         .contact-list li:last-child {
             border-bottom: none;
+        }
+
+        .contact-details {
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: #666;
         }
 
         .registration-form {
@@ -135,9 +141,30 @@
     <div class="contact-list">
         <h2>連絡先一覧</h2>
         <ul>
-            <li>山田 太郎 - 090-1234-5678</li>
-            <li>佐藤 花子 - 080-9876-5432</li>
-            <li>鈴木 一郎 - 070-1111-2222</li>
+            <li>
+                山田 太郎 - 090-1234-5678
+                <div class="contact-details">
+                    部署: セキュリティ本部<br>
+                    役職: 責任者<br>
+                    設備担当: 設備A
+                </div>
+            </li>
+            <li>
+                佐藤 花子 - 080-9876-5432
+                <div class="contact-details">
+                    部署: システム開発本部<br>
+                    役職: 開発エンジニア<br>
+                    設備担当: 設備B
+                </div>
+            </li>
+            <li>
+                鈴木 一郎 - 070-1111-2222
+                <div class="contact-details">
+                    部署: セキュリティ本部<br>
+                    役職: 運用保守エンジニア<br>
+                    設備担当: 設備C
+                </div>
+            </li>
         </ul>
     </div>
 
