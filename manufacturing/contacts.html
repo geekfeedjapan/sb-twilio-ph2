@@ -281,14 +281,14 @@
     <div class="settings-container">
         <div class="settings-section">
             <h2>電話通知の設定</h2>
-            <p>以下にTwilioの自動音声作成スクリプトを記述してください。</p>
+            <p>以下の自動音声作成スクリプトを記述してください。</p>
             <textarea placeholder="例: const twilio = require('twilio');\nconst client = twilio(accountSid, authToken);\nclient.calls.create({\n    url: 'http://example.com/voice.xml',\n    to: '+819012345678',\n    from: '+1234567890'\n});"></textarea>
             <button>保存</button>
         </div>
 
         <div class="settings-section">
             <h2>SMS通知の設定</h2>
-            <p>以下にTwilioのSMS送信スクリプトを記述してください。</p>
+            <p>以下のSMS送信スクリプトを記述してください。</p>
             <textarea placeholder="例: const twilio = require('twilio');\nconst client = twilio(accountSid, authToken);\nclient.messages.create({\n    body: '緊急通知: 設備Aで異常が発生しました。',\n    to: '+819012345678',\n    from: '+1234567890'\n});"></textarea>
             <button>保存</button>
         </div>
