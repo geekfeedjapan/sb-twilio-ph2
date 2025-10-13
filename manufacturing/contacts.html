@@ -31,22 +31,27 @@
             color: #555;
         }
 
-        .contact-list ul {
-            list-style: none;
-            padding: 0;
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
         }
 
-        .contact-list li {
+        .contact-item {
             padding: 10px;
-            border-bottom: 1px solid #ddd;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .contact-list li:last-child {
-            border-bottom: none;
+        .contact-item h3 {
+            margin: 0 0 5px;
+            font-size: 1.1em;
+            color: #333;
         }
 
         .contact-details {
-            margin-top: 5px;
             font-size: 0.9em;
             color: #666;
         }
@@ -140,32 +145,89 @@
 
     <div class="contact-list">
         <h2>連絡先一覧</h2>
-        <ul>
-            <li>
-                山田 太郎 - 090-1234-5678
+        <div class="contact-grid">
+            <div class="contact-item">
+                <h3>山田 太郎</h3>
                 <div class="contact-details">
+                    電話番号: 090-1234-5678<br>
                     部署: セキュリティ本部<br>
                     役職: 責任者<br>
                     設備担当: 設備A
                 </div>
-            </li>
-            <li>
-                佐藤 花子 - 080-9876-5432
+            </div>
+            <div class="contact-item">
+                <h3>佐藤 花子</h3>
                 <div class="contact-details">
+                    電話番号: 080-9876-5432<br>
                     部署: システム開発本部<br>
                     役職: 開発エンジニア<br>
                     設備担当: 設備B
                 </div>
-            </li>
-            <li>
-                鈴木 一郎 - 070-1111-2222
+            </div>
+            <div class="contact-item">
+                <h3>鈴木 一郎</h3>
                 <div class="contact-details">
+                    電話番号: 070-1111-2222<br>
                     部署: セキュリティ本部<br>
                     役職: 運用保守エンジニア<br>
                     設備担当: 設備C
                 </div>
-            </li>
-        </ul>
+            </div>
+            <div class="contact-item">
+                <h3>高橋 美咲</h3>
+                <div class="contact-details">
+                    電話番号: 090-2222-3333<br>
+                    部署: システム開発本部<br>
+                    役職: 責任者<br>
+                    設備担当: 設備A
+                </div>
+            </div>
+            <div class="contact-item">
+                <h3>伊藤 健</h3>
+                <div class="contact-details">
+                    電話番号: 080-4444-5555<br>
+                    部署: セキュリティ本部<br>
+                    役職: 開発エンジニア<br>
+                    設備担当: 設備B
+                </div>
+            </div>
+            <div class="contact-item">
+                <h3>中村 優</h3>
+                <div class="contact-details">
+                    電話番号: 070-6666-7777<br>
+                    部署: システム開発本部<br>
+                    役職: 運用保守エンジニア<br>
+                    設備担当: 設備C
+                </div>
+            </div>
+            <div class="contact-item">
+                <h3>小林 翔</h3>
+                <div class="contact-details">
+                    電話番号: 090-8888-9999<br>
+                    部署: セキュリティ本部<br>
+                    役職: 責任者<br>
+                    設備担当: 設備A
+                </div>
+            </div>
+            <div class="contact-item">
+                <h3>松本 菜々</h3>
+                <div class="contact-details">
+                    電話番号: 080-0000-1111<br>
+                    部署: システム開発本部<br>
+                    役職: 開発エンジニア<br>
+                    設備担当: 設備B
+                </div>
+            </div>
+            <div class="contact-item">
+                <h3>林 太一</h3>
+                <div class="contact-details">
+                    電話番号: 070-2222-3333<br>
+                    部署: セキュリティ本部<br>
+                    役職: 運用保守エンジニア<br>
+                    設備担当: 設備C
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="registration-form">
