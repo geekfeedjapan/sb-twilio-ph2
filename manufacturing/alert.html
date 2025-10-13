@@ -11,7 +11,7 @@
             font-family: Arial, sans-serif;
             background-color: #f4f4f9;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             height: 100vh;
         }
@@ -24,6 +24,7 @@
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
             max-width: 500px;
             width: 90%;
+            margin-top: 20px;
             animation: fadeIn 1s ease-in-out;
         }
 
@@ -72,6 +73,35 @@
             background: linear-gradient(135deg, #0056b3, #003f7f);
         }
 
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+
+        .chart {
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .chart h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .chart-placeholder {
+            width: 100%;
+            height: 200px;
+            background: repeating-linear-gradient(45deg, #e0e0e0, #e0e0e0 10px, #f9f9f9 10px, #f9f9f9 20px);
+            border-radius: 8px;
+        }
+
         .history-section {
             margin-top: 30px;
             text-align: left;
@@ -102,11 +132,31 @@
             <button class="notify-button" onclick="makeCall()">電話通知</button>
             <button class="notify-button" onclick="sendSMS()">SMS通知</button>
         </div>
-        <div class="history-section">
-            <h2>通知履歴</h2>
-            <p class="history-item">2025-10-13 14:00: 設備Aの異常を検知</p>
-            <p class="history-item">2025-10-13 14:05: 担当者に電話通知</p>
+    </div>
+
+    <div class="dashboard">
+        <div class="chart">
+            <h3>CPU 使用率</h3>
+            <div class="chart-placeholder"></div>
         </div>
+        <div class="chart">
+            <h3>メモリ使用量</h3>
+            <div class="chart-placeholder"></div>
+        </div>
+        <div class="chart">
+            <h3>ネットワークトラフィック</h3>
+            <div class="chart-placeholder"></div>
+        </div>
+        <div class="chart">
+            <h3>ディスクI/O</h3>
+            <div class="chart-placeholder"></div>
+        </div>
+    </div>
+
+    <div class="history-section">
+        <h2>通知履歴</h2>
+        <p class="history-item">2025-10-13 14:00: 設備Aの異常を検知</p>
+        <p class="history-item">2025-10-13 14:05: 担当者に電話通知</p>
     </div>
 
     <script>
