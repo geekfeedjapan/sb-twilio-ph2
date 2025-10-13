@@ -25,24 +25,24 @@
             margin: 20px 0;
         }
 
-        .main-container {
+        .main-container, .settings-container {
             display: flex;
             justify-content: space-between;
-            gap: 32px; /* Adjusted for better spacing */
+            gap: 32px;
             margin: 20px auto;
-            max-width: 1920px; /* Fit within 1920px width */
+            max-width: 1920px; /* Ensure consistent width for all sections */
         }
 
-        .contact-list, .registration-form {
+        .contact-list, .registration-form, .settings-section {
             flex: 1;
             background: #ffffff;
             padding: 24px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            max-width: 900px; /* Adjusted for 1920px layout */
+            max-width: 900px; /* Ensure consistent width for all sections */
         }
 
-        .contact-list h2, .registration-form h2 {
+        .contact-list h2, .registration-form h2, .settings-section h2 {
             margin-bottom: 15px;
             color: #333;
         }
@@ -100,28 +100,6 @@
 
         .registration-form button:hover {
             background: linear-gradient(135deg, #0056b3, #003f7f);
-        }
-
-        .settings-container {
-            display: flex;
-            justify-content: space-between;
-            gap: 32px; /* Adjusted for better spacing */
-            margin: 20px auto;
-            max-width: 1920px; /* Fit within 1920px width */
-        }
-
-        .settings-section {
-            flex: 1;
-            background: #ffffff;
-            padding: 24px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            max-width: 900px; /* Match the width of '連絡先一覧' and '新しい連絡先の登録' */
-        }
-
-        .settings-section h2 {
-            margin-bottom: 15px;
-            color: #333;
         }
 
         .settings-section textarea {
