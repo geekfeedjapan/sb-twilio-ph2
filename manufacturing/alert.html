@@ -10,7 +10,7 @@
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
+            background-color: #696969; /* Updated background color */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -76,7 +76,7 @@
 
         .dashboard {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(3, 1fr); /* 3 columns */
             gap: 20px;
             width: 90%;
             max-width: 1200px;
@@ -114,20 +114,28 @@
 
     <div class="dashboard">
         <div class="chart">
-            <h3>CPU 使用率</h3>
-            <canvas id="cpuChart"></canvas>
+            <h3>不正アクセス試行</h3>
+            <canvas id="unauthorizedAccessChart"></canvas>
         </div>
         <div class="chart">
-            <h3>メモリ使用量</h3>
-            <canvas id="memoryChart"></canvas>
+            <h3>ファイアウォールアクティビティ</h3>
+            <canvas id="firewallActivityChart"></canvas>
         </div>
         <div class="chart">
-            <h3>ネットワークトラフィック</h3>
-            <canvas id="networkChart"></canvas>
+            <h3>ウイルス検知数</h3>
+            <canvas id="virusDetectionChart"></canvas>
         </div>
         <div class="chart">
-            <h3>ディスクI/O</h3>
-            <canvas id="diskChart"></canvas>
+            <h3>ログイン成功率</h3>
+            <canvas id="loginSuccessRateChart"></canvas>
+        </div>
+        <div class="chart">
+            <h3>データ転送量</h3>
+            <canvas id="dataTransferChart"></canvas>
+        </div>
+        <div class="chart">
+            <h3>システム稼働率</h3>
+            <canvas id="systemUptimeChart"></canvas>
         </div>
     </div>
 
@@ -140,53 +148,10 @@
             alert('SMS通知を送信しました！（Twilio APIを統合予定）');
         }
 
-        // Adjusted dummy data for charts
-        const cpuData = {
-            labels: ['1分前', '30秒前', '現在'],
-            datasets: [{
-                label: 'CPU 使用率',
-                data: [20, 40, 60],
-                backgroundColor: 'rgba(0, 123, 255, 0.5)',
-                borderColor: 'rgba(0, 123, 255, 1)',
-                borderWidth: 1
-            }]
-        };
-
-        const memoryData = {
-            labels: ['1分前', '30秒前', '現在'],
-            datasets: [{
-                label: 'メモリ使用量',
-                data: [50, 55, 60],
-                backgroundColor: 'rgba(40, 167, 69, 0.5)',
-                borderColor: 'rgba(40, 167, 69, 1)',
-                borderWidth: 1
-            }]
-        };
-
-        const networkData = {
-            labels: ['1分前', '30秒前', '現在'],
-            datasets: [{
-                label: 'ネットワークトラフィック (MB)',
-                data: [10, 20, 15],
-                backgroundColor: 'rgba(255, 193, 7, 0.5)',
-                borderColor: 'rgba(255, 193, 7, 1)',
-                borderWidth: 1
-            }]
-        };
-
-        const diskData = {
-            labels: ['読み取り', '書き込み'],
-            datasets: [{
-                data: [70, 30],
-                backgroundColor: ['rgba(0, 123, 255, 0.5)', 'rgba(255, 99, 132, 0.5)'],
-                borderColor: ['rgba(0, 123, 255, 1)', 'rgba(255, 99, 132, 1)'],
-                borderWidth: 1
-            }]
-        };
-
-        const options = {
+        // Dummy data for security-related charts
+        const chartOptions = {
             responsive: true,
-            maintainAspectRatio: true, // Ensure proper aspect ratio
+            maintainAspectRatio: true,
             scales: {
                 y: {
                     beginAtZero: true,
@@ -195,32 +160,107 @@
             }
         };
 
+        const unauthorizedAccessData = {
+            labels: ['1時間前', '30分前', '現在'],
+            datasets: [{
+                label: '試行回数',
+                data: [5, 10, 3],
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const firewallActivityData = {
+            labels: ['1時間前', '30分前', '現在'],
+            datasets: [{
+                label: 'アクティビティ数',
+                data: [20, 25, 30],
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const virusDetectionData = {
+            labels: ['1時間前', '30分前', '現在'],
+            datasets: [{
+                label: '検知数',
+                data: [1, 2, 1],
+                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const loginSuccessRateData = {
+            labels: ['1時間前', '30分前', '現在'],
+            datasets: [{
+                label: '成功率 (%)',
+                data: [95, 90, 92],
+                backgroundColor: 'rgba(153, 102, 255, 0.5)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const dataTransferData = {
+            labels: ['1時間前', '30分前', '現在'],
+            datasets: [{
+                label: '転送量 (MB)',
+                data: [500, 700, 600],
+                backgroundColor: 'rgba(255, 206, 86, 0.5)',
+                borderColor: 'rgba(255, 206, 86, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const systemUptimeData = {
+            labels: ['1時間前', '30分前', '現在'],
+            datasets: [{
+                label: '稼働率 (%)',
+                data: [99, 98, 99],
+                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        };
+
         // Initialize charts
-        new Chart(document.getElementById('cpuChart'), {
+        new Chart(document.getElementById('unauthorizedAccessChart'), {
             type: 'bar',
-            data: cpuData,
-            options
+            data: unauthorizedAccessData,
+            options: chartOptions
         });
 
-        new Chart(document.getElementById('memoryChart'), {
+        new Chart(document.getElementById('firewallActivityChart'), {
             type: 'line',
-            data: memoryData,
-            options
+            data: firewallActivityData,
+            options: chartOptions
         });
 
-        new Chart(document.getElementById('networkChart'), {
+        new Chart(document.getElementById('virusDetectionChart'), {
+            type: 'bar',
+            data: virusDetectionData,
+            options: chartOptions
+        });
+
+        new Chart(document.getElementById('loginSuccessRateChart'), {
             type: 'line',
-            data: networkData,
-            options
+            data: loginSuccessRateData,
+            options: chartOptions
         });
 
-        new Chart(document.getElementById('diskChart'), {
-            type: 'pie',
-            data: diskData,
-            options: {
-                responsive: true,
-                maintainAspectRatio: true
-            }
+        new Chart(document.getElementById('dataTransferChart'), {
+            type: 'bar',
+            data: dataTransferData,
+            options: chartOptions
+        });
+
+        new Chart(document.getElementById('systemUptimeChart'), {
+            type: 'line',
+            data: systemUptimeData,
+            options: chartOptions
         });
     </script>
 </body>
