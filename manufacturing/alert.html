@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>設備異常アラート</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             margin: 0;
@@ -95,32 +96,9 @@
             color: #333;
         }
 
-        .chart-placeholder {
-            width: 100%;
-            height: 200px;
-            background: repeating-linear-gradient(45deg, #e0e0e0, #e0e0e0 10px, #f9f9f9 10px, #f9f9f9 20px);
-            border-radius: 8px;
-        }
-
-        .history-section {
-            margin-top: 30px;
-            text-align: left;
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .history-section h2 {
-            font-size: 1.5em;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .history-item {
-            font-size: 1em;
-            color: #555;
-            margin-bottom: 5px;
+        canvas {
+            max-width: 100%;
+            height: auto;
         }
     </style>
 </head>
@@ -137,26 +115,20 @@
     <div class="dashboard">
         <div class="chart">
             <h3>CPU 使用率</h3>
-            <div class="chart-placeholder"></div>
+            <canvas id="cpuChart"></canvas>
         </div>
         <div class="chart">
             <h3>メモリ使用量</h3>
-            <div class="chart-placeholder"></div>
+            <canvas id="memoryChart"></canvas>
         </div>
         <div class="chart">
             <h3>ネットワークトラフィック</h3>
-            <div class="chart-placeholder"></div>
+            <canvas id="networkChart"></canvas>
         </div>
         <div class="chart">
             <h3>ディスクI/O</h3>
-            <div class="chart-placeholder"></div>
+            <canvas id="diskChart"></canvas>
         </div>
-    </div>
-
-    <div class="history-section">
-        <h2>通知履歴</h2>
-        <p class="history-item">2025-10-13 14:00: 設備Aの異常を検知</p>
-        <p class="history-item">2025-10-13 14:05: 担当者に電話通知</p>
     </div>
 
     <script>
@@ -167,6 +139,62 @@
         function sendSMS() {
             alert('SMS通知を送信しました！（Twilio APIを統合予定）');
         }
+
+        // Dummy data for charts
+        const dummyData = {
+            labels: ['1分前', '30秒前', '現在'],
+            datasets: [{
+                label: '使用率',
+                data: [30, 50, 70],
+                backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        };
+
+        // Initialize charts
+        new Chart(document.getElementById('cpuChart'), {
+            type: 'bar',
+            data: dummyData,
+            options
+        });
+
+        new Chart(document.getElementById('memoryChart'), {
+            type: 'line',
+            data: dummyData,
+            options
+        });
+
+        new Chart(document.getElementById('networkChart'), {
+            type: 'radar',
+            data: dummyData,
+            options
+        });
+
+        new Chart(document.getElementById('diskChart'), {
+            type: 'pie',
+            data: {
+                labels: ['読み取り', '書き込み'],
+                datasets: [{
+                    data: [60, 40],
+                    backgroundColor: ['rgba(0, 123, 255, 0.5)', 'rgba(255, 99, 132, 0.5)'],
+                    borderColor: ['rgba(0, 123, 255, 1)', 'rgba(255, 99, 132, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options
+        });
     </script>
 </body>
 </html>
