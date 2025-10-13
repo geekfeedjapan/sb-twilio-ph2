@@ -88,9 +88,25 @@
         </div>
         <div class="contact-actions">
             <h2>ドライバーに連絡</h2>
-            <button class="contact-button" onclick="alert('電話をかけます')">電話</button>
-            <button class="contact-button" onclick="alert('SMSを送信します')">SMS</button>
+            <button class="contact-button" onclick="makeCall()">電話</button>
+            <button class="contact-button" onclick="sendSMS()">SMS</button>
         </div>
     </div>
+
+    <script>
+      function makeCall() {
+        fetch('/make-call', { method: 'POST' })
+          .then(response => response.json())
+          .then(data => alert('発信が成功しました！'))
+          .catch(error => alert('発信に失敗しました。'));
+      }
+
+      function sendSMS() {
+        fetch('/send-sms', { method: 'POST' })
+          .then(response => response.json())
+          .then(data => alert('SMS送信が成功しました！'))
+          .catch(error => alert('SMS送信に失敗しました。'));
+      }
+    </script>
 </body>
 </html>
