@@ -17,16 +17,23 @@
             color: #333;
         }
 
-        .contact-list {
+        .main-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
             margin: 20px auto;
-            max-width: 800px;
+            max-width: 1200px;
+        }
+
+        .contact-list, .registration-form {
+            flex: 1;
             background: #fff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .contact-list h2 {
+        .contact-list h2, .registration-form h2 {
             margin-bottom: 15px;
             color: #555;
         }
@@ -56,27 +63,13 @@
             color: #666;
         }
 
-        .registration-form {
-            margin: 20px auto;
-            max-width: 800px;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .registration-form h2 {
-            margin-bottom: 15px;
-            color: #555;
-        }
-
         .registration-form label {
             display: block;
             margin-bottom: 5px;
             color: #333;
         }
 
-        .registration-form input {
+        .registration-form input, .registration-form select {
             width: 100%;
             padding: 10px;
             margin-bottom: 15px;
@@ -143,104 +136,126 @@
 <body>
     <h1>通知先登録</h1>
 
-    <div class="contact-list">
-        <h2>連絡先一覧</h2>
-        <div class="contact-grid">
-            <div class="contact-item">
-                <h3>山田 太郎</h3>
-                <div class="contact-details">
-                    電話番号: 090-1234-5678<br>
-                    部署: セキュリティ本部<br>
-                    役職: 責任者<br>
-                    設備担当: 設備A
+    <div class="main-container">
+        <div class="contact-list">
+            <h2>連絡先一覧</h2>
+            <div class="contact-grid">
+                <div class="contact-item">
+                    <h3>山田 太郎</h3>
+                    <div class="contact-details">
+                        電話番号: 090-1234-5678<br>
+                        部署: セキュリティ本部<br>
+                        役職: 責任者<br>
+                        設備担当: 設備A
+                    </div>
                 </div>
-            </div>
-            <div class="contact-item">
-                <h3>佐藤 花子</h3>
-                <div class="contact-details">
-                    電話番号: 080-9876-5432<br>
-                    部署: システム開発本部<br>
-                    役職: 開発エンジニア<br>
-                    設備担当: 設備B
+                <div class="contact-item">
+                    <h3>佐藤 花子</h3>
+                    <div class="contact-details">
+                        電話番号: 080-9876-5432<br>
+                        部署: システム開発本部<br>
+                        役職: 開発エンジニア<br>
+                        設備担当: 設備B
+                    </div>
                 </div>
-            </div>
-            <div class="contact-item">
-                <h3>鈴木 一郎</h3>
-                <div class="contact-details">
-                    電話番号: 070-1111-2222<br>
-                    部署: セキュリティ本部<br>
-                    役職: 運用保守エンジニア<br>
-                    設備担当: 設備C
+                <div class="contact-item">
+                    <h3>鈴木 一郎</h3>
+                    <div class="contact-details">
+                        電話番号: 070-1111-2222<br>
+                        部署: セキュリティ本部<br>
+                        役職: 運用保守エンジニア<br>
+                        設備担当: 設備C
+                    </div>
                 </div>
-            </div>
-            <div class="contact-item">
-                <h3>高橋 美咲</h3>
-                <div class="contact-details">
-                    電話番号: 090-2222-3333<br>
-                    部署: システム開発本部<br>
-                    役職: 責任者<br>
-                    設備担当: 設備A
+                <div class="contact-item">
+                    <h3>高橋 美咲</h3>
+                    <div class="contact-details">
+                        電話番号: 090-2222-3333<br>
+                        部署: システム開発本部<br>
+                        役職: 責任者<br>
+                        設備担当: 設備A
+                    </div>
                 </div>
-            </div>
-            <div class="contact-item">
-                <h3>伊藤 健</h3>
-                <div class="contact-details">
-                    電話番号: 080-4444-5555<br>
-                    部署: セキュリティ本部<br>
-                    役職: 開発エンジニア<br>
-                    設備担当: 設備B
+                <div class="contact-item">
+                    <h3>伊藤 健</h3>
+                    <div class="contact-details">
+                        電話番号: 080-4444-5555<br>
+                        部署: セキュリティ本部<br>
+                        役職: 開発エンジニア<br>
+                        設備担当: 設備B
+                    </div>
                 </div>
-            </div>
-            <div class="contact-item">
-                <h3>中村 優</h3>
-                <div class="contact-details">
-                    電話番号: 070-6666-7777<br>
-                    部署: システム開発本部<br>
-                    役職: 運用保守エンジニア<br>
-                    設備担当: 設備C
+                <div class="contact-item">
+                    <h3>中村 優</h3>
+                    <div class="contact-details">
+                        電話番号: 070-6666-7777<br>
+                        部署: システム開発本部<br>
+                        役職: 運用保守エンジニア<br>
+                        設備担当: 設備C
+                    </div>
                 </div>
-            </div>
-            <div class="contact-item">
-                <h3>小林 翔</h3>
-                <div class="contact-details">
-                    電話番号: 090-8888-9999<br>
-                    部署: セキュリティ本部<br>
-                    役職: 責任者<br>
-                    設備担当: 設備A
+                <div class="contact-item">
+                    <h3>小林 翔</h3>
+                    <div class="contact-details">
+                        電話番号: 090-8888-9999<br>
+                        部署: セキュリティ本部<br>
+                        役職: 責任者<br>
+                        設備担当: 設備A
+                    </div>
                 </div>
-            </div>
-            <div class="contact-item">
-                <h3>松本 菜々</h3>
-                <div class="contact-details">
-                    電話番号: 080-0000-1111<br>
-                    部署: システム開発本部<br>
-                    役職: 開発エンジニア<br>
-                    設備担当: 設備B
+                <div class="contact-item">
+                    <h3>松本 菜々</h3>
+                    <div class="contact-details">
+                        電話番号: 080-0000-1111<br>
+                        部署: システム開発本部<br>
+                        役職: 開発エンジニア<br>
+                        設備担当: 設備B
+                    </div>
                 </div>
-            </div>
-            <div class="contact-item">
-                <h3>林 太一</h3>
-                <div class="contact-details">
-                    電話番号: 070-2222-3333<br>
-                    部署: セキュリティ本部<br>
-                    役職: 運用保守エンジニア<br>
-                    設備担当: 設備C
+                <div class="contact-item">
+                    <h3>林 太一</h3>
+                    <div class="contact-details">
+                        電話番号: 070-2222-3333<br>
+                        部署: セキュリティ本部<br>
+                        役職: 運用保守エンジニア<br>
+                        設備担当: 設備C
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="registration-form">
-        <h2>新しい連絡先を登録</h2>
-        <form>
-            <label for="name">名前</label>
-            <input type="text" id="name" name="name" placeholder="例: 山田 太郎" required>
+        <div class="registration-form">
+            <h2>新しい連絡先を登録</h2>
+            <form>
+                <label for="name">名前</label>
+                <input type="text" id="name" name="name" placeholder="例: 山田 太郎" required>
 
-            <label for="phone">電話番号</label>
-            <input type="tel" id="phone" name="phone" placeholder="例: 090-1234-5678" required>
+                <label for="phone">電話番号</label>
+                <input type="tel" id="phone" name="phone" placeholder="例: 090-1234-5678" required>
 
-            <button type="submit">登録</button>
-        </form>
+                <label for="department">部署</label>
+                <select id="department" name="department" required>
+                    <option value="セキュリティ本部">セキュリティ本部</option>
+                    <option value="システム開発本部">システム開発本部</option>
+                </select>
+
+                <label for="position">役職</label>
+                <select id="position" name="position" required>
+                    <option value="責任者">責任者</option>
+                    <option value="開発エンジニア">開発エンジニア</option>
+                    <option value="運用保守エンジニア">運用保守エンジニア</option>
+                </select>
+
+                <label for="equipment">設備担当</label>
+                <select id="equipment" name="equipment" required>
+                    <option value="設備A">設備A</option>
+                    <option value="設備B">設備B</option>
+                    <option value="設備C">設備C</option>
+                </select>
+
+                <button type="submit">登録</button>
+            </form>
+        </div>
     </div>
 
     <div class="settings-section">
