@@ -3,389 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>設備異常アラート</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>ダッシュボード</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Meiryo', Arial, sans-serif; /* Updated font */
-            background-color: #696969; /* Updated background color */
+            font-family: 'Roboto', Arial, sans-serif;
+            background: linear-gradient(135deg, #2c3e50, #4ca1af);
+            color: #ffffff;
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
         }
 
-        .popup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 40px; /* Doubled padding for larger size */
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            text-align: center;
-            width: 80%; /* Increased width */
-            max-width: 800px; /* Doubled max-width */
-        }
-
-        .popup h2 {
-            margin-bottom: 15px;
-            color: red; /* Changed to red */
-            font-size: 4em; /* Doubled font size */
-        }
-
-        .popup p {
-            font-size: 1.5em; /* Increased font size for better readability */
-            margin-bottom: 20px;
-            color: #555;
-        }
-
-        .popup-close {
-            margin-top: 10px;
-            padding: 10px 20px;
-            font-size: 1em;
-            border: none;
-            border-radius: 8px;
-            background: #007bff;
-            color: white;
-            cursor: pointer;
-        }
-
-        .notify-button {
-            padding: 36px 60px; /* Tripled padding */
-            font-size: 3em; /* Tripled font size */
-            border: none;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #007bff, #0056b3);
-            color: white;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .notify-button:hover {
-            background: linear-gradient(135deg, #0056b3, #003f7f);
-        }
-
-        .dashboard-title-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
+        h1 {
+            font-size: 2.5em;
             margin: 20px 0;
-        }
-
-        .dashboard-title {
-            color: #ffffff;
-            font-size: 3em; /* Increased size to 1.5x */
             text-align: center;
         }
 
-        .popup-button {
-            padding: 10px 15px;
-            font-size: 1em;
-            border: none;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #ff4500, #ff6347);
-            color: white;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .popup-button:hover {
-            background: linear-gradient(135deg, #ff6347, #ff4500);
-        }
-
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 columns */
+        .dashboard-container {
+            display: flex;
+            flex-wrap: wrap;
             gap: 20px;
-            width: 90%;
+            justify-content: center;
             max-width: 1200px;
             margin: 20px auto;
         }
 
-        .chart {
+        .card {
             background: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            text-align: center;
-        }
-
-        .chart h3 {
-            margin-bottom: 15px;
             color: #333;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            width: 300px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        canvas {
-            max-width: 100%;
-            height: 300px !important; /* Increased height for better resolution */
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
 
-        .contacts-button {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            font-size: 1.2em;
+        .card h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            font-size: 1em;
+            margin-bottom: 15px;
+        }
+
+        .card button {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: #ffffff;
             border: none;
             border-radius: 8px;
-            background: linear-gradient(135deg, #28a745, #218838);
-            color: white;
+            padding: 10px 20px;
+            font-size: 1em;
             cursor: pointer;
             transition: background 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        .contacts-button:hover {
-            background: linear-gradient(135deg, #218838, #1e7e34);
+        .card button:hover {
+            background: linear-gradient(135deg, #0056b3, #003f7f);
+        }
+
+        .icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+            color: #4ca1af;
+        }
+
+        @media (max-width: 768px) {
+            .card {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="dashboard-title-container">
-        <h1 class="dashboard-title">Twilio 監視ダッシュボード</h1>
-        <button class="popup-button" onclick="showPopup()">異常発生</button>
-    </div>
+    <h1>ダッシュボード</h1>
 
-    <div class="popup" id="popup">
-        <h2>設備異常発生！</h2>
-        <p>設備Aで不正なアクセスが検知されました。<br>担当者に連絡し、至急確認してください。</p>
-        <div class="button-container">
-            <button class="notify-button" onclick="makeCall()">電話通知</button>
-            <button class="notify-button" onclick="sendSMS()">SMS通知</button>
+    <div class="dashboard-container">
+        <div class="card">
+            <div class="icon">📞</div>
+            <h2>電話通知</h2>
+            <p>電話通知の設定を管理します。</p>
+            <button>設定を開く</button>
         </div>
-        <button class="popup-close" onclick="closePopup()">閉じる</button>
-    </div>
 
-    <div class="dashboard">
-        <div class="chart">
-            <h3>不正アクセス試行</h3>
-            <canvas id="unauthorizedAccessChart"></canvas>
+        <div class="card">
+            <div class="icon">✉️</div>
+            <h2>SMS通知</h2>
+            <p>SMS通知の設定を管理します。</p>
+            <button>設定を開く</button>
         </div>
-        <div class="chart">
-            <h3>ファイアウォールアクティビティ</h3>
-            <canvas id="firewallActivityChart"></canvas>
+
+        <div class="card">
+            <div class="icon">📋</div>
+            <h2>連絡先一覧</h2>
+            <p>登録された連絡先を確認します。</p>
+            <button>一覧を表示</button>
         </div>
-        <div class="chart">
-            <h3>ウイルス検知数</h3>
-            <canvas id="virusDetectionChart"></canvas>
-        </div>
-        <div class="chart">
-            <h3>ログイン成功率</h3>
-            <canvas id="loginSuccessRateChart"></canvas>
-        </div>
-        <div class="chart">
-            <h3>データ転送量</h3>
-            <canvas id="dataTransferChart"></canvas>
-        </div>
-        <div class="chart">
-            <h3>システム稼働率</h3>
-            <canvas id="systemUptimeChart"></canvas>
-        </div>
-        <div class="chart">
-            <h3>CPU 使用率</h3>
-            <canvas id="cpuUsageChart"></canvas>
-        </div>
-        <div class="chart">
-            <h3>メモリ使用量</h3>
-            <canvas id="memoryUsageChart"></canvas>
-        </div>
-        <div class="chart">
-            <h3>ディスク容量</h3>
-            <canvas id="diskUsageChart"></canvas>
+
+        <div class="card">
+            <div class="icon">➕</div>
+            <h2>新しい連絡先</h2>
+            <p>新しい連絡先を登録します。</p>
+            <button>登録する</button>
         </div>
     </div>
-
-    <a href="contacts.html" class="contacts-button">通知先登録</a>
-
-    <script>
-        function makeCall() {
-            alert('電話通知を送信しました！（Twilio APIを統合予定）');
-        }
-
-        function sendSMS() {
-            alert('SMS通知を送信しました！（Twilio APIを統合予定）');
-        }
-
-        function showPopup() {
-            document.getElementById('popup').style.display = 'block';
-        }
-
-        function closePopup() {
-            document.getElementById('popup').style.display = 'none';
-        }
-
-        // Dummy data for security-related charts
-        const chartOptions = {
-            responsive: true,
-            maintainAspectRatio: false, /* Allow better resolution */
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100
-                }
-            }
-        };
-
-        const unauthorizedAccessData = {
-            labels: ['1時間前', '30分前', '現在'],
-            datasets: [{
-                label: '試行回数',
-                data: [5, 10, 3],
-                backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1
-            }]
-        };
-
-        const firewallActivityData = {
-            labels: ['1時間前', '30分前', '現在'],
-            datasets: [{
-                label: 'アクティビティ数',
-                data: [20, 25, 30],
-                backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        };
-
-        const virusDetectionData = {
-            labels: ['1時間前', '30分前', '現在'],
-            datasets: [{
-                label: '検知数',
-                data: [1, 2, 1],
-                backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
-            }]
-        };
-
-        const loginSuccessRateData = {
-            labels: ['1時間前', '30分前', '現在'],
-            datasets: [{
-                label: '成功率 (%)',
-                data: [95, 90, 92],
-                backgroundColor: 'rgba(153, 102, 255, 0.5)',
-                borderColor: 'rgba(153, 102, 255, 1)',
-                borderWidth: 1
-            }]
-        };
-
-        const dataTransferData = {
-            labels: ['1時間前', '30分前', '現在'],
-            datasets: [{
-                label: '転送量 (MB)',
-                data: [500, 700, 600],
-                backgroundColor: 'rgba(255, 206, 86, 0.5)',
-                borderColor: 'rgba(255, 206, 86, 1)',
-                borderWidth: 1
-            }]
-        };
-
-        const systemUptimeData = {
-            labels: ['1時間前', '30分前', '現在'],
-            datasets: [{
-                label: '稼働率 (%)',
-                data: [99, 98, 99],
-                backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
-            }]
-        };
-
-        const cpuUsageData = {
-            labels: ['1時間前', '30分前', '現在'],
-            datasets: [{
-                label: 'CPU 使用率',
-                data: [30, 50, 70],
-                backgroundColor: 'rgba(255, 159, 64, 0.5)',
-                borderColor: 'rgba(255, 159, 64, 1)',
-                borderWidth: 1
-            }]
-        };
-
-        const memoryUsageData = {
-            labels: ['1時間前', '30分前', '現在'],
-            datasets: [{
-                label: 'メモリ使用量 (%)',
-                data: [60, 65, 70],
-                backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        };
-
-        const diskUsageData = {
-            labels: ['1時間前', '30分前', '現在'],
-            datasets: [{
-                label: 'ディスク使用量 (%)',
-                data: [40, 50, 60],
-                backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
-            }]
-        };
-
-        // Initialize charts
-        new Chart(document.getElementById('unauthorizedAccessChart'), {
-            type: 'bar',
-            data: unauthorizedAccessData,
-            options: chartOptions
-        });
-
-        new Chart(document.getElementById('firewallActivityChart'), {
-            type: 'line',
-            data: firewallActivityData,
-            options: chartOptions
-        });
-
-        new Chart(document.getElementById('virusDetectionChart'), {
-            type: 'bar',
-            data: virusDetectionData,
-            options: chartOptions
-        });
-
-        new Chart(document.getElementById('loginSuccessRateChart'), {
-            type: 'line',
-            data: loginSuccessRateData,
-            options: chartOptions
-        });
-
-        new Chart(document.getElementById('dataTransferChart'), {
-            type: 'bar',
-            data: dataTransferData,
-            options: chartOptions
-        });
-
-        new Chart(document.getElementById('systemUptimeChart'), {
-            type: 'line',
-            data: systemUptimeData,
-            options: chartOptions
-        });
-
-        new Chart(document.getElementById('cpuUsageChart'), {
-            type: 'bar',
-            data: cpuUsageData,
-            options: chartOptions
-        });
-
-        new Chart(document.getElementById('memoryUsageChart'), {
-            type: 'line',
-            data: memoryUsageData,
-            options: chartOptions
-        });
-
-        new Chart(document.getElementById('diskUsageChart'), {
-            type: 'bar',
-            data: diskUsageData,
-            options: chartOptions
-        });
-    </script>
 </body>
 </html>
