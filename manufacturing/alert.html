@@ -98,7 +98,7 @@
 
         canvas {
             max-width: 100%;
-            height: auto;
+            height: 200px;
         }
     </style>
 </head>
@@ -140,14 +140,46 @@
             alert('SMS通知を送信しました！（Twilio APIを統合予定）');
         }
 
-        // Dummy data for charts
-        const dummyData = {
+        // Adjusted dummy data for charts
+        const cpuData = {
             labels: ['1分前', '30秒前', '現在'],
             datasets: [{
-                label: '使用率',
-                data: [30, 50, 70],
+                label: 'CPU 使用率',
+                data: [20, 40, 60],
                 backgroundColor: 'rgba(0, 123, 255, 0.5)',
                 borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const memoryData = {
+            labels: ['1分前', '30秒前', '現在'],
+            datasets: [{
+                label: 'メモリ使用量',
+                data: [50, 55, 60],
+                backgroundColor: 'rgba(40, 167, 69, 0.5)',
+                borderColor: 'rgba(40, 167, 69, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const networkData = {
+            labels: ['1分前', '30秒前', '現在'],
+            datasets: [{
+                label: 'ネットワークトラフィック (MB)',
+                data: [10, 20, 15],
+                backgroundColor: 'rgba(255, 193, 7, 0.5)',
+                borderColor: 'rgba(255, 193, 7, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const diskData = {
+            labels: ['読み取り', '書き込み'],
+            datasets: [{
+                data: [70, 30],
+                backgroundColor: ['rgba(0, 123, 255, 0.5)', 'rgba(255, 99, 132, 0.5)'],
+                borderColor: ['rgba(0, 123, 255, 1)', 'rgba(255, 99, 132, 1)'],
                 borderWidth: 1
             }]
         };
@@ -166,34 +198,29 @@
         // Initialize charts
         new Chart(document.getElementById('cpuChart'), {
             type: 'bar',
-            data: dummyData,
+            data: cpuData,
             options
         });
 
         new Chart(document.getElementById('memoryChart'), {
             type: 'line',
-            data: dummyData,
+            data: memoryData,
             options
         });
 
         new Chart(document.getElementById('networkChart'), {
-            type: 'radar',
-            data: dummyData,
+            type: 'line',
+            data: networkData,
             options
         });
 
         new Chart(document.getElementById('diskChart'), {
             type: 'pie',
-            data: {
-                labels: ['読み取り', '書き込み'],
-                datasets: [{
-                    data: [60, 40],
-                    backgroundColor: ['rgba(0, 123, 255, 0.5)', 'rgba(255, 99, 132, 0.5)'],
-                    borderColor: ['rgba(0, 123, 255, 1)', 'rgba(255, 99, 132, 1)'],
-                    borderWidth: 1
-                }]
-            },
-            options
+            data: diskData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
         });
     </script>
 </body>
