@@ -9,7 +9,7 @@
         body {
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
+            font-family: 'MS Gothic', Arial, sans-serif; /* Updated font */
             background-color: #696969; /* Updated background color */
             display: flex;
             flex-direction: column;
@@ -74,6 +74,13 @@
             background: linear-gradient(135deg, #0056b3, #003f7f);
         }
 
+        .dashboard-title {
+            color: #ffffff;
+            font-size: 2em;
+            margin: 20px 0;
+            text-align: center;
+        }
+
         .dashboard {
             display: grid;
             grid-template-columns: repeat(3, 1fr); /* 3 columns */
@@ -98,7 +105,7 @@
 
         canvas {
             max-width: 100%;
-            height: 250px !important; /* Explicitly set height */
+            height: 300px !important; /* Increased height for better resolution */
         }
     </style>
 </head>
@@ -111,6 +118,8 @@
             <button class="notify-button" onclick="sendSMS()">SMS通知</button>
         </div>
     </div>
+
+    <h1 class="dashboard-title">Twilio 監視ダッシュボード</h1>
 
     <div class="dashboard">
         <div class="chart">
@@ -137,6 +146,18 @@
             <h3>システム稼働率</h3>
             <canvas id="systemUptimeChart"></canvas>
         </div>
+        <div class="chart">
+            <h3>CPU 使用率</h3>
+            <canvas id="cpuUsageChart"></canvas>
+        </div>
+        <div class="chart">
+            <h3>メモリ使用量</h3>
+            <canvas id="memoryUsageChart"></canvas>
+        </div>
+        <div class="chart">
+            <h3>ディスク容量</h3>
+            <canvas id="diskUsageChart"></canvas>
+        </div>
     </div>
 
     <script>
@@ -151,7 +172,7 @@
         // Dummy data for security-related charts
         const chartOptions = {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false, /* Allow better resolution */
             scales: {
                 y: {
                     beginAtZero: true,
@@ -226,6 +247,39 @@
             }]
         };
 
+        const cpuUsageData = {
+            labels: ['1時間前', '30分前', '現在'],
+            datasets: [{
+                label: 'CPU 使用率',
+                data: [30, 50, 70],
+                backgroundColor: 'rgba(255, 159, 64, 0.5)',
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const memoryUsageData = {
+            labels: ['1時間前', '30分前', '現在'],
+            datasets: [{
+                label: 'メモリ使用量 (%)',
+                data: [60, 65, 70],
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const diskUsageData = {
+            labels: ['1時間前', '30分前', '現在'],
+            datasets: [{
+                label: 'ディスク使用量 (%)',
+                data: [40, 50, 60],
+                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        };
+
         // Initialize charts
         new Chart(document.getElementById('unauthorizedAccessChart'), {
             type: 'bar',
@@ -260,6 +314,24 @@
         new Chart(document.getElementById('systemUptimeChart'), {
             type: 'line',
             data: systemUptimeData,
+            options: chartOptions
+        });
+
+        new Chart(document.getElementById('cpuUsageChart'), {
+            type: 'bar',
+            data: cpuUsageData,
+            options: chartOptions
+        });
+
+        new Chart(document.getElementById('memoryUsageChart'), {
+            type: 'line',
+            data: memoryUsageData,
+            options: chartOptions
+        });
+
+        new Chart(document.getElementById('diskUsageChart'), {
+            type: 'bar',
+            data: diskUsageData,
             options: chartOptions
         });
     </script>
