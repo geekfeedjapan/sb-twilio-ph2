@@ -17,19 +17,42 @@
             height: 100vh;
         }
 
-        .alert-container {
-            display: none; /* Removed the top alert popup */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px; /* Doubled padding for larger size */
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            text-align: center;
+            width: 80%; /* Increased width */
+            max-width: 800px; /* Doubled max-width */
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .popup h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .popup p {
+            font-size: 1.5em; /* Increased font size for better readability */
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .popup-close {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
         }
 
         .dashboard-title-container {
@@ -59,42 +82,6 @@
 
         .popup-button:hover {
             background: linear-gradient(135deg, #ff6347, #ff4500);
-        }
-
-        .popup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            text-align: center;
-        }
-
-        .popup h2 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .popup p {
-            font-size: 1.2em;
-            margin-bottom: 20px;
-            color: #555;
-        }
-
-        .popup-close {
-            margin-top: 10px;
-            padding: 10px 20px;
-            font-size: 1em;
-            border: none;
-            border-radius: 8px;
-            background: #007bff;
-            color: white;
-            cursor: pointer;
         }
 
         .dashboard {
@@ -133,7 +120,7 @@
 
     <div class="popup" id="popup">
         <h2>設備異常発生！</h2>
-        <p>設備Aで異常が検出されました。<br>至急確認してください。</p>
+        <p>設備Aで不正なアクセスが検知されました。担当者に連絡し、至急確認してください。</p>
         <div class="button-container">
             <button class="notify-button" onclick="makeCall()">電話通知</button>
             <button class="notify-button" onclick="sendSMS()">SMS通知</button>
