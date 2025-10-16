@@ -9,8 +9,8 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: #fff;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #e0e0e0;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -23,38 +23,39 @@
             grid-template-columns: repeat(5, 1fr);
             gap: 20px;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.6);
             border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             width: 90%;
-            max-width: 900px;
+            max-width: 1000px;
             overflow-y: auto;
             max-height: 90vh;
         }
 
         .dashboard-container h1 {
             text-align: center;
-            color: #fff;
+            color: #00c6ff;
             margin-bottom: 25px;
-            font-size: 2.5em;
+            font-size: 2.8em;
             grid-column: span 5;
         }
 
         .reservation-info {
             grid-column: span 5;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
+            color: #e0e0e0;
         }
 
         .reservation-info h2 {
             margin: 0 0 10px 0;
             font-size: 1.8em;
-            color: #00d4ff;
+            color: #00c6ff;
         }
 
         .tracking-item {
@@ -70,36 +71,37 @@
         }
 
         .tracking-item:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transform: scale(1.05);
         }
 
         .tracking-item .status {
             font-weight: bold;
-            color: #00d4ff;
+            color: #00c6ff;
         }
 
         .tracking-item .actions button {
-            padding: 8px 12px;
-            font-size: 0.9em;
+            padding: 10px 15px;
+            font-size: 1em;
             border: none;
             border-radius: 5px;
-            background: linear-gradient(135deg, #00d4ff, #007bff);
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
             color: white;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: background 0.3s, transform 0.2s;
         }
 
         .tracking-item .actions button:hover {
-            background: linear-gradient(135deg, #007bff, #0056b3);
+            background: linear-gradient(135deg, #0072ff, #0056b3);
+            transform: scale(1.1);
         }
 
         .header {
             position: absolute;
             top: 10px;
             left: 20px;
-            font-size: 1.8em;
-            color: #fff;
+            font-size: 2em;
+            color: #00c6ff;
             font-weight: bold;
         }
     </style>
