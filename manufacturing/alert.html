@@ -10,6 +10,7 @@
 <body>
     <div class="dashboard-title-container">
         <h1 class="dashboard-title">Twilio 監視ダッシュボード</h1>
+        <button class="alert-button" onclick="showAlertPopup()">アラート</button>
     </div>
 
     <div class="dashboard">
@@ -51,6 +52,11 @@
         </div>
     </div>
 
+    <script>
+        function showAlertPopup() {
+            alert('アラートが押されました！');
+        }
+    </script>
     <script src="alert.js"></script>
 </body>
 </html>
