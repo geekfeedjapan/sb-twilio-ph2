@@ -4,126 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Twilioセキュリティ連携デモ</title>
-    <style>
-        /* ここにCSSを記述します */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f9;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            background-color: #ffffff;
-            padding: 30px 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 450px;
-        }
-        h2 {
-            color: #007bff;
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 10px;
-            margin-top: 0;
-            font-weight: 600;
-        }
-        .step {
-            margin-bottom: 30px;
-            padding: 15px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #555;
-        }
-        input[type="tel"], input[type="text"] {
-            width: calc(100% - 20px);
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-        .btn {
-            display: inline-block;
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            font-weight: 600;
-        }
-        #btn-send-otp {
-            background-color: #28a745;
-            color: white;
-        }
-        #btn-send-otp:hover {
-            background-color: #218838;
-        }
-        #btn-change-info {
-            background-color: #007bff;
-            color: white;
-        }
-        #btn-change-info:hover {
-            background-color: #0056b3;
-        }
-        #btn-next {
-            background-color: #6c757d;
-            color: white;
-        }
-        #btn-next:hover {
-            background-color: #5a6268;
-        }
-        .logic-display {
-            background-color: #e9ecef;
-            border: 1px dashed #adb5bd;
-            padding: 10px;
-            margin-top: 15px;
-            border-radius: 6px;
-            font-size: 14px;
-            color: #495057;
-        }
-        .logic-display strong {
-            color: #dc3545; /* PKCV 無効: 赤 */
-        }
-        .logic-display.pkcv-active strong {
-            color: #ffc107; /* PKCV 有効: 黄 */
-        }
-        .logic-display.success strong {
-            color: #28a745; /* 成功: 緑 */
-        }
-        .security-banner {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-            color: #6c757d;
-        }
-        .security-banner img {
-            height: 20px;
-            margin-right: 5px;
-            vertical-align: middle;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
+    <script src="scripts.js" defer></script>
 </head>
 <body>
-    <div class="container">
+    <!-- 保険会社サイト風ヘッダー -->
+    <header class="site-header" role="banner">
+        <div class="inner">
+            <div class="brand" aria-label="company brand">
+                <div class="logo" aria-hidden="true"></div>
+                <span>SecureLife Insurance</span>
+            </div>
+            <nav class="nav" aria-label="global navigation">
+                <a href="#">商品・サービス</a>
+                <a href="#">ご契約者さま</a>
+                <a href="#">各種お手続き</a>
+                <a href="#">サポート</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ヒーロー背景（保険サイトのファーストビューを模したもの） -->
+    <section class="hero">
+        <div class="inner">
+            <div class="container">
         <div class="step" id="step-1">
             <h2>👤 ステップ1: 本人確認とセキュリティ</h2>
             <label for="phone">登録済みの電話番号</label>
             <input type="tel" id="phone" value="090-XXXX-XXXX" readonly>
             <button class="btn" id="btn-send-otp">ワンタイムパスワードを送信 (Twilio Verify)</button>
             <div class="logic-display">
-                裏側ロジック表示：🔒 **PKCV（無効）**：このOTP送信APIリクエストはPKCV署名なしで実施されます。
+                裏側ロジック表示：🔒 <strong>PKCV（無効）</strong>：このOTP送信APIリクエストはPKCV署名なしで実施されます。
             </div>
         </div>
 
@@ -134,7 +45,7 @@
             <input type="text" id="otp" placeholder="6桁のコードを入力">
             <button class="btn" id="btn-change-info">🔑 顧客情報を変更する</button>
             <div class="logic-display pkcv-active">
-                裏側ロジック表示：⚠️ **PKCV（有効）**：このAPIリクエストは**秘密鍵で署名**され、Twilioに送信されます。
+                裏側ロジック表示：⚠️ <strong>PKCV（有効）</strong>：このAPIリクエストは<strong>秘密鍵で署名</strong>され、Twilioに送信されます。
             </div>
         </div>
 
@@ -142,33 +53,29 @@
             <h2>🚀 ステップ3: 認証完了！安心して入力してください</h2>
             <p>OTP認証とPKCVによるリクエスト検証が完了しました。なりすましの心配なく、安心して次の画面で変更内容を入力してください。</p>
             <div class="logic-display success">
-                裏側ロジック表示：✅ **Twilio Verify & PKCV 検証成功**
+                裏側ロジック表示：✅ <strong>Twilio Verify & PKCV 検証成功</strong>
             </div>
             <button class="btn" id="btn-next">顧客情報入力へ進む</button>
         </div>
+        </div>
+    </section>
 
-        <div class="security-banner">
-            <span role="img" aria-label="shield">🛡️</span> Twilio採用によるセキュリティ強化
-            <br>
+    <div class="security-banner">
+            <span role="img" aria-label="shield">🛡️</span> Twilio採用によるセキュリティ強化<br>
             <small>KDDIグループサポートとグローバルな導入実績</small>
         </div>
     </div>
 
-    <script>
-        document.getElementById('btn-send-otp').addEventListener('click', function() {
-            document.getElementById('step-1').style.display = 'none';
-            document.getElementById('step-2').style.display = 'block';
-        });
-
-        document.getElementById('btn-change-info').addEventListener('click', function() {
-            // ここで実際にはOTP検証とPKCV署名が行われる
-            document.getElementById('step-2').style.display = 'none';
-            document.getElementById('step-3').style.display = 'block';
-        });
-
-        document.getElementById('btn-next').addEventListener('click', function() {
-            alert('顧客情報入力画面へ遷移します。PKCVにより安全な通信が保証されています。');
-        });
-    </script>
+    <!-- フッター（信頼バッジ風） -->
+    <footer class="site-footer" role="contentinfo">
+        <div class="inner">
+            <div>© 2025 SecureLife Insurance Co., Ltd.</div>
+            <div class="badges">
+                <span class="badge">ISO/IEC 27001</span>
+                <span class="badge">PCI DSS Ready</span>
+                <span class="badge">TWILIO Verified</span>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>

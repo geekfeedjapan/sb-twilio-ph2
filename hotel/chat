@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Twilio コミュニケーション統合デモ</title>
+  <style>
+    /* ==================================== */
+    /* CSS: メインページ全体 */
+    /* ==================================== */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f7f9;
+      color: #333;
+    }
+
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 15px 50px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .main-content {
+      padding: 40px 50px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .hotel-info h1 {
+      color: #007bff;
+      margin-top: 0;
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 10px;
+    }
+
+    .hotel-info p {
+      line-height: 1.8;
+      margin-bottom: 30px;
+    }
+
+    /* ==================================== */
+    /* CSS: チャットウィジェット */
+    /* ==================================== */
+    .chat-widget-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      overflow: hidden;
+      width: 350px; /* ウィジェットの幅 */
+      background: #fff;
+    }
+
+    .chat-header {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+    }
+    .chat-header .status {
+      font-size: 12px;
+      font-weight: 400;
+      opacity: .9;
+    }
+
+    .chat-body {
+      height: 400px; /* チャット履歴の高さ */
+      overflow-y: auto;
+      padding: 10px;
+      background-color: #e6e6e6;
+      border-bottom: 1px solid #ccc;
+      display: block;
+    }
+
+    .chat-input {
+      padding: 10px;
+      border-top: 1px solid #ccc;
+      display: flex;
+      background-color: white;
+    }
+
+    .chat-input input {
+      flex-grow: 1;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-right: 5px;
+    }
+
+    .chat-input button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* チャット吹き出しスタイル */
+    .message-row {
+      display: flex;
+      margin-bottom: 15px;
+    }
+    .message-row.user { justify-content: flex-end; }
+    .message-row.bot { justify-content: flex-start; }
+    .message-row.system { justify-content: center; text-align: center; }
+
+    .message-bubble {
+      padding: 8px 12px;
+      border-radius: 15px;
+      max-width: 75%;
+      word-wrap: break-word;
+      line-height: 1.5;
+    }
+    .message-row.bot .message-bubble { background-color: #dcf8c6; text-align: left; }
+    .message-row.user .message-bubble { background-color: #fff; text-align: right; }
+    .message-row.system .message-bubble {
+      background-color: #ffc107; /* システムメッセージ（黄色） */
+      color: #333;
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+
+    .escalation-buttons button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 5px;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+    .escalation-buttons button.secondary {
+      background-color: #17a2b8;
+    }
+    .escalation-buttons button:hover { opacity: 0.9; }
+
+    /* LINEチャネル統合アピール */
+    footer {
+      text-align: center;
+      padding: 30px 0;
+      background-color: #fff;
+      border-top: 1px solid #eee;
+      margin-top: 40px;
+    }
+    .line-integration {
+      background-color: #e8f5e9; /* 薄い緑 */
+      padding: 15px;
+      border-radius: 8px;
+      display: inline-block;
+      color: #00b900;
+      font-weight: 600;
+    }
+    .line-integration span {
+      font-size: 20px;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    .hidden { display: none; }
+      /* ===== ビジネスホテル風のサイト装飾を追加 ===== */
+    :root{ --brand:#0c5aa6; --brand-2:#0aa2c0; --ink:#1f2937; --bg:#f5f7fb; }
+    body{ background: var(--bg); color: var(--ink); }
+    .site-header{ position: sticky; top:0; z-index: 40; background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,.06); }
+    .site-header .inner{ max-width: 1200px; margin:0 auto; padding: 14px 24px; display:flex; align-items:center; justify-content:space-between; }
+    .brand{ display:flex; align-items:center; gap:10px; font-weight:700; color:var(--brand); }
+    .brand .logo{ width:28px; height:28px; border-radius:6px; background: linear-gradient(135deg,var(--brand),var(--brand-2)); box-shadow: inset 0 0 0 2px rgba(255,255,255,.7); }
+    .brand span{ letter-spacing:.3px; }
+    .nav{ display:flex; gap:20px; font-size:14px; }
+    .nav a{ color:#37557a; text-decoration:none; }
+    .nav a:hover{ color:var(--brand); }
+
+    .hero{ background:
+      radial-gradient(1000px 400px at 80% -150px, rgba(12,90,166,.15), transparent 60%),
+      radial-gradient(800px 300px at -100px 20%, rgba(10,162,192,.18), transparent 60%),
+      linear-gradient(180deg,#eaf3ff 0%, #ffffff 100%);
+      border-bottom: 1px solid #e9eef5;
+    }
+    .hero .inner{ max-width:1200px; margin:0 auto; padding:56px 24px 36px; display:grid; grid-template-columns: 1.1fr .9fr; gap:28px; align-items:center; }
+    .hero h1{ margin:0 0 10px; color:var(--brand); font-size:32px; }
+    .hero p{ margin:0 0 18px; line-height:1.8; color:#3b4b63; }
+    .hero .cta{ display:flex; gap:12px; flex-wrap:wrap; }
+    .btn-primary{ background:var(--brand); color:#fff; border:none; padding:10px 16px; border-radius:10px; font-weight:700; cursor:pointer; }
+    .btn-outline{ background:#fff; color:var(--brand); border:1px solid var(--brand); padding:10px 16px; border-radius:10px; font-weight:700; cursor:pointer; }
+    .hero-card{ background:#fff; border-radius:14px; box-shadow: 0 10px 30px rgba(0,0,0,.07); padding:14px; display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .mini{ background:#f7fbff; border:1px solid #e6eef7; border-radius:10px; padding:10px; font-size:12px; color:#335574; }
+
+    /* セクション（客室/設備/アクセス） */
+    .section{ max-width:1200px; margin: 0 auto; padding: 24px; }
+    .section h2{ color:#244a7b; margin: 18px 0 10px; }
+    .grid{ display:grid; grid-template-columns: repeat(3,1fr); gap:18px; }
+    .card{ background:#fff; border:1px solid #e7eef6; border-radius:12px; padding:16px; box-shadow: 0 8px 20px rgba(0,0,0,.04); }
+    .card h3{ margin:0 0 6px; color:#244a7b; }
+    .muted{ color:#60738d; font-size:14px; }
+
+    /* 既存の固定チャットと干渉しない余白を確保 */
+    .main-content{ padding-bottom: 120px; }
+</style>
+</head>
+<body>
+  <header class="site-header" role="banner">
+  <div class="inner">
+    <div class="brand"><div class="logo" aria-hidden="true"></div><span>CityStay Business Hotel</span></div>
+    <nav class="nav" aria-label="global navigation">
+      <a href="#rooms">客室</a>
+      <a href="#amenities">設備</a>
+      <a href="#access">アクセス</a>
+      <a href="#contact">お問い合わせ</a>
+    </nav>
+  </div>
+</header>
+
+  <div class="main-content">
+  <!-- ヒーロー：ビジネスホテルのメインビジュアル領域 -->
+  <section class="hero">
+    <div class="inner">
+      <div>
+        <h1>出張も観光も、快適に。</h1>
+        <p>CityStayは駅徒歩3分。全室Wi‑Fi・加湿空気清浄機・ワークデスク完備。<br>
+        チャットからのご予約相談も24時間対応します。</p>
+        <div class="cta">
+          <button class="btn-primary">最安値で予約する</button>
+          <button class="btn-outline">空室状況を確認</button>
+        </div>
+      </div>
+      <div class="hero-card" aria-label="ホテル概要サマリー">
+        <div class="mini">🛏 シングル / ダブル / ツイン</div>
+        <div class="mini">💻 全室無料Wi‑Fi</div>
+        <div class="mini">🍳 朝食ビュッフェ 7:00–10:00</div>
+        <div class="mini">🚆 駅から徒歩3分</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 客室情報 -->
+  <section id="rooms" class="section">
+    <h2>客室タイプ</h2>
+    <div class="grid">
+      <div class="card"><h3>コンフォートシングル</h3><p class="muted">14㎡ / セミダブルベッド / ワークライト</p></div>
+      <div class="card"><h3>ダブル</h3><p class="muted">18㎡ / クイーンベッド / ソファ</p></div>
+      <div class="card"><h3>ツイン</h3><p class="muted">22㎡ / セパレートベッド / ミニテーブル</p></div>
+    </div>
+  </section>
+
+  <!-- 設備 -->
+  <section id="amenities" class="section">
+    <h2>設備・サービス</h2>
+    <div class="grid">
+      <div class="card"><h3>コワーキングラウンジ</h3><p class="muted">電源・プリンタ・無料コーヒー</p></div>
+      <div class="card"><h3>ランドリー</h3><p class="muted">洗濯〜乾燥までキャッシュレス</p></div>
+      <div class="card"><h3>セキュリティ</h3><p class="muted">カードキー・フロアセキュリティ</p></div>
+    </div>
+  </section>
+
+  <!-- アクセス -->
+  <section id="access" class="section">
+    <h2>アクセス</h2>
+    <p class="muted">JR〇〇駅 東口より徒歩3分 / 空港リムジンバス停から徒歩5分</p>
+  </section>
+</div>
+
+<div class="chat-widget-container" aria-live="polite">
+    <div class="chat-header" id="chat-header">
+      <span>ホテル予約サポート</span>
+      <span class="status" id="chat-status">BOT 対応中</span>
+    </div>
+    <div class="chat-body" id="chat-body"></div>
+    <div class="chat-input">
+      <input type="text" id="chat-input" placeholder="メッセージを入力..." disabled />
+      <button id="send-btn" disabled>送信</button>
+    </div>
+  </div>
+
+  <footer>
+    <div class="line-integration">
+      <span role="img" aria-label="line-app">💬</span>
+      LINEチャネルも同じバックエンドで統合されています！
+    </div>
+  </footer>
+
+  <script>
+    const chatBody = document.getElementById('chat-body');
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
+    const chatHeader = document.getElementById('chat-header');
+    const chatStatus = document.getElementById('chat-status');
+
+    let exchangeCount = 0;
+    let isEscalated = false;
+    let collapsed = false;
+
+    // メッセージをチャットに表示する関数
+    function displayMessage(text, sender, isHtml = false) {
+      const row = document.createElement('div');
+      row.className = `message-row ${sender}`;
+      const bubble = document.createElement('div');
+      bubble.className = 'message-bubble';
+      if (isHtml) bubble.innerHTML = text; else bubble.textContent = text;
+      row.appendChild(bubble);
+      chatBody.appendChild(row);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    // エスカレーションUIを差し込む
+    function showEscalationOptions() {
+      const html = `
+        <div>
+          より詳細なご案内が必要と判断しました。ご希望の接続方法をお選びください。
+          <div class="escalation-buttons">
+            <button id="btn-voice">📞 電話で接続</button>
+            <button id="btn-chat" class="secondary">👤 チャットでオペレーター</button>
+          </div>
+        </div>`;
+      displayMessage(html, 'bot', true);
+
+      // ボタンのイベント委任
+      chatBody.addEventListener('click', (e) => {
+        if (e.target.id === 'btn-voice' && !isEscalated) {
+          escalate('voice');
+        }
+        if (e.target.id === 'btn-chat' && !isEscalated) {
+          escalate('chat');
+        }
+      }, { once: true });
+    }
+
+    // エスカレーション処理（デモ用）
+    function escalate(mode) {
+      isEscalated = true;
+      chatStatus.textContent = 'オペレーター接続中';
+      displayMessage(`外部サーバーの判断により、Twilio Conversations を通じて${mode === 'voice' ? '音声通話' : '有人チャット'}へ接続します。`, 'system');
+      displayMessage('※同じバックエンドでLINEユーザーも同一スレッドに合流可能です。', 'system');
+
+      setTimeout(() => {
+        displayMessage('オペレーター：お待たせしました。ご予約内容を確認いたします。ご希望の日付を教えてください。', 'bot');
+      }, 700);
+    }
+
+    // 簡易ボット応答
+    function botReply(userText) {
+      exchangeCount += 1;
+
+      // キーワードでFAQ風に返答
+      if (/チェックイン|check[- ]?in/i.test(userText)) {
+        displayMessage('BOT：チェックインは15:00から、チェックアウトは11:00です。', 'bot');
+        return;
+      }
+      if (/朝食|breakfast/i.test(userText)) {
+        displayMessage('BOT：朝食は7:00〜10:00、1,500円です。和洋ビュッフェをご用意しています。', 'bot');
+        return;
+      }
+
+      // 一定回数 or 特定ワードでエスカレーション
+      if (/難しい|複雑|変更|キャンセル|返金|オペレーター|人/.test(userText) || exchangeCount >= 2) {
+        displayMessage('BOT：少々お待ちください。専門オペレーターへおつなぎ可能です。', 'bot');
+        showEscalationOptions();
+        return;
+      }
+
+      // デフォルト応答
+      displayMessage('BOT：ご質問内容をもう少し詳しく教えてください。', 'bot');
+    }
+
+    // 初期メッセージ
+    function init() {
+      displayMessage('SYSTEM：このデモでは、ボット/オペレーター切替を外部サーバーロジックで制御しています。', 'system');
+      setTimeout(() => displayMessage('BOT：こんにちは。ホテル予約サポートです。どのようなご用件でしょうか？', 'bot'), 400);
+      setTimeout(() => { chatInput.disabled = false; sendBtn.disabled = false; chatInput.focus(); }, 700);
+    }
+
+    // 送信処理
+    function sendMessage() {
+      const text = chatInput.value.trim();
+      if (!text) return;
+      displayMessage(text, 'user');
+      chatInput.value = '';
+      setTimeout(() => botReply(text), 300);
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // ヘッダークリックで折りたたみ
+    chatHeader.addEventListener('click', () => {
+      collapsed = !collapsed;
+      document.querySelector('.chat-body').classList.toggle('hidden', collapsed);
+      document.querySelector('.chat-input').classList.toggle('hidden', collapsed);
+    });
+
+    // 起動
+    init();
+  </script>
+</body>
+</html>
