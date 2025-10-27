@@ -380,7 +380,7 @@
     // 初期メッセージ
     function init() {
       displayMessage('SYSTEM：このデモでは、ボット/オペレーター切替を外部サーバーロジックで制御しています。', 'system');
-      setTimeout(() => displayMessage('BOT：こんにちは。ホテル予約サポートです。どのようなご用件でしょうか？', 'bot'), 400);
+      setTimeout(() => displayMessage('BOT：こんにちは、ホテル予約サポートです。どのようなご用件でしょうか？', 'bot'), 400);
       setTimeout(() => { chatInput.disabled = false; sendBtn.disabled = false; chatInput.focus(); }, 700);
     }
 
