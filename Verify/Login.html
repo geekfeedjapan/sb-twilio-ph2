@@ -33,9 +33,6 @@
             <label for="phone">登録済みの電話番号</label>
             <input type="tel" id="phone" value="090-XXXX-XXXX" readonly>
             <button class="btn" id="btn-send-otp">ワンタイムパスワードを送信 (Twilio Verify)</button>
-            <div class="logic-display">
-                裏側ロジック表示：🔒 <strong>PKCV（無効）</strong>：このOTP送信APIリクエストはPKCV署名なしで実施されます。
-            </div>
         </div>
 
         <div class="step" id="step-2" style="display: none;">
@@ -44,9 +41,6 @@
             <label for="otp">ワンタイムパスワード (OTP)</label>
             <input type="text" id="otp" placeholder="6桁のコードを入力">
             <button class="btn" id="btn-change-info">🔑 顧客情報を変更する</button>
-            <div class="logic-display pkcv-active">
-                裏側ロジック表示：⚠️ <strong>PKCV（有効）</strong>：このAPIリクエストは<strong>秘密鍵で署名</strong>され、Twilioに送信されます。
-            </div>
         </div>
 
         <div class="step" id="step-3" style="display: none;">
@@ -59,12 +53,6 @@
         </div>
         </div>
     </section>
-
-    <div class="security-banner">
-            <span role="img" aria-label="shield">🛡️</span> Twilio採用によるセキュリティ強化<br>
-            <small>KDDIグループサポートとグローバルな導入実績</small>
-        </div>
-    </div>
 
     <!-- フッター（信頼バッジ風） -->
     <footer class="site-footer" role="contentinfo">
