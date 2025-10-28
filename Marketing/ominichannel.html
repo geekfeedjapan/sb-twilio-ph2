@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twilio オムニチャネル & Verify 統合デモ</title>
+    <title>Omnichannel Communication</title>
+    <link rel="stylesheet" href="styles.css">
     <style>
         /* ベーススタイルは前回のWebチャットデモと共通 */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f9; margin: 0; padding: 0 0 50px 0; }
@@ -83,6 +84,44 @@
         .integration-box ul { margin: 10px 0 0 0; padding-left: 20px; }
         .integration-box li { margin-bottom: 5px; }
 
+        /* 新規追加スタイル */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .channel-options {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        .btn {
+            flex: 1;
+            margin: 0 10px;
+            padding: 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .status-display {
+            padding: 10px;
+            background-color: #e9f5ff;
+            border: 1px solid #b3e0ff;
+            border-radius: 5px;
+            margin-top: 10px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -116,6 +155,20 @@
         <div class="chat-input" id="chat-input-area">
             <input type="text" id="chat-input" placeholder="メッセージを入力..." disabled>
             <button id="send-btn" disabled>送信</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Omnichannel Communication</h1>
+        <p>以下のオプションを選択して、コミュニケーションを開始してください。</p>
+
+        <div class="channel-options">
+            <button class="btn" id="line-to-webchat">LINEからWebチャットへ移行</button>
+            <button class="btn" id="webchat-to-call">Webチャットから電話へ遷移</button>
+        </div>
+
+        <div id="status" class="status-display">
+            <p>選択したオプションのステータスがここに表示されます。</p>
         </div>
     </div>
 
@@ -236,6 +289,14 @@
         });
 
         window.onload = initChat;
+
+        document.getElementById('line-to-webchat').addEventListener('click', function() {
+            document.getElementById('status').innerHTML = '<p>LINEからWebチャットへの移行を開始しました。</p>';
+        });
+
+        document.getElementById('webchat-to-call').addEventListener('click', function() {
+            document.getElementById('status').innerHTML = '<p>Webチャットから電話への遷移を開始しました。</p>';
+        });
     </script>
 </body>
 </html>
