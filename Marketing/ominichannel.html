@@ -1,302 +1,585 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Omnichannel Communication</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        /* ベーススタイルは前回のWebチャットデモと共通 */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f9; margin: 0; padding: 0 0 50px 0; }
-        header { background-color: #007bff; color: white; padding: 15px 50px; text-align: center; font-size: 24px; font-weight: 600; }
-        .main-content { padding: 40px 50px; max-width: 1200px; margin: 0 auto; }
-        h1 { color: #007bff; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-top: 0; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Twilio LINE Verify 統合デモ（フル機能プレビュー）</title>
+  <style>
+    /* =========================================================
+       Global / Background: Hotel-like landing page behind demo
+       ========================================================= */
+    :root{
+      --line-green: #00b900;
+      --hotel-accent: #8d6e63;
+      --hotel-bg1: #f5efe6;
+      --hotel-bg2: #e8dfd2;
+      --verify-accent: #ff9800;
+      --ink: #333;
+    }
+    html, body {
+      height: 100%;
+    }
+    body {
+      margin: 0;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+      /* Soft hotel background with gradient */
+      background: radial-gradient(1200px 800px at 20% 10%, var(--hotel-bg1), transparent 60%),
+                  radial-gradient(1000px 700px at 80% 0%, var(--hotel-bg2), transparent 60%),
+                  linear-gradient(180deg, #faf7f2, #eee7dc 65%, #f8f5f0);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
 
-        /* チャットウィジェット */
-        .chat-widget-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            overflow: hidden;
-            width: 380px; /* やや広く */
-        }
-        .chat-header {
-            background-color: #3f51b5; /* 目立つ色 */
-            color: white;
-            padding: 12px 15px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .chat-header span.status { font-size: 12px; font-weight: normal; background-color: #2196f3; padding: 2px 8px; border-radius: 12px; }
-        .chat-body { height: 450px; overflow-y: scroll; padding: 10px; background-color: #e6e6e6; }
-        .chat-input { padding: 10px; border-top: 1px solid #ccc; display: flex; background-color: white; }
-        .chat-input input { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; margin-right: 5px; }
-        .chat-input button { background-color: #3f51b5; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 600; }
+    /* Faux hotel header */
+    .hotel-header {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 14px 24px;
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid #e6dccf;
+    }
+    .logo {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: conic-gradient(from 20deg, #c1976b, #b08968, #f1e0c6, #b08968);
+      box-shadow: 0 2px 8px rgba(0,0,0,.08) inset;
+    }
+    .brand {
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+    .nav {
+      margin-left: auto;
+      display: flex;
+      gap: 18px;
+      color: #6c5f57;
+      font-size: 14px;
+    }
 
-        /* メッセージスタイル */
-        .message-row { display: flex; margin-bottom: 10px; }
-        .message-row.user { justify-content: flex-end; }
-        .message-row.bot, .message-row.agent { justify-content: flex-start; }
-        .message-row.system { justify-content: center; text-align: center; }
+    /* Landing hero strip (faux hotel site) */
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 24px;
+      align-items: center;
+      padding: 24px 24px 0;
+    }
+    .hero-copy h1 {
+      margin: 0 0 8px;
+      font-weight: 800;
+      letter-spacing: .01em;
+    }
+    .hero-copy p {
+      margin: 0;
+      color: #6c5f57;
+    }
+    .hero-card {
+      justify-self: end;
+    }
 
-        .message-bubble { padding: 10px 15px; border-radius: 15px; max-width: 75%; word-wrap: break-word; font-size: 14px; }
-        .message-row.bot .message-bubble { background-color: #fff; text-align: left; }
-        .message-row.user .message-bubble { background-color: #dcf8c6; text-align: right; }
-        .message-row.agent .message-bubble { background-color: #ffe0b2; /* エージェントの色 */ text-align: left; }
-        
-        .message-row.system .message-bubble { background-color: #fce4ec; color: #ad1457; font-size: 12px; padding: 5px 10px; border-radius: 5px; }
+    /* =========================================================
+       Device (smartphone) frame
+       ========================================================= */
+    .device {
+      width: 390px;
+      height: 780px;
+      background: #111;
+      border-radius: 42px;
+      padding: 14px;
+      box-shadow:
+        0 24px 60px rgba(0,0,0,.35),
+        0 4px 16px rgba(0,0,0,.25);
+      position: relative;
+    }
+    .device::before {
+      /* Notch */
+      content:"";
+      position:absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 160px;
+      height: 26px;
+      background: #000;
+      border-radius: 14px;
+    }
+    .device-inset {
+      width: 100%;
+      height: 100%;
+      background: #f2f2f2;
+      border-radius: 28px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(0,0,0,.08);
+    }
 
-        /* Verify 専用フォーム */
-        .verify-card {
-            background-color: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            margin-top: 10px;
-        }
-        .verify-card p { color: #333; margin-bottom: 10px; font-weight: 600; }
-        .verify-card input { width: calc(100% - 20px); padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; text-align: center; font-size: 16px; letter-spacing: 5px; }
-        .verify-card button {
-            background-color: #ff9800; /* Verifyの目立つ色 */
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+    /* =========================================================
+       Top bar (app title + controls)
+       ========================================================= */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: var(--line-green);
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .controls {
+      display:flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .select, .btn {
+      font: inherit;
+      border-radius: 999px;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    .select {
+      color: #1b5e20;
+      background: #d5f5d2;
+      font-weight: 700;
+    }
+    .btn {
+      background: rgba(255,255,255,.2);
+      color: #fff;
+      font-weight: 800;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid rgba(255,255,255,.85);
+      color: #fff;
+    }
 
-        /* 統合アピール */
-        .integration-box {
-            background-color: #e3f2fd;
-            border: 1px solid #90caf9;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 8px;
-        }
-        .integration-box strong { color: #1565c0; }
-        .integration-box ul { margin: 10px 0 0 0; padding-left: 20px; }
-        .integration-box li { margin-bottom: 5px; }
+    /* =========================================================
+       Chat area
+       ========================================================= */
+    .chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-body {
+      flex: 1;
+      overflow-y: auto;
+      background: #e8e8e8;
+      padding: 10px;
+    }
+    .chat-inputbar {
+      display: flex;
+      gap: 8px;
+      padding: 8px;
+      background: #f7f7f7;
+      border-top: 1px solid #ddd;
+    }
+    .chat-inputbar input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #ccc;
+      border-radius: 18px;
+      font-size: 14px;
+    }
+    .chat-inputbar button {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: var(--line-green);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+    }
 
-        /* 新規追加スタイル */
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .channel-options {
-            display: flex;
-            justify-content: space-between;
-            margin: 20px 0;
-        }
-        .btn {
-            flex: 1;
-            margin: 0 10px;
-            padding: 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: background-color 0.3s;
-        }
-        .btn:hover {
-            background-color: #0056b3;
-        }
-        .status-display {
-            padding: 10px;
-            background-color: #e9f5ff;
-            border: 1px solid #b3e0ff;
-            border-radius: 5px;
-            margin-top: 10px;
-            text-align: center;
-        }
-    </style>
+    /* Bubbles */
+    .row { display:flex; margin: 8px 0; }
+    .row.user { justify-content: flex-end; }
+    .row.bot { justify-content: flex-start; }
+    .row.system { justify-content: center; }
+    .bubble {
+      max-width: 76%;
+      padding: 10px 14px;
+      border-radius: 18px;
+      line-height: 1.4;
+      font-size: 15px;
+      box-shadow: 0 1px 0 rgba(0,0,0,.06);
+      word-break: break-word;
+    }
+    .row.bot .bubble {
+      background: #fff;
+      border-bottom-left-radius: 6px;
+    }
+    .row.user .bubble {
+      background: #9fe670;
+      border-bottom-right-radius: 6px;
+    }
+    .row.system .bubble {
+      background: #f7e09f;
+      color: #835200;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 6px;
+    }
+
+    /* Verify UI card */
+    .verify-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+      margin-top: 6px;
+    }
+    .verify-card p { margin: 8px 0; color: #555; font-size: 14px; }
+    .verify-card input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      margin: 6px 0 10px;
+      font-size: 18px;
+      letter-spacing: 6px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+    .verify-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .verify-btn {
+      background: var(--verify-accent);
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .verify-secondary {
+      background: #eee3d1;
+      color: #6b4f37;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Integration help footer inside device */
+    .footer-help {
+      font-size: 11px;
+      color: #6c5f57;
+      background: #fcfaf6;
+      border-top: 1px dashed #e6dccf;
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+    .code-chip {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 11px;
+      background: #efe7da;
+      border: 1px solid #e1d7c7;
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+
+    /* Utility */
+    .muted { color: #666; font-size: 12px; }
+    .hidden { display: none !important; }
+
+    @media (max-width: 1000px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-card { justify-self: start; }
+    }
+  </style>
 </head>
 <body>
+  <!-- Faux hotel site header -->
+  <header class="hotel-header">
+    <div class="logo" aria-hidden="true"></div>
+    <div class="brand">SkyStay Hotel</div>
+    <nav class="nav">
+      <span>客室</span>
+      <span>レストラン</span>
+      <span>スパ</span>
+      <span>アクセス</span>
+    </nav>
+  </header>
 
-    <header>
-        Twilio オムニチャネル＆Verify 統合デモ
-    </header>
-
-    <div class="main-content">
-        <h1>オムニチャネル対応のセキュアな顧客対応</h1>
-        <p>
-            本デモは、LINEで開始した会話をWebチャットに引き継ぎ（オムニチャネル）、機密性の高い操作（予約変更）を行う際に、Twilio VerifyによるSMS認証を組み込むことで、セキュリティを担保するプロセスを示します。
-        </p>
-
-        <div class="integration-box">
-            <strong>デモの裏側：Twilio Conversations APIの活用</strong>
-            <ul>
-                <li>**オムニチャネル:** LINEとこのWebチャットは、同じ**Twilio Conversation**に接続されています。</li>
-                <li>**セキュリティ:** 予約変更時に、Twilio **Verify API**がSMSでワンタイムパスワード（OTP）を送信・検証します。</li>
-            </ul>
-        </div>
+  <section class="hero">
+    <div class="hero-copy">
+      <h1>ご予約サポートAI（LINE風UI）</h1>
+      <p>Twilio Verify を使った二段階認証のフローを、スマホUIで実演します。<br/>
+         実機に近い見た目・操作感で商談・説明に活用できます。</p>
     </div>
-
-    <div class="chat-widget-container">
-        <div class="chat-header">
-            <span>ホテル予約コンシェルジュ</span>
-            <span class="status" id="chat-status">チャネル：LINEから継続中</span>
-        </div>
-        <div class="chat-body" id="chat-body">
+    <div class="hero-card">
+      <!-- Device frame with the app -->
+      <div class="device">
+        <div class="device-inset">
+          <div class="topbar">
+            <div>ホテル予約AIアシスタント</div>
+            <div class="controls">
+              <select id="channel" class="select" title="Verifyチャネル">
+                <option value="sms" selected>SMS</option>
+                <option value="whatsapp">WhatsApp</option>
+              </select>
+              <button id="resetBtn" class="btn btn-outline" title="デモを最初から">Reset</button>
             </div>
-        <div class="chat-input" id="chat-input-area">
-            <input type="text" id="chat-input" placeholder="メッセージを入力..." disabled>
-            <button id="send-btn" disabled>送信</button>
+          </div>
+
+          <div id="chat" class="chat">
+            <div id="chat-body" class="chat-body"></div>
+            <div class="chat-inputbar">
+              <input type="text" id="chat-input" placeholder="メッセージを入力..." disabled />
+              <button id="send-btn" title="送信" disabled>▶</button>
+            </div>
+          </div>
+
+          <div class="footer-help">
+            <div class="muted">デモ用 固定成功コード: <span class="code-chip">123456</span></div>
+            <div class="muted">置換ポイント: <span class="code-chip">Service SID / To</span></div>
+          </div>
         </div>
+      </div>
     </div>
+  </section>
 
-    <div class="container">
-        <h1>Omnichannel Communication</h1>
-        <p>以下のオプションを選択して、コミュニケーションを開始してください。</p>
+  <script>
+    // ======================= Demo Config =======================
+    const chatBody = document.getElementById('chat-body');
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
+    const resetBtn = document.getElementById('resetBtn');
+    const channelSelect = document.getElementById('channel');
 
-        <div class="channel-options">
-            <button class="btn" id="line-to-webchat">LINEからWebチャットへ移行</button>
-            <button class="btn" id="webchat-to-call">Webチャットから電話へ遷移</button>
+    let currentStep = 0;
+    let isVerifyStep = false;
+    const verifySuccessCode = '123456'; // デモ成功コード（表示にも明示）
+
+    // ======================= Helpers =======================
+    function el(tag, opts={}){
+      const n = document.createElement(tag);
+      if(opts.className) n.className = opts.className;
+      if(opts.text) n.textContent = opts.text;
+      if(opts.html) n.innerHTML = opts.html;
+      return n;
+    }
+
+    function displayMessage(text, sender, {isHtml=false} = {}) {
+      const row = el('div', { className: `row ${sender}` });
+      const bubble = el('div', { className: 'bubble' });
+      if (isHtml) bubble.innerHTML = text;
+      else bubble.textContent = text;
+      row.appendChild(bubble);
+      chatBody.appendChild(row);
+      chatBody.scrollTop = chatBody.scrollHeight;
+      return bubble;
+    }
+
+    function systemMsg(text){ return displayMessage(text, 'system'); }
+    function botMsg(text, isHtml=false){ return displayMessage(text, 'bot', {isHtml}); }
+    function userMsg(text){ return displayMessage(text, 'user'); }
+
+    function createVerifyHtml(){
+      return `
+        <div class="verify-card" id="verify-card">
+          <p>📱 <strong>6桁の認証コード</strong>を入力してください。</p>
+          <p class="muted">
+            チャネル: <strong>${channelSelect.value.toUpperCase()}</strong> |
+            送信先: ***-****-1234（デモ）
+          </p>
+          <input type="text" id="verify-code" placeholder="XXXXXX" maxlength="6" inputmode="numeric" />
+          <div class="verify-actions">
+            <button class="verify-btn" id="verify-submit">検証</button>
+            <button class="verify-secondary" id="verify-resend">コード再送</button>
+          </div>
         </div>
+      `;
+    }
 
-        <div id="status" class="status-display">
-            <p>選択したオプションのステータスがここに表示されます。</p>
-        </div>
-    </div>
+    function focusVerifyInputSoon(){
+      setTimeout(() => {
+        const vc = document.getElementById('verify-code');
+        if(vc) vc.focus();
+      }, 120);
+    }
 
-    <script>
-        const chatBody = document.getElementById('chat-body');
-        const chatInput = document.getElementById('chat-input');
-        const sendBtn = document.getElementById('send-btn');
-        const chatStatus = document.getElementById('chat-status');
-        const chatInputArea = document.getElementById('chat-input-area');
-        let currentStep = 0;
-        let isVerifyStep = false;
+    // ======================= Demo Script =======================
+    const demoSteps = [
+      { sender: 'bot', text: 'こんにちは。ご予約ありがとうございます。ご用件をお知らせください。', nextText: 'チェックイン時間を変更したい。' },
+      { sender: 'user', text: 'チェックイン時間を14時から15時に変更したい。' },
+      { sender: 'bot', text: '承知いたしました。予約内容に重要な変更があるため、二段階認証を実施します。' },
+      // channel-dependent system message
+      { sender: 'system', dynamic: true },
+      { sender: 'bot', html: true, verifyTrigger: true },
+    ];
 
-        function displayMessage(text, sender, isHtml = false) {
-            const row = document.createElement('div');
-            row.className = `message-row ${sender}`;
-            const bubble = document.createElement('div');
-            bubble.className = 'message-bubble';
-            if (isHtml) {
-                bubble.innerHTML = text;
-            } else {
-                bubble.textContent = text;
-            }
-            row.appendChild(bubble);
-            chatBody.appendChild(row);
-            chatBody.scrollTop = chatBody.scrollHeight;
+    function channelSystemMessage(){
+      const ch = channelSelect.value;
+      if(ch === 'sms'){
+        return '🔒 <strong>Twilio Verify API</strong> が電話番号(***-****-1234)へ <strong>SMS</strong> 認証コードを送信しました。';
+      } else {
+        return '🔒 <strong>Twilio Verify API</strong> が WhatsApp 宛に認証コードを送信しました。（受信先: ***-****-1234 連携アカウント）';
+      }
+    }
+
+    function initChat(){
+      chatBody.innerHTML = '';
+      chatInput.value = '';
+      chatInput.disabled = false;
+      sendBtn.disabled = false;
+      currentStep = 0;
+      isVerifyStep = false;
+
+      // Kick off first bot message
+      botMsg(demoSteps[0].text);
+      chatInput.placeholder = '「チェックイン時間を変更したい。」など入力不要（▶で進む）';
+    }
+
+    function next(){
+      if(isVerifyStep) return;
+
+      // simulate user reply for steps that have nextText
+      const step = demoSteps[currentStep];
+      if(step && step.nextText){
+        userMsg(step.nextText);
+        currentStep++;
+      }
+
+      // display subsequent step
+      if(currentStep < demoSteps.length){
+        const nextStep = demoSteps[currentStep];
+        if(nextStep.dynamic){
+          systemMsg(channelSystemMessage());
+          currentStep++;
+        } else if(nextStep.html){
+          botMsg(createVerifyHtml(), true);
+          isVerifyStep = true;
+          chatInput.disabled = true;
+          sendBtn.disabled = true;
+          currentStep++;
+          // Wire up verify form handlers
+          setTimeout(() => {
+            const submit = document.getElementById('verify-submit');
+            const resend = document.getElementById('verify-resend');
+            submit?.addEventListener('click', verifyCode);
+            resend?.addEventListener('click', resendCode);
+            focusVerifyInputSoon();
+          }, 30);
+        } else {
+          // Normal text step
+          const txt = nextStep.text;
+          if(nextStep.sender === 'bot') botMsg(txt);
+          else if(nextStep.sender === 'system') systemMsg(txt);
+          else userMsg(txt);
+          currentStep++;
         }
+      }
+    }
 
-        // デモの会話ステップ
-        const demoSteps = [
-            // 0: LINEでの会話開始をシミュレート
-            { sender: 'bot', text: 'LINEで予約の最終確認を承りました。Webチャットに移行し、資料（画像など）を見ながら最終確認をお願いします。' },
-            // 1: 移行完了
-            { sender: 'system', text: 'チャネルがLINEからWebチャットに引き継がれました。会話履歴は継続しています。' },
-            // 2: エージェント登場
-            { sender: 'agent', text: 'コンシェルジュの田中です。LINEからのご依頼、拝見しました。ご要望のチェックイン時間変更（14:00→15:00）でよろしいでしょうか？' },
-            // 3: ユーザーの返答
-            { sender: 'user', text: 'はい、お願いします。' },
-            // 4: Verifyトリガー
-            { sender: 'agent', text: '承知いたしました。予約内容の重要な変更となるため、お客様の電話番号(***-****-1234)へSMSで認証コードを送信し、本人確認を行います。' },
-            // 5: Verifyフォーム表示
-            { sender: 'system', isHtml: true, text: `
-                <div class="verify-card">
-                    <p><strong>SMSに届いた認証コード（OTP）</strong>を入力してください。</p>
-                    <input type="text" id="verify-code" placeholder="XXXXXX" maxlength="6">
-                    <button onclick="verifyCode()">認証コードを検証 (Twilio Verify)</button>
-                </div>
-            `},
-        ];
+    // ======================= Verify Simulation =======================
+    function resendCode(){
+      const bubble = systemMsg('⏳ 認証コードを再送しています…');
+      setTimeout(() => {
+        bubble.textContent = channelSelect.value === 'sms'
+          ? '✅ SMSで認証コードを再送しました。'
+          : '✅ WhatsAppで認証コードを再送しました。';
+        focusVerifyInputSoon();
+      }, 900);
+    }
 
-        function initChat() {
-            displayMessage(demoSteps[0].text, demoSteps[0].sender);
-            setTimeout(() => {
-                displayMessage(demoSteps[1].text, demoSteps[1].sender);
-                chatStatus.textContent = 'チャネル：Webチャットに移行';
-                setTimeout(() => {
-                    displayMessage(demoSteps[2].text, demoSteps[2].sender);
-                    chatInput.disabled = false;
-                    sendBtn.disabled = false;
-                }, 1000);
-            }, 1000);
+    function verifyCode(){
+      const input = document.getElementById('verify-code');
+      const card = document.getElementById('verify-card');
+      if(!input || !card) return;
+
+      const code = input.value.trim();
+      if(code.length !== 6 || !/^\d{6}$/.test(code)){
+        alert('認証コードは6桁の数字です。');
+        return;
+      }
+
+      // Pretend calling Twilio Verify check API
+      const submit = document.getElementById('verify-submit');
+      submit.disabled = true;
+      submit.textContent = 'Twilio Verifyで検証中…';
+
+      setTimeout(() => {
+        const ok = (code === verifySuccessCode);
+        if(ok){
+          systemMsg('✅ Twilio Verify による本人認証に成功しました！');
+          botMsg('チェックイン時刻を 15:00 に変更しました。変更完了です。');
+          isVerifyStep = false;
+          chatInput.disabled = false;
+          sendBtn.disabled = false;
+          chatInput.placeholder = 'メッセージを入力...';
+          card.classList.add('hidden');
+        } else {
+          systemMsg(`❌ 認証コード [${code}] が一致しません。もう一度ご確認ください。`);
+          submit.disabled = false;
+          submit.textContent = '検証';
+          // inline hint
+          const hint = card.querySelector('p');
+          if(hint){
+            hint.innerHTML = `📱 <strong>6桁の認証コード</strong>を入力してください。<br>
+              <strong style="color:#c62828;">コードが異なります。再入力してください。</strong>`;
+          }
+          input.focus();
+          input.select();
         }
+      }, 1100);
+    }
 
-        function sendMessage() {
-            if (isVerifyStep) return; // Verify中は通常メッセージ送信をブロック
+    // ======================= Real Integration Notes =======================
+    // 実運用時は以下のような形で server-side にリクエストします（例：fetchで自サーバーを叩く）:
+    //
+    // 1) 認証コード送信（Start Verify）
+    //   POST /api/verify/start  BODY: { channel: "sms" | "whatsapp", to: "+81XXXXXXXXXX" }
+    //   => server：Twilio Verify v2 API (Verification/Verifications) を呼び出す
+    //
+    // 2) コード検証（Check Verify）
+    //   POST /api/verify/check  BODY: { to: "+81XXXXXXXXXX", code: "123456" }
+    //   => server：Twilio Verify v2 API (VerificationCheck) を呼び出す
+    //
+    // ※ ブラウザから直接Twilioを呼ばず、必ず認証情報はサーバー側で保持してください。
 
-            if (currentStep === 2) {
-                displayMessage(demoSteps[3].text, 'user');
-                chatInput.value = '';
-                currentStep = 4;
-                setTimeout(() => {
-                    displayMessage(demoSteps[4].text, demoSteps[4].sender);
-                    setTimeout(() => {
-                        displayMessage(demoSteps[5].text, demoSteps[5].sender, true);
-                        isVerifyStep = true;
-                        chatInput.disabled = true;
-                        sendBtn.disabled = true;
-                        document.getElementById('verify-code').focus();
-                    }, 1000);
-                }, 1000);
-            }
+    // ======================= Wire Events =======================
+    sendBtn.addEventListener('click', next);
+    chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') next(); });
+    resetBtn.addEventListener('click', initChat);
+    channelSelect.addEventListener('change', () => {
+      // if verify card is visible, refresh the card to reflect channel label
+      const card = document.getElementById('verify-card');
+      if(card){
+        // replace with a fresh card
+        const row = card.closest('.row');
+        if(row){
+          row.querySelector('.bubble').innerHTML = createVerifyHtml();
+          // rebind
+          setTimeout(() => {
+            document.getElementById('verify-submit')?.addEventListener('click', verifyCode);
+            document.getElementById('verify-resend')?.addEventListener('click', resendCode);
+            focusVerifyInputSoon();
+          }, 30);
         }
-        
-        // 認証コード検証処理
-        window.verifyCode = function() {
-            const code = document.getElementById('verify-code').value;
-            if (code.length !== 6) {
-                alert('認証コードは6桁です。');
-                return;
-            }
+      }
+    });
 
-            // Verify APIの検証ロジックをシミュレート
-            displayMessage(`認証コード [${code}] を検証中... (Twilio Verify API)`, 'system');
-
-            setTimeout(() => {
-                const isSuccess = (code === '123456'); // デモ用成功コード
-                const verifyCard = document.querySelector('.verify-card');
-                
-                if (isSuccess) {
-                    displayMessage('✅ Twilio Verifyによる本人認証に成功しました。予約変更を確定します。', 'system');
-                    displayMessage('予約変更が完了しました。チェックイン時刻を15:00に変更しました。', 'agent');
-                    displayMessage('（裏側でLINEにも変更完了通知を送信しました。）', 'system');
-                    isVerifyStep = false;
-                    chatInputArea.innerHTML = '<p style="text-align:center; color:green; margin:0;">✅ 認証完了。この会話は終了しました。</p>';
-                } else {
-                    displayMessage('❌ 認証コードが一致しませんでした。セキュリティのため、再試行するか、電話でお問い合わせください。', 'system');
-                    if (verifyCard) {
-                        verifyCard.querySelector('p').textContent = 'コードが一致しませんでした。再入力してください。';
-                    }
-                }
-            }, 1500);
-        }
-
-        sendBtn.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
-        window.onload = initChat;
-
-        document.getElementById('line-to-webchat').addEventListener('click', function() {
-            document.getElementById('status').innerHTML = '<p>LINEからWebチャットへの移行を開始しました。</p>';
-        });
-
-        document.getElementById('webchat-to-call').addEventListener('click', function() {
-            document.getElementById('status').innerHTML = '<p>Webチャットから電話への遷移を開始しました。</p>';
-        });
-    </script>
+    // Start
+    initChat();
+  </script>
 </body>
 </html>
