@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twilio LINE-電話連携デモ</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', 'Arial', sans-serif;
+            background-color: #f4f7f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .line-container {
+            width: 100%;
+            max-width: 400px;
+            height: 700px;
+            background-color: #f2f2f2;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .line-header {
+            background-color: #00b900;
+            color: white;
+            padding: 15px 10px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .line-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #e8e8e8;
+        }
+
+        .line-input-area {
+            display: flex;
+            padding: 8px;
+            background-color: #f7f7f7;
+            border-top: 1px solid #ddd;
+        }
+
+        .line-input-area input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            margin-right: 8px;
+            font-size: 14px;
+        }
+
+        .line-input-area button {
+            background-color: #00b900;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            cursor: pointer;
+            line-height: 40px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .message-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .message-row.user { justify-content: flex-end; }
+        .message-row.bot { justify-content: flex-start; }
+        .message-row.system { justify-content: center; }
+
+        .message-bubble {
+            padding: 10px 15px;
+            border-radius: 20px;
+            max-width: 75%;
+            word-wrap: break-word;
+            line-height: 1.4;
+            font-size: 15px;
+        }
+        .message-row.bot .message-bubble {
+            background-color: white;
+            text-align: left;
+            border-bottom-left-radius: 5px;
+        }
+        .message-row.user .message-bubble {
+            background-color: #9fe670;
+            text-align: right;
+            border-bottom-right-radius: 5px;
+        }
+
+        .callback-card {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .callback-card p {
+            margin: 0 0 10px 0;
+            color: #555;
+            font-size: 14px;
+        }
+        .callback-button {
+            background-color: #ff9900;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .callback-button:hover { background-color: #e68a00; }
+        .twilio-tag {
+            font-size: 10px;
+            color: #777;
+            margin-top: 5px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="line-container">
+        <div class="line-header">飲食店予約AIアシスタント</div>
+        <div class="line-body" id="chat-body"></div>
+        <div class="line-input-area">
+            <input type="text" id="chat-input" placeholder="メッセージを入力..." disabled>
+            <button id="send-btn" disabled>▶</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBody = document.getElementById('chat-body');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+        let currentStep = 0;
+
+        function displayMessage(text, sender, isHtml = false) {
+            const row = document.createElement('div');
+            row.className = `message-row ${sender}`;
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            if (isHtml) bubble.innerHTML = text; else bubble.textContent = text;
+            row.appendChild(bubble);
+            chatBody.appendChild(row);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function createCallbackCardHtml() {
+            return `
+                <div class="callback-card">
+                    <p>📞 <strong>電話番号を調べる必要はありません！</strong><br>このままワンタップでコンシェルジュから折り返し電話を差し上げます。</p>
+                    <button class="callback-button" id="callbackBtn">コンシェルジュに折り返し電話をリクエスト</button>
+                    <span class="twilio-tag">Twilio Programmable Voice/Conversations API連携</span>
+                </div>
+            `;
+        }
+
+        const demoSteps = [
+            { sender: 'bot', text: 'こんにちは！飲食店予約AIアシスタントです。ご用件をお知らせください。' },
+            { sender: 'user', text: '特別なディナーを予約したい。' },
+            { sender: 'bot', text: '特別なご予約ですね！誠に恐れ入りますが、詳細なプランのカスタムはボットでは対応が難しく、専門のコンシェルジュへのお電話が必要となります。' },
+            { sender: 'bot', text: createCallbackCardHtml(), isHtml: true }
+        ];
+
+        function simulateLineAuth() {
+            displayMessage('LINE認証を試みています...', 'bot');
+            setTimeout(() => {
+                displayMessage('LINE認証に失敗しました。電話認証をご利用ください。', 'bot');
+                displayMessage(createCallbackCardHtml(), 'bot', true);
+                const callbackBtn = document.getElementById('callbackBtn');
+                if (callbackBtn) callbackBtn.addEventListener('click', requestCallback);
+            }, 2000);
+        }
+
+        function initChat() {
+            let delay = 1000;
+            demoSteps.forEach((step, i) => {
+                setTimeout(() => {
+                    displayMessage(step.text, step.sender, step.isHtml);
+                    if (step.isHtml) {
+                        const callbackBtn = document.getElementById('callbackBtn');
+                        if (callbackBtn) callbackBtn.addEventListener('click', requestCallback);
+                    }
+                }, delay);
+                delay += 2000;
+            });
+            setTimeout(() => {
+                chatInput.disabled = false;
+                sendBtn.disabled = false;
+                simulateLineAuth(); // LINE認証をシミュレート
+            }, delay);
+        }
+
+        function requestCallback() {
+            displayMessage('ありがとうございます。まもなくコンシェルジュから折り返しのお電話を差し上げます。', 'bot');
+            const button = document.getElementById('callbackBtn');
+            if (button) {
+                button.disabled = true;
+                button.textContent = 'リクエスト済み (担当者発信中)';
+            }
+        }
+
+        window.addEventListener('load', initChat);
+    </script>
+</body>
+</html>
