@@ -177,16 +177,6 @@
             { sender: 'bot', text: createCallbackCardHtml(), isHtml: true }
         ];
 
-        function simulateLineAuth() {
-            displayMessage('LINE認証を試みています...', 'bot');
-            setTimeout(() => {
-                displayMessage('LINE認証に失敗しました。電話認証をご利用ください。', 'bot');
-                displayMessage(createCallbackCardHtml(), 'bot', true);
-                const callbackBtn = document.getElementById('callbackBtn');
-                if (callbackBtn) callbackBtn.addEventListener('click', requestCallback);
-            }, 2000);
-        }
-
         function initChat() {
             let delay = 1000;
             demoSteps.forEach((step, i) => {
@@ -202,7 +192,6 @@
             setTimeout(() => {
                 chatInput.disabled = false;
                 sendBtn.disabled = false;
-                simulateLineAuth(); // LINE認証をシミュレート
             }, delay);
         }
 
