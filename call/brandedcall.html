@@ -1,0 +1,346 @@
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+// 単一ファイル・プレビュー用：
+// 企業名と「用件（表示理由）」をコール画面に大きく表示して、
+// 実際の通信はせず“体験イメージ”だけを再現するデモです。
+
+// ==========================
+// ユーティリティ
+// ==========================
+const digitsOnly = (s: string) => s.replace(/[^0-9]/g, "");
+
+const phoneFormat = (s: string) => {
+  const d = digitsOnly(s);
+  if (d.length <= 3) return d;
+  if (d.length <= 7) return `${d.slice(0,3)}-${d.slice(3)}`;
+  if (d.length <= 11) return `${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7)}`;
+  return s;
+};
+
+const presets = [
+  { company: "JCBカード", reason: "不正利用確認", callerId: "03-1234-5678" },
+  { company: "JCBカード", reason: "未納督促確認", callerId: "03-9876-5432" },
+  { company: "SBI証券", reason: "認証中", callerId: "0120-123-456" },
+  { company: "ソフトバンク", reason: "料金プランのご案内", callerId: "0800-111-222" },
+];
+
+type CallState = "idle" | "dialing" | "ringing" | "connected" | "ended";
+
+const stateLabel: Record<CallState, string> = {
+  idle: "待機中",
+  dialing: "発信中…",
+  ringing: "着信中…",
+  connected: "通話中",
+  ended: "終了",
+};
+
+const SecureBadge = ({ show }: { show: boolean }) => (
+  <AnimatePresence>
+    {show && (
+      <motion.div
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -6 }}
+        className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 border border-emerald-200"
+      >
+        <span className="i-lucide-shield-check w-4 h-4" /> 本人確認フロー
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
+
+const DotPulse = () => (
+  <div className="flex gap-1 items-center">
+    {[0,1,2].map((i) => (
+      <motion.span
+        key={i}
+        className="w-1.5 h-1.5 rounded-full bg-white/90"
+        animate={{ opacity: [0.3, 1, 0.3] }}
+        transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+      />
+    ))}
+  </div>
+);
+
+const InitialAvatar = ({ text = "Corp", size = 64 }) => {
+  const initials = useMemo(() => {
+    const parts = text.trim().split(/\s+/);
+    const pick = (t: string) => (t?.[0] || "").toUpperCase();
+    return (pick(parts[0]) + pick(parts[parts.length - 1])) || "CO";
+  }, [text]);
+  return (
+    <div
+      className="flex items-center justify-center rounded-full bg-white/20 text-white/95 backdrop-blur-sm shadow-inner"
+      style={{ width: size, height: size }}
+    >
+      <span className="font-semibold text-xl tracking-wide">{initials}</span>
+    </div>
+  );
+};
+
+export default function BrandedCallLineStyleDemo() {
+  // 入力
+  const [company, setCompany] = useState("JCBカード");
+  const [reason, setReason] = useState("不正利用確認");
+  const [callerId, setCallerId] = useState("03-1234-5678");
+  const [calleeName, setCalleeName] = useState("山田 太郎");
+  const [calleePhone, setCalleePhone] = useState("090-1234-5678");
+  const [showSecure, setShowSecure] = useState(true);
+  const [channel, setChannel] = useState<"LINE通話" | "通常電話">("LINE通話");
+
+  // 状態
+  const [callState, setCallState] = useState<CallState>("idle");
+  const [logs, setLogs] = useState<string[]>([]);
+  const timerRef = useRef<number | null>(null);
+
+  useEffect(() => () => timerRef.current && clearTimeout(timerRef.current), []);
+
+  const log = (m: string) => setLogs((prev) => [
+    `${new Date().toLocaleTimeString("ja-JP", { hour12: false })}  ${m}`,
+    ...prev,
+  ]);
+
+  const start = () => {
+    if (callState !== "idle" && callState !== "ended") return;
+    setLogs([]);
+    setCallState("dialing");
+    log("発信開始（企業→ユーザー）");
+    timerRef.current = window.setTimeout(() => {
+      setCallState("ringing");
+      log("ユーザー端末側で着信表示");
+      timerRef.current = window.setTimeout(() => {
+        setCallState("connected");
+        log("通話開始");
+      }, 1800);
+    }, 1000);
+  };
+
+  const end = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (callState === "connected") log("通話終了");
+    setCallState("ended");
+  };
+
+  const reset = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setLogs([]);
+    setCallState("idle");
+  };
+
+  const applyPreset = (p: (typeof presets)[number]) => {
+    setCompany(p.company);
+    setReason(p.reason);
+    setCallerId(p.callerId);
+  };
+
+  // 表示用
+  const title = `${company}　${reason}`;
+  const subline = `${channel} - 発信番号 ${callerId}`;
+
+  // カードのカラーテーマ（LINE風：グリーン）
+  const gradFrom = "#06C755"; // LINEグリーン
+  const gradTo = "#23D26A";
+
+  return (
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6 md:p-10">
+      <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        {/* 左：設定パネル */}
+        <section className="bg-white/90 backdrop-blur rounded-2xl shadow border border-slate-200 p-5 md:p-6">
+          <h1 className="text-2xl font-bold tracking-tight">ブランデッドコール（LINE風）デモ</h1>
+          <p className="text-slate-600 mt-1 text-sm">実通話は行わず、ユーザー側の表示を再現するイメージデモです。</p>
+
+          {/* プリセット */}
+          <div className="mt-5">
+            <label className="text-sm text-slate-600">プリセット</label>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {presets.map((p, i) => (
+                <button
+                  key={i}
+                  onClick={() => applyPreset(p)}
+                  className="px-3 py-1.5 rounded-full text-sm bg-slate-100 border border-slate-200 hover:bg-slate-200 transition"
+                >
+                  {p.company}／{p.reason}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 入力群 */}
+          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm text-slate-600">企業名</label>
+              <input
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="例：JCBカード"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-slate-600">用件（表示理由）</label>
+              <input
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="例：不正利用確認"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-slate-600">発信番号（表示）</label>
+              <input
+                value={callerId}
+                onChange={(e) => setCallerId(phoneFormat(e.target.value))}
+                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="03-1234-5678"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-slate-600">宛先（ユーザー表示名）</label>
+              <input
+                value={calleeName}
+                onChange={(e) => setCalleeName(e.target.value)}
+                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="例：山田 太郎"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-slate-600">宛先電話番号</label>
+              <input
+                value={calleePhone}
+                onChange={(e) => setCalleePhone(phoneFormat(e.target.value))}
+                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="090-1234-5678"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-slate-600">チャネル</label>
+              <div className="mt-1 flex gap-2">
+                {["LINE通話", "通常電話"].map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setChannel(c as any)}
+                    className={`px-3 py-2 rounded-xl border text-sm ${
+                      channel === c
+                        ? "bg-emerald-600 text-white border-emerald-700"
+                        : "bg-white border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* オプション */}
+          <div className="mt-4 flex items-center gap-3">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={showSecure} onChange={(e) => setShowSecure(e.target.checked)} />
+              本人確認バッジを表示
+            </label>
+          </div>
+
+          {/* 操作ボタン */}
+          <div className="mt-5 flex gap-3">
+            <button onClick={start} className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-medium shadow hover:bg-emerald-700">発信開始</button>
+            <button onClick={end} className="px-4 py-2 rounded-xl bg-slate-800 text-white font-medium shadow hover:bg-black/90">終了</button>
+            <button onClick={reset} className="px-4 py-2 rounded-xl bg-white border border-slate-200 font-medium hover:bg-slate-50">リセット</button>
+          </div>
+
+          {/* ログ */}
+          <div className="mt-6">
+            <h3 className="text-sm font-semibold text-slate-700">イベントログ</h3>
+            <div className="mt-2 h-36 overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+              {logs.length === 0 ? (
+                <div className="text-slate-400">（ここにコール進行のログが表示されます）</div>
+              ) : (
+                <ul className="space-y-1">
+                  {logs.map((l, i) => (
+                    <li key={i} className="font-mono whitespace-pre-wrap">{l}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* 右：スマホ画面モック（ユーザー側の着信表示） */}
+        <section className="flex items-start justify-center">
+          <div className="relative w-[320px] sm:w-[360px] h-[640px] sm:h-[720px] rounded-[42px] border-[10px] border-black shadow-2xl overflow-hidden bg-slate-900">
+            {/* 上部：LINE風ヘッダ */}
+            <div
+              className="h-28 p-4 text-white"
+              style={{
+                background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})`,
+              }}
+            >
+              <div className="flex justify-between items-center text-xs opacity-90">
+                <span>LINE</span>
+                <span className="font-mono">{stateLabel[callState]}</span>
+              </div>
+              <div className="mt-4 flex items-center gap-3">
+                <InitialAvatar text={company} />
+                <div className="flex-1">
+                  <div className="text-sm opacity-90">{subline}</div>
+                  <div className="text-lg sm:text-xl font-semibold leading-tight">
+                    {company}　{reason}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 中央：コール情報 */}
+            <div className="p-5 text-white">
+              <div className="text-slate-300 text-xs">宛先</div>
+              <div className="text-lg font-medium">{calleeName}</div>
+              <div className="text-slate-300">{calleePhone}</div>
+
+              <div className="mt-4">
+                {showSecure && <SecureBadge show />}
+              </div>
+
+              {/* 状態表示 */}
+              <div className="mt-8 flex items-center gap-3">
+                <div className="px-2 py-1 rounded bg-white/10 border border-white/15 text-xs">状態</div>
+                <div className="text-base font-medium">
+                  {stateLabel[callState]}
+                </div>
+                {(callState === "dialing" || callState === "ringing") && <DotPulse />}
+              </div>
+
+              {/* 擬似着信カード */}
+              <motion.div
+                layout
+                className="mt-5 rounded-2xl border border-white/15 bg-white/5 p-4"
+              >
+                <div className="text-sm text-white/80">ユーザー端末の表示（例）</div>
+                <div className="mt-2 text-xl font-semibold">{company}　{reason}</div>
+                <div className="text-white/70 text-sm">発信番号 {callerId}</div>
+                <div className="mt-3 flex gap-2 text-xs text-white/70">
+                  <span className="px-2 py-1 rounded-full border border-white/20">公式連絡</span>
+                  <span className="px-2 py-1 rounded-full border border-white/20">なりすまし対策</span>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* 下部：受話/拒否ボタン風（飾り） */}
+            <div className="absolute bottom-0 left-0 right-0 p-6">
+              <div className="flex items-center justify-around">
+                <div className="flex flex-col items-center gap-2">
+                  <button className="w-14 h-14 rounded-full bg-red-600/90 border border-red-700 shadow-md active:scale-95" />
+                  <span className="text-white/80 text-xs">拒否</span>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <button className="w-14 h-14 rounded-full bg-emerald-500/90 border border-emerald-600 shadow-md active:scale-95" />
+                  <span className="text-white/80 text-xs">応答</span>
+                </div>
+              </div>
+              <div className="text-center text-[10px] text-white/40 mt-3">※本デモは表示のみで、実通話やAPI連携は行いません。</div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
