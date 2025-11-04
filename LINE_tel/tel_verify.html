@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LINE認証失敗時の電話認証デモ</title>
+    <style>
+        /* ==================================== */
+        /* CSS: スマートフォンとLINE風インターフェース */
+        /* ==================================== */
+        body {
+            font-family: 'Helvetica Neue', 'Arial', sans-serif;
+            background-color: #f4f7f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 0;
+        }
+
+        /* スマートフォン外枠のスタイル */
+        .smartphone-frame {
+            width: 100%;
+            max-width: 375px; /* iPhone X/11/12の幅を想定 */
+            height: 750px; /* スマートフォンの高さを想定 */
+            background-color: #333;
+            border: 10px solid #222;
+            border-radius: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 画面上部のノッチ/ステータスバーをシミュレート */
+        .notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 30px;
+            background-color: #222;
+            border-radius: 0 0 15px 15px;
+            z-index: 10;
+        }
+        
+        .line-auth-container {
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            padding-top: 50px; /* ステータスバーとノッチの回避 */
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .line-header-bar {
+            background-color: #f7f7f7;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 15px;
+            position: absolute;
+            top: 30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 17px;
+            font-weight: 600;
+            color: #333;
+            z-index: 5;
+        }
+
+        .content {
+            padding: 0 40px 20px 40px;
+            flex-grow: 1;
+            margin-top: 55px;
+        }
+
+        .line-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .line-logo img {
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
+        }
+
+        h3 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .btn-primary {
+            width: 90%;
+            margin: 0 auto;
+
+            width: 100%;
+            padding: 16px;
+            background-color: #00b900;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: #00a000;
+        }
+
+        .error-message {
+            color: #d8000c;
+            background-color: #ffbaba;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid #d8000c;
+        }
+
+        .success-message {
+            color: #0f5132;
+            background-color: #d1e7dd;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            display: none;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid #badbcc;
+        }
+
+        .alt-auth-option {
+            text-align: center;
+            margin-top: 30px;
+            padding: 0 20px;
+        }
+
+        .alt-auth-option p {
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .btn-secondary-voice {
+            width: 100%;
+            padding: 15px;
+            background-color: #f0f0f0;
+            color: #007bff;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            display: none;
+            margin-top: 10px;
+        }
+
+        .btn-secondary-voice:hover {
+            background-color: #e0e0e0;
+        }
+        
+        /* 音声通知のシミュレーション（着信画面風） */
+        .voice-notification {
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            display: none;
+            text-align: center;
+            transition: all 0.5s;
+        }
+        .voice-notification strong {
+            color: #ffc107;
+            display: block;
+            margin-top: 5px;
+        }
+        .voice-notification .call-info {
+            font-size: 28px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .voice-notification .info {
+            font-size: 12px;
+            color: #bbb;
+        }
+        .call-icon {
+            font-size: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="smartphone-frame">
+        <div class="notch"></div>
+        <div class="line-auth-container">
+            <div class="line-header-bar" id="step-title">LINEで認証</div>
+
+            <div class="content">
+                <div class="line-logo">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48c3R5bGU+LmNscy0xLHtmaWxsOiMxZWM2NWJ9PC9zdHlsZT48L2RlZnM+PHRpdGxlPmxpbmUtbG9nby13aGl0ZS1uZXc8L3RpdGxlPjxnIGlkPSJMYXllcl8yIiBkYXRhLW5hbWU9IkxheWVyIDIiPjxnIGlkPSJMYXllcl8xLTIiIGRhdGEtbmFtZT0iTGF5ZXIgMSI+PHJlY3QgY2xhc3M9ImNscy0xIiB4PSIyIiB5PSIyIiB3aWR0aD0iNTA4IiBoZWlnaHQ9IjUwOCIgc3R5bGU9ImZpbGw6I3MyMTIxMjEiIHJ4PSI3MS44NyIvPjxwYXRoIHN0eWxlPSJmaWxsOiNmZmYiIGQ9Ik00MDAuMzYsMTUzLjM2QzM2NC4xOSwxMTcuMTksMzE2LjkzLDk3Ljk0LDI1Niw5Ny45NGMtNjAuOTQsMC0xMDguMjEsMTkuMjUtMTQ0LjM3LDU1LjQyLTM2LjE5LDM2LjE5LTU1LjQyLDgzLjQ2LTU1LjQyLDE0NC4zN3MwLS4wMSwwLDExLjdWMzU1bDM3LjUtLjEyYzUuNjYtMS42NCwxMi41LTYuNDksMTcuNjItMTIuMDcsMTIuODktMTMuNDEsMTUuMTMtMTguMiwxNS4xMy0yNC42MiwwLTUuMTktLjE2LTEwLjUyLTMuODEtMTQuNDEtMy42Mi0zLjczLTEzLjA1LTQuNzctMjQtMy4xMVMyMDcuNzQsMzI4LDIwNS4wNiwzMjguNTNjMi43OCwyLjg0LDMuODEsNC4xMSwzLjI5LDEwLjA3LS43LDEzLjczLTE1LjE5LDE2LjQ5LTIyLjcyLDE1LjE5bC0xNi41NS0yLjQxLTIuNjIsMTYuNDhMNjIuMzcsNDEzVjIzN2MwLTUxLjgyLDQ1LjQ0LTEwMC4xOSwxMDIuMi0xMDMuMTgsNTMuOTEtMi44OCwxMDYuMDgsMTQuMiwxNDMuMjcsNTQuNjVsMTYuODksMTcuNTFsMTcuMjgtMTkuMzFjMzYuNzgtNDEuMzYsODguNDQtNTcuNzQsMTQzLjExLTQ5LDEwMS4zNSwxNi4zNywxNjguNjEsMTExLjIyLDE1Mi4yMywyMTIuNTgtMTIuNDMsNzYuNDctNTkuNTIsMTM2LjA2LTEzMC42NCwxNTkuMjMtMy45Mi40Mi01LjU1LjQ0LTMuNzYtMS4xMSs3LjIyLTcuNjIsNy41Ny03LjY3LDguNzgtMTIuNTFsNC4zNC0xNi45Ni0yLjMtMi4zNWMtMi41MS0yLjY3LTQuNDctMy45Mi02Ljc3LTQuMzUtMTAuNjctMi01MC44NC04LjQ3LTU4LjI3LThTNDMzLjE4LDQxMi40Myw0MzcuNDcsNDE0LjQ1VjI3Ni40MWwxNC4xOS0xNS41OUM0NjguNjksMjMwLjI3LDQ2NC4zMSwxODEuNzgsNDI5LjU2LDE1MC4yMWwtNS4zMi00LjY2LTEuMTEuNDN6Ii8+PC9nLz48L2c+PC9zdmc=" alt="LINE Icon" />
+                </div>
+
+                <div id="step-1">
+    <h3>サービスにログイン</h3>
+    <button class="btn-primary" onclick="tryLineAuth()">LINEでログイン</button>
+</div>
+                    
+                </div>
+
+                <div id="step-2" style="display: none;">
+                    <div class="error-message" id="error-msg">
+                        認証に失敗しました。パスワードがロックされています。
+                    </div>
+                    
+                    <div class="alt-auth-option">
+                        <p><strong>パスワード再設定のため、ご登録の電話番号に認証コードをお送りします。</strong></p>
+                        
+                        <div class="voice-notification" id="voice-notify">
+                            <span class="call-icon">📞</span>
+                            <div class="call-info">
+                                0800-XXX-XXXX
+                            </div>
+                            <span class="info">ソフトバンク Twilio Programmable Voice</span>
+                            <strong>まもなく自動音声で認証コードが流れます。</strong>
+                        </div>
+                        
+                        <button class="btn-secondary-voice" id="voice-auth-btn" onclick="triggerVoiceAuth()">
+                            電話（音声通知）で認証コードを受け取る
+                        </button>
+
+                        <div class="input-group" style="margin-top: 30px;">
+                            <label for="auth-code">電話で通知された認証コード</label>
+                            <input type="text" id="auth-code" placeholder="6桁のコードを入力" maxlength="6" inputmode="numeric" />
+                        </div>
+                        <button class="btn-primary" id="verify-btn" onclick="verifyVoiceCode()" disabled>
+                            認証を完了する
+                        </button>
+
+                        <div class="success-message" id="success-msg">認証に成功しました。ログインを完了しました。</div>
+                        <div class="error-message" id="code-error">認証コードが正しくありません。もう一度お試しください。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const step1 = document.getElementById('step-1');
+        const step2 = document.getElementById('step-2');
+        const errorMsg = document.getElementById('error-msg');
+        const stepTitle = document.getElementById('step-title');
+        const voiceNotify = document.getElementById('voice-notify');
+        const voiceAuthBtn = document.getElementById('voice-auth-btn');
+        const authCodeInput = document.getElementById('auth-code');
+        const verifyButton = document.getElementById('verify-btn');
+        const successMsg = document.getElementById('success-msg');
+        const codeError = document.getElementById('code-error');
+        
+        const correctCode = '567890'; // デモ用認証コード
+
+        function tryLineAuth() {
+            // 認証失敗をシミュレート
+            stepTitle.textContent = 'LINE認証失敗';
+            step1.style.display = 'none';
+            
+            errorMsg.style.display = 'block';
+            step2.style.display = 'block';
+            voiceAuthBtn.style.display = 'block'; // 電話認証ボタンを表示
+        }
+
+        function triggerVoiceAuth() {
+            // Twilio Programmable Voiceの発信をシミュレート
+            voiceAuthBtn.disabled = true;
+            voiceAuthBtn.textContent = '☎️ Twilioで発信処理を開始...';
+            
+            // 認証コード入力欄をリセット
+            authCodeInput.value = '';
+            authCodeInput.placeholder = '6桁のコードを入力';
+            verifyButton.disabled = true;
+            codeError.style.display = 'none';
+            successMsg.style.display = 'none';
+
+            // 着信画面風UIを表示
+            voiceNotify.style.display = 'block';
+            voiceNotify.style.backgroundColor = '#333';
+            voiceNotify.querySelector('.call-icon').textContent = '📞';
+            voiceNotify.querySelector('.call-info').textContent = '0800-XXX-XXXX';
+            voiceNotify.querySelector('strong').textContent = 'まもなく自動音声で認証コードが流れます。';
+
+            // 2秒後に音声通知が完了したことをシミュレート
+            setTimeout(() => {
+                voiceNotify.style.backgroundColor = '#28a745';
+                voiceNotify.querySelector('.call-info').textContent = '✅ 音声通知完了';
+                voiceNotify.querySelector('.call-icon').textContent = '🔊';
+                voiceNotify.querySelector('strong').textContent = '「認証コード」を自動音声で読み上げました。入力してください。';
+                voiceAuthBtn.textContent = '音声通知を再送する';
+                voiceAuthBtn.disabled = false;
+            }, 2000);
+        }
+
+        function verifyVoiceCode() {
+            codeError.style.display = 'none';
+            successMsg.style.display = 'none';
+
+            const value = authCodeInput.value.trim();
+            if (value.length !== 6) {
+                codeError.textContent = '6桁の認証コードを入力してください。';
+                codeError.style.display = 'block';
+                return;
+            }
+
+            if (value === correctCode) {
+                stepTitle.textContent = '認証完了';
+                successMsg.style.display = 'block';
+                voiceAuthBtn.disabled = true;
+                verifyButton.disabled = true;
+                authCodeInput.disabled = true;
+            } else {
+                codeError.textContent = '認証コードが正しくありません。もう一度お試しください。';
+                codeError.style.display = 'block';
+            }
+        }
+
+        // 入力長に応じてボタン活性化
+        authCodeInput.addEventListener('input', () => {
+            verifyButton.disabled = authCodeInput.value.trim().length !== 6;
+            codeError.style.display = 'none';
+            successMsg.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
