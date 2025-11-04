@@ -1,0 +1,121 @@
+/* ===== ベース ===== */
+:root {
+--line-from: #06C755; /* LINE green */
+--line-to: #23D26A;
+--ink: #0b1324;
+--muted: #6b7280;
+--border: #e5e7eb;
+--bg: #f7f8fa;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+margin: 0;
+font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+color: var(--ink);
+background: linear-gradient(135deg, #eef7f1, #ffffff 40%, #eef6ff);
+}
+.container { max-width: 1140px; margin: 0 auto; padding: 24px; }
+.header h1 { margin: 0 0 6px; font-size: 22px; }
+.header .sub { color: var(--muted); margin: 0 0 12px; font-size: 14px; }
+.tabs { display: flex; gap: 8px; }
+.tab { padding: 8px 14px; border: 1px solid var(--border); background:#fff; border-radius: 12px; cursor: pointer; }
+.tab.is-active { background: #065f46; color: #fff; border-color: #064e3b; }
+
+
+.view { display: none; }
+.view.is-visible { display: block; }
+
+
+/* ===== 管理者パネル ===== */
+.panel { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: 0 8px 24px rgba(0,0,0,.04); }
+.panel h2 { margin: 0 0 16px; font-size: 18px; }
+.row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.lbl { color: var(--muted); font-size: 13px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { padding: 6px 10px; background: #f3f4f6; border: 1px solid var(--border); border-radius: 999px; font-size: 12px; cursor: pointer; }
+.chip:hover { background: #e5e7eb; }
+
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 12px 0; }
+.fld span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+.fld input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; outline: none; }
+.fld input:focus { border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.18); }
+
+
+.seg { display: inline-flex; gap: 6px; }
+.seg-btn { padding: 8px 12px; border: 1px solid var(--border); background: #fff; border-radius: 12px; cursor: pointer; font-size: 13px; }
+.seg-btn.is-active { background: #065f46; color: #fff; border-color: #064e3b; }
+
+
+.opts { margin-top: 8px; }
+.chk { font-size: 13px; color: #111827; }
+
+
+.actions { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
+.btn { padding: 10px 14px; border: 1px solid var(--border); border-radius: 12px; background: #fff; cursor: pointer; }
+.btn:hover { background: #f8fafc; }
+.btn.primary { background: #059669; color: #fff; border-color: #047857; }
+.btn.primary:hover { background: #047857; }
+.btn.dark { background: #0f172a; color: #fff; border-color: #0b1220; }
+.btn.dark:hover { background: #111827; }
+
+
+.log { margin-top: 16px; }
+.log h3 { margin: 0 0 8px; font-size: 13px; color: #374151; }
+.log-box { height: 140px; overflow: auto; border: 1px solid var(--border); background: #f8fafc; border-radius: 12px; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; white-space: pre-wrap; }
+
+
+/* ===== ユーザー側：スマホUI ===== */
+.phone { position: relative; width: 340px; height: 680px; margin: 20px auto; border: 10px solid #000; border-radius: 44px; overflow: hidden; background: #0b1220; color: #fff; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.statusbar { display: flex; justify-content: space-between; padding: 8px 10px; font-size: 12px; opacity: .85; background: linear-gradient(135deg, var(--line-from), var(--line-to)); }
+.hero { padding: 16px; background: linear-gradient(135deg, var(--line-from), var(--line-to)); }
+.brand { display: flex; gap: 12px; align-items: center; }
+.avatar { width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,.25); display: grid; place-items: center; font-weight: 700; }
+.brand-txt .sub { font-size: 12px; opacity: .9; }
+.brand-txt .title { font-size: 20px; font-weight: 700; letter-spacing: .2px; }
+
+
+.content { padding: 18px; }
+.to .cap { color: #94a3b8; font-size: 12px; }
+.to .name { font-size: 18px; font-weight: 600; }
+.to .tel { color: #cbd5e1; }
+
+
+.secure { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; background: rgba(16,185,129,.12); color: #bbf7d0; margin-top: 10px; font-size: 12px; }
+
+
+.state { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+.pill { padding: 4px 8px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15); border-radius: 8px; font-size: 12px; }
+.value { font-size: 16px; font-weight: 600; }
+
+
+/* ドットアニメーション（LINE風） */
+.dots { display: inline-flex; gap: 4px; }
+.dots i { width: 6px; height: 6px; background: rgba(255,255,255,.9); border-radius: 50%; display: inline-block; animation: pulse 1.2s infinite ease-in-out; }
+.dots i:nth-child(2) { animation-delay: .2s; }
+.dots i:nth-child(3) { animation-delay: .4s; }
+@keyframes pulse { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+
+
+.card { margin-top: 14px; padding: 14px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.06); border-radius: 14px; }
+.card .cap { font-size: 12px; color: rgba(255,255,255,.8); }
+.card .big { font-size: 22px; font-weight: 700; margin-top: 6px; }
+.card .muted { color: rgba(255,255,255,.75); font-size: 13px; margin-top: 2px; }
+.tags { margin-top: 8px; display: flex; gap: 8px; }
+.tag { padding: 4px 8px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; font-size: 11px; color: rgba(255,255,255,.85); }
+
+
+.callbar { position: absolute; left: 0; right: 0; bottom: 16px; display: flex; justify-content: space-around; align-items: center; }
+.btn-round { width: 56px; height: 56px; border-radius: 50%; border: 1px solid rgba(0,0,0,.25); box-shadow: 0 6px 18px rgba(0,0,0,.35) inset, 0 6px 18px rgba(0,0,0,.15); }
+.btn-round.reject { background: #dc2626; }
+.btn-round.accept { background: #16a34a; }
+
+
+.note { position: absolute; left: 0; right: 0; bottom: -2px; text-align: center; color: rgba(255,255,255,.45); font-size: 10px; }
+
+
+/* レイアウト補助 */
+@media (min-width: 960px) {
+.container { display: grid; grid-template-columns: 1fr 420px; gap: 24px; align-items: start; }
+#admin-view .panel { margin-right: 0; }
