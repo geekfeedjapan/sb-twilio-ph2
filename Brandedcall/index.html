@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ブランデッドコール・デモ（バニラ）</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<main class="container">
+<header class="header">
+<h1>ブランデッドコール・デモ（LINE風・バニラ版）</h1>
+<p class="sub">実通話は行わず、ユーザー端末の着信UIを再現するデモです。</p>
+<div class="tabs">
+<button class="tab is-active" data-view="admin">管理者画面</button>
+<button class="tab" data-view="user">ユーザー画面</button>
+</div>
+</header>
+
+
+<section id="admin-view" class="view is-visible">
+<div class="panel">
+<h2>発信設定</h2>
+
+
+<div class="row">
+<label class="lbl">プリセット</label>
+<div class="chips" id="preset-chips">
+<!-- JSで挿入 -->
+</div>
+</div>
+
+
+<div class="grid">
+<label class="fld">
+<span>企業名</span>
+<input id="company" type="text" placeholder="例：JCBカード" value="JCBカード" />
+</label>
+<label class="fld">
+<span>用件（表示理由）</span>
+<input id="reason" type="text" placeholder="例：不正利用確認" value="不正利用確認" />
+</label>
+<label class="fld">
+<span>発信番号（表示）</span>
+<input id="callerId" type="text" placeholder="03-1234-5678" value="03-1234-5678" />
+</label>
+<label class="fld">
+<span>宛先（ユーザー表示名）</span>
+<input id="calleeName" type="text" placeholder="例：山田 太郎" value="山田 太郎" />
+</label>
+<label class="fld">
+<span>宛先電話番号</span>
+<input id="calleePhone" type="text" placeholder="090-1234-5678" value="090-1234-5678" />
+</label>
+<label class="fld">
+<span>チャネル</span>
+<div class="seg">
+<button class="seg-btn is-active" data-channel="LINE通話">LINE通話</button>
+<button class="seg-btn" data-channel="通常電話">通常電話</button>
+</div>
+</label>
+</div>
+
+
+<div class="opts">
+<label class="chk">
+<input id="secureBadge" type="checkbox" checked /> 本人確認バッジを表示
+</label>
+</div>
+
+
+<div class="actions">
+<button id="btnStart" class="btn primary">発信開始</button>
+<button id="btnEnd" class="btn dark">終了</button>
+<button id="btnReset" class="btn">リセット</button>
+</div>
+
+
+<div class="log">
+<h3>イベントログ</h3>
+<div id="logBox" class="log-box" aria-live="polite"></div>
+</div>
+</div>
+</section>
+
+
+<section id="user-view" class="view">
+<div class="phone">
+<div class="statusbar">
+<span>LINE</span>
+<span id="stateLabel">待機中</span>
+</div>
+
+
+<div class="hero">
+<div class="brand">
+<div class="avatar" id="brandAvatar">JC</div>
+<div class="brand-txt">
+<div class="sub" id="subline">LINE通話 - 発信番号 03-1234-5678</div>
+<div class="title"><span id="brandCompany">JCBカード</span>　<span id="brandReason">不正利用確認</span></div>
+</div>
+</div>
+</div>
+
+
+<div class="content">
+<div class="to">
+<div class="cap">宛先</div>
+<div class="name" id="toName">山田 太郎</div>
+<div class="tel" id="toPhone">090-1234-5678</div>
+</div>
+
+
+<div class="secure" id="secureWrap">
+<span class="shield" aria-hidden>🛡</span> 本人確認フロー
+</div>
+
+
+<div class="state">
+<span class="pill">状態</span>
+<span class="value" id="stateText">待機中</span>
+<span class="dots" id="dotPulse" aria-hidden>
+<i></i><i></i><i></i>
+</span>
+</div>
+
+
+<div class="card">
+<div class="cap">ユーザー端末の表示（例）</div>
+<div class="big" id="cardTitle">JCBカード　不正利用確認</div>
+<div class="muted" id="cardNumber">発信番号 03-1234-5678</div>
+<div class="tags">
+<span class="tag">公式連絡</span>
+<span class="tag">なりすまし対策</span>
+</div>
+</div>
+</div>
+
+
+<div class="callbar">
+<div class="btn-round reject" aria-label="拒否"></div>
+<div class="btn-round accept" aria-label="応答"></div>
+</div>
+
+
+<div class="note">※本デモは表示のみで、実通話やAPI連携は行いません。</div>
+</div>
+</section>
+</main>
+
+
+<script src="app.js"></script>
+</body>
+</html>
