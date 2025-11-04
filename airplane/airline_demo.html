@@ -23,3 +23,265 @@
   .btn.secondary{ background:#eef5ff; color:#124a88 }
   .section{ padding:28px 0 }
   .split{ display:grid; grid-template-columns:1fr 1fr; gap:20px }
+  .muted{ color:#5f7187 }
+  .qrbox{ display:flex; flex-direction:column; align-items:center; gap:8px }
+  .qrwrap{ background:#fff; border:1px solid #e3ebf5; border-radius:12px; padding:14px }
+  .small{ font-size:12px; color:#6a7b92; word-break:break-all; text-align:center }
+  .form label{ display:block; font-size:13px; color:#4b5e76; margin:.35rem 0 .15rem }
+  .form input,.form select{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid #cfd9e6; background:#fcfdff }
+  .form .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
+  .notice{ font-size:12px; color:#5f7187 }
+  .success{ background:#ecfff1; border:1px solid #bce3c8; color:#136c31; padding:10px 12px; border-radius:10px; margin-top:10px; display:none }
+  .error{ background:#fff2f2; border:1px solid #ffbcbc; color:#a30000; padding:10px 12px; border-radius:10px; margin-top:10px; display:none }
+  footer{ padding:36px 0 48px; color:#5f7187; text-align:center }
+  @media (max-width:880px){ .cards{ grid-template-columns:1fr } .split{ grid-template-columns:1fr } }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <div class="logo">
+      <span class="logo-badge" id="logoBadge">SB</span>
+      <span id="brandName">ソフトバンクエアライン</span>
+    </div>
+    <nav class="muted" aria-label="主要ナビゲーション">
+      <a href="#features">QR入口</a>
+      <span style="padding:0 8px">・</span>
+      <a href="#register">事前通知登録</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ===== 通知の進行フロー（ヒーロー） ===== -->
+<section class="hero">
+  <div class="wrap">
+    <div class="card">
+      <h3 style="margin:0 0 8px">通知の進行フロー</h3>
+      <div class="cards">
+        <div class="card"><b>STEP 1</b><br>LINE通知（既読状況を監視）</div>
+        <div class="card"><b>STEP 2</b><br>未読時：SMSで再通知</div>
+        <div class="card"><b>STEP 3</b><br>未応答時：電話にて最終連絡</div>
+      </div>
+      <p class="notice" style="margin-top:10px">※ このページはデモUIです。実際の送信は行いません。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== QR入口 & 登録フォーム ===== -->
+<section id="features" class="section">
+  <div class="wrap split">
+    <!-- QR入口 -->
+    <div class="card">
+      <h3 style="margin-top:0">QR入口</h3>
+      <p class="muted">スマホでQRを読み取ると登録フォーム（同一サイト内の <code>#/register</code>）が開きます。</p>
+      <div class="qrbox">
+        <div class="qrwrap"><canvas id="qrcode" width="168" height="168" aria-label="登録用QR"></canvas></div>
+        <div class="small" id="regUrlTxt"></div>
+        <div style="display:flex;gap:8px">
+          <a class="btn" href="#/register">この端末で開く</a>
+          <button class="btn secondary" id="copyQr">QR先リンクをコピー</button>
+        </div>
+        <div id="qrError" class="error">QRの生成に失敗しました。URLは下に表示していますので、リンクから開いてください。</div>
+        <div id="qrOk" class="success">QRの自己テストに成功しました（キャンバスへ描画済み）。</div>
+      </div>
+    </div>
+
+    <!-- 事前通知 登録フォーム -->
+    <div id="register" class="card">
+      <h3 style="margin-top:0">事前通知 登録フォーム</h3>
+      <form class="form" id="regForm">
+        <div class="row">
+          <div>
+            <label>お名前</label>
+            <input required name="name" value="山田 太郎" />
+          </div>
+          <div>
+            <label>フライト番号</label>
+            <input required name="flightNo" value="SB123" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>搭乗日</label>
+            <input type="date" required name="date" />
+          </div>
+          <div>
+            <label>電話番号（SMS/電話）</label>
+            <input required name="phone" value="090-1234-5678" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>LINE ID（任意）</label>
+            <input name="lineId" placeholder="@example" />
+          </div>
+          <div>
+            <label>配信言語</label>
+            <select name="locale">
+              <option value="ja-JP">日本語</option>
+              <option value="en-US">English</option>
+            </select>
+          </div>
+        </div>
+        <label style="display:flex;gap:8px;align-items:center;margin-top:6px">
+          <input type="checkbox" name="agree" id="agree" />
+          <span>通知ポリシーに同意します（デモでは実送信しません）</span>
+        </label>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn" type="submit">登録する</button>
+          <button class="btn secondary" type="button" id="fillDemo">デモ値を入れる</button>
+        </div>
+        <div class="success" id="successBox">登録を受け付けました。管理設定（config.js）の値で動作を制御できます。</div>
+      </form>
+      <p class="notice">※ バックエンド連携は未接続です。実装時は既読/配信Webhookやフォールバック制御をサーバ側にて。</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">© <span id="brandName2">ソフトバンクエアライン</span> — これはデモサイトです。</div>
+</footer>
+
+<!-- 設定ファイル（管理系）は別ファイル） -->
+<script src="./config.js"></script>
+
+<!-- 依存なしの軽量QRエンジン（キャンバス描画・最小） -->
+<script>
+/* Minimal QR draw (derived from Kazuhiko Arase's QRCode for JavaScript). */
+(function(global){
+  function QR8bitByte(data){ this.mode=4; this.data=data; this.parsed=[]; for(var i=0;i<data.length;i++){ this.parsed.push(data.charCodeAt(i)); } }
+  QR8bitByte.prototype={ getLength:function(){return this.parsed.length;}, write:function(buf){ for(var i=0;i<this.parsed.length;i++){ buf.put(this.parsed[i],8);} } };
+  function QRBitBuffer(){ this.buffer=[]; this.length=0; }
+  QRBitBuffer.prototype={ put:function(num,length){ for(var i=0;i<length;i++){ this.putBit( ((num>>> (length-i-1)) &1)===1 ); } }, putBit:function(bit){ var idx=Math.floor(this.length/8); if(this.buffer.length<=idx){ this.buffer.push(0); } if(bit){ this.buffer[idx] |= (0x80>>> (this.length%8)); } this.length++; } };
+  var PAD0=0xEC, PAD1=0x11;
+  var RS_BLOCKS={ 1:[[1,19,7]], 2:[[1,34,10]], 3:[[1,55,15]], 4:[[1,80,20]], 5:[[1,108,26]], 6:[[1,136,18]], 7:[[2,86,20]], 8:[[2,98,24]], 9:[[2,121,30]], 10:[[2,146,18]], 11:[[4,86,26]], 12:[[2,98,24],[2,98,24]], 13:[[4,107,26]], 14:[[3,115,30],[1,116,30]] };
+  function rsBlocks(ver){ return RS_BLOCKS[ver] || RS_BLOCKS[1]; }
+  function getTypeNumber(length){ var map=[14,26,42,62,84,106,122,152,180,213,251,287,331,362]; for(var v=1;v<=14;v++){ if(length<=map[v-1]) return v; } return 14; }
+  function QRMath(){}
+  QRMath.glog=function(n){ if(n<1) throw new Error('glog'); return LOG_TABLE[n]; };
+  QRMath.gexp=function(n){ while(n<0) n+=255; while(n>=256) n-=255; return EXP_TABLE[n]; };
+  var EXP_TABLE=new Array(256), LOG_TABLE=new Array(256); (function(){ for(var i=0;i<8;i++) EXP_TABLE[i]=1<<i; for(i=8;i<256;i++) EXP_TABLE[i]=EXP_TABLE[i-4]^EXP_TABLE[i-5]^EXP_TABLE[i-6]^EXP_TABLE[i-8]; for(i=0;i<255;i++) LOG_TABLE[EXP_TABLE[i]]=i; })();
+  function QRPolynomial(num,shift){ this.num=num; while(this.num.length>0 && this.num[0]==0){ this.num.shift(); } for(var i=0;i<shift;i++){ this.num.push(0); } }
+  QRPolynomial.prototype={ get:function(i){ return this.num[i]; }, getLength:function(){ return this.num.length; }, multiply:function(e){ var num=new Array(this.getLength()+e.getLength()-1); for(var i=0;i<this.getLength();i++){ for(var j=0;j<e.getLength();j++){ num[i+j] ^= QRMath.gexp(QRMath.glog(this.get(i))+QRMath.glog(e.get(j))); } } return new QRPolynomial(num,0); }, mod:function(e){ if(this.getLength()-e.getLength()<0) return this; var ratio=QRMath.glog(this.get(0))-QRMath.glog(e.get(0)); var num=this.num.slice(0); for(var i=0;i<e.getLength();i++){ num[i] ^= QRMath.gexp(QRMath.glog(e.get(i))+ratio); } return new QRPolynomial(num,0).mod(e); } };
+  function rsPoly(ec){ var poly=new QRPolynomial([1],0); for(var i=0;i<ec;i++){ poly=poly.multiply(new QRPolynomial([1, QRMath.gexp(i)],0)); } return poly; }
+  function createData(ver, data){ var buf=new QRBitBuffer(); buf.put(4,4); buf.put(data.getLength(), ver<10?8:16); data.write(buf); var rs=rsBlocks(ver); var total=0, ec=0; for(var i=0;i<rs.length;i++){ var b=rs[i]; for(var j=0;j<b[0];j++){ total+=b[1]; ec=b[2]; } } var maxBytes=total; while(buf.length%8!=0) buf.putBit(false); var bytes=[]; for(i=0;i<buf.length/8;i++){ bytes.push( buf.buffer[i] ); } while(bytes.length<maxBytes){ bytes.push(bytes.length%2==0?PAD0:PAD1); } return bytes; }
+  function QRCode(text, size){ this.text=text; this.size=size||168; this.modules=null; this.moduleCount=0; }
+  QRCode.prototype={ make:function(){ var data=new QR8bitByte(this.text); var ver=getTypeNumber(data.getLength()); var bytes=createData(ver,data); var mc=ver*4+17; this.moduleCount=mc; this.modules=new Array(mc); for(var r=0;r<mc;r++){ this.modules[r]=new Array(mc); for(var c=0;c<mc;c++){ this.modules[r][c]=null; } } function placeFinder(row,col,modules){ for(var r=0;r<7;r++){ for(var c=0;c<7;c++){ var on=( (r==0||r==6||c==0||c==6) || (r>=2&&r<=4&&c>=2&&c<=4) ); modules[row+r][col+c]=on; } } } placeFinder(0,0,this.modules); placeFinder(0,mc-7,this.modules); placeFinder(mc-7,0,this.modules); for(var i=8;i<mc-8;i++){ this.modules[6][i]=(i%2==0); this.modules[i][6]=(i%2==0); } var dir=-1; var row=mc-1; var bit=0; var byteIdx=0; for(var col=mc-1; col>0; col-=2){ if(col==6) col--; for(;;){ for(var c=0;c<2;c++){ if(this.modules[row][col-c]===null){ var dark=false; if(byteIdx<bytes.length){ dark = ((bytes[byteIdx]>>> (7-bit)) &1) ===1; } this.modules[row][col-c]=dark; bit++; if(bit==8){ bit=0; byteIdx++; } } } row+=dir; if(row<0||row>=mc){ row+=dir; dir=-dir; break; } } }
+    }, drawToCanvas:function(canvas){ if(!this.modules) this.make(); var ctx=canvas.getContext('2d'); if(!ctx){ return false; } var n=this.moduleCount; var size=this.size; var scale=Math.max(1, Math.floor(size/n)); var quiet=4; var dim = (n+quiet*2)*scale; canvas.width=canvas.height=dim; ctx.fillStyle='#fff'; ctx.fillRect(0,0,dim,dim); ctx.fillStyle='#000'; for(var r=0;r<n;r++){ for(var c=0;c<n;c++){ if(this.modules[r][c]){ ctx.fillRect((c+quiet)*scale,(r+quiet)*scale,scale,scale); } } } return true; }
+  };
+  global._MiniQR = function(canvas, text, size){ var qr=new QRCode(text,size); qr.make(); return qr.drawToCanvas(canvas); };
+})(window);
+</script>
+
+<script>
+(function(){
+  // ===== 設定の適用 =====
+  const C = (window.DEMO_CONFIG||{});
+  const brand = (C.brand||{});
+  if(brand.primaryColor){ document.documentElement.style.setProperty('--brand', brand.primaryColor); }
+  if(brand.companyName){ document.getElementById('brandName').textContent = brand.companyName; document.getElementById('brandName2').textContent = brand.companyName; }
+  if(brand.logoText){ document.getElementById('logoBadge').textContent = brand.logoText; }
+
+  // ===== 登録URL（絶対URL + ハッシュ） =====
+  const hashPath = (C.routes && C.routes.registrationUrl) ? C.routes.registrationUrl : '#/register';
+  const regUrl = location.origin + location.pathname + hashPath;
+  document.getElementById('regUrlTxt').textContent = regUrl;
+
+  // ===== localStorage 上書きの取り込み（通知設定） =====
+  try{
+    const raw = localStorage.getItem('demo:config:notification');
+    if(raw){ const override = JSON.parse(raw); if(!window.DEMO_CONFIG) window.DEMO_CONFIG={}; window.DEMO_CONFIG.notification = override; }
+  }catch(e){ console.warn('notification override failed', e); }
+
+  // ===== QR生成（外部依存なし） =====
+  const size = (C.qr && C.qr.size) ? C.qr.size : 168;
+  try{
+    const ok = window._MiniQR(document.getElementById('qrcode'), regUrl, size);
+    if(ok){ document.getElementById('qrOk').style.display='block'; }
+    else { document.getElementById('qrError').style.display='block'; }
+  }catch(e){
+    console.warn('QR generation error', e);
+    document.getElementById('qrError').style.display='block';
+  }
+
+  // ===== 簡易自己テスト（追加テスト含む） =====
+  (function runSelfTests(){
+    // Test A: 必須DOM要素の存在
+    ['qrcode','regForm','copyQr'].forEach(id=>{ console.assert(!!document.getElementById(id), `[SELFTEST] missing #${id}`); });
+
+    // Test B: QRが描画されたこと（サイズ & 一部ピクセル暗部）
+    try{
+      const c=document.createElement('canvas');
+      const ok = window._MiniQR(c, 'https://example.com/test', 120);
+      if(!ok){ console.warn('[SELFTEST] QR draw returned false (no 2D context)'); return; }
+      const ctx=c.getContext('2d');
+      if(!ctx || c.width===0 || c.height===0){ console.warn('[SELFTEST] canvas context/size unavailable'); return; }
+      const data=ctx.getImageData(0,0,c.width,c.height).data;
+      let dark=0; for(let i=0;i<data.length;i+=4){ if(data[i]<200 || data[i+1]<200 || data[i+2]<200){ dark++; if(dark>10) break; } }
+      console.assert(dark>10, '[SELFTEST] QR canvas should contain dark pixels');
+    }catch(err){ console.warn('[SELFTEST] QR test warning', err); }
+
+    // Test C: 日本語テキストでも描画できること
+    try{
+      const c2=document.createElement('canvas');
+      const ok2 = window._MiniQR(c2, '日本語テスト-便名SB123', 100);
+      if(!ok2){ console.warn('[SELFTEST] QR draw (JP) returned false'); }
+    }catch(err){ console.warn('[SELFTEST] QR JP test warning', err); }
+  })();
+
+  // ===== コピー系（存在ガード） =====
+  const copy = (text)=> navigator.clipboard && navigator.clipboard.writeText(text).then(()=>alert('コピーしました')).catch(()=>prompt('コピーできない環境です。手動でコピーしてください:', text));
+  const copyQrBtn=document.getElementById('copyQr');
+  if(copyQrBtn){ copyQrBtn.onclick=()=> copy(regUrl); }
+
+  // ===== #/register にスクロール =====
+  function onHash(){ if(location.hash === '#/register'){ document.getElementById('register').scrollIntoView({behavior:'smooth'}); } }
+  window.addEventListener('hashchange', onHash); onHash();
+
+  // ===== フォーム：デモ送信処理 =====
+  const form = document.getElementById('regForm');
+  const successBox = document.getElementById('successBox');
+  const consentRequired = !C.forms || C.forms.consentRequired !== false; // 既定:true
+
+  // デモ用に明日を初期値
+  form.elements.date.value = new Date(Date.now()+24*3600*1000).toISOString().slice(0,10);
+
+  document.getElementById('fillDemo').onclick = ()=>{
+    form.elements.name.value = '山田 太郎';
+    form.elements.flightNo.value = 'SB' + (100 + Math.floor(Math.random()*900));
+    form.elements.phone.value = '090-1234-5678';
+    form.elements.lineId.value = '@taro';
+    if(consentRequired) form.elements.agree.checked = true;
+  };
+
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(form).entries());
+    if(consentRequired && !form.elements.agree.checked){ alert('通知ポリシーに同意してください'); return; }
+
+    const handler = C.api && C.api.submitRegistration;
+    try{
+      if(typeof handler === 'function'){
+        await handler(d, { regUrl, config: C });
+      }else if(typeof handler === 'string'){
+        await fetch(handler,{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(d)});
+      }else{
+        const key = 'demo:registrations';
+        const arr = JSON.parse(localStorage.getItem(key)||'[]');
+        arr.push({ ...d, ts: Date.now() });
+        localStorage.setItem(key, JSON.stringify(arr));
+        console.log('[DEMO] saved', d);
+      }
+      successBox.style.display='block';
+      form.reset();
+      form.elements.date.value = new Date(Date.now()+24*3600*1000).toISOString().slice(0,10);
+      if(consentRequired){ form.elements.agree.checked = false; }
+    }catch(err){
+      console.warn(err);
+      alert('登録中にエラーが発生しました');
+    }
+  });
+})();
+</script>
+</body>
+</html>
