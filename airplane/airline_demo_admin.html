@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>管理画面｜通知タイミング・メッセージ設定</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{ --brand:#0B74D1; }
+  *{ box-sizing:border-box }
+  body{ margin:0; font-family:"Noto Sans JP", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:#f6f8fb; color:#1a1a1a }
+  header{ background:#fff; border-bottom:1px solid #e6eef7; position:sticky; top:0; z-index:5 }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 16px }
+  .nav{ height:56px; display:flex; align-items:center; justify-content:space-between }
+  .logo{ display:flex; align-items:center; gap:10px; font-weight:700 }
+  .badge{ width:26px; height:26px; border-radius:6px; background:var(--brand); color:#fff; display:grid; place-items:center }
+  .btn{ display:inline-flex; align-items:center; gap:8px; background:var(--brand); color:#fff; font-weight:600; border:none; border-radius:10px; padding:10px 14px; cursor:pointer }
+  .btn.secondary{ background:#eef5ff; color:#124a88 }
+  .grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px }
+  .card{ background:#fff; border:1px solid #e3ebf5; border-radius:14px; padding:16px }
+  .card h3{ margin:0 0 6px }
+  label{ font-size:13px; color:#4b5e76; display:block; margin:.35rem 0 .15rem }
+  input[type=number]{ width:100%; padding:8px 10px; border:1px solid #cfd9e6; border-radius:10px; background:#fcfdff }
+  textarea{ width:100%; height:120px; padding:10px 12px; border:1px solid #cfd9e6; border-radius:10px; background:#fcfdff; resize:vertical }
+  .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
+  .muted{ color:#5f7187; font-size:12px }
+  .section{ padding:22px 0 }
+  .actions{ display:flex; gap:8px; flex-wrap:wrap }
+  .notice{ background:#fff8e6; border:1px solid #ffe3a3; color:#7a5200; padding:8px 10px; border-radius:10px }
+  .success{ background:#ecfff1; border:1px solid #bce3c8; color:#136c31; padding:8px 10px; border-radius:10px; display:none }
+  .error{ background:#fff2f2; border:1px solid #ffbcbc; color:#a30000; padding:8px 10px; border-radius:10px; display:none }
+  @media (max-width:980px){ .grid{ grid-template-columns:1fr } .row{ grid-template-columns:1fr } }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <div class="logo"><span class="badge">AD</span> <span>管理画面｜通知設定</span></div>
+    <div class="actions">
+      <a class="btn secondary" href="./index.html">サイトへ戻る</a>
+      <button id="btnExport" class="btn secondary">JSONを書き出し</button>
+      <button id="btnImport" class="btn secondary">JSONを読み込み</button>
+      <button id="btnReset" class="btn secondary">デフォルトへ戻す</button>
+      <button id="btnSave" class="btn">保存</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap section">
+  <div class="notice" style="margin-bottom:12px">保存はブラウザの <b>localStorage</b> に行われ、<code>config.js</code> の設定よりも優先されます。エクスポートしたJSONを <code>config.js</code> に反映すれば本番反映も可能です。</div>
+  <div id="msgOk" class="success">保存しました。</div>
+  <div id="msgErr" class="error">エラーが発生しました。入力内容をご確認ください。</div>
+
+  <div class="grid">
+    <section class="card" id="panelLine">
+      <h3>LINE 通知</h3>
+      <p class="muted">既読が付かなかった場合はフォールバック対象。</p>
+      <div class="row">
+        <div>
+          <label>送信タイミング（秒）</label>
+          <input type="number" id="lineDelay" min="0" step="1" />
+        </div>
+        <div>
+          <label>既読待ち（秒）</label>
+          <input type="number" id="lineReadWait" min="0" step="1" />
+        </div>
+      </div>
+      <label>メッセージ本文</label>
+      <textarea id="lineMsg" placeholder="【航空会社】ご搭乗のご案内…"></textarea>
+    </section>
+
+    <section class="card" id="panelSms">
+      <h3>SMS 通知</h3>
+      <p class="muted">LINE未読・未反応時に再通知。</p>
+      <div class="row">
+        <div>
+          <label>送信タイミング（秒）</label>
+          <input type="number" id="smsDelay" min="0" step="1" />
+        </div>
+        <div>
+          <label>次段（電話）までの待機（秒）</label>
+          <input type="number" id="smsToCallWait" min="0" step="1" />
+        </div>
+      </div>
+      <label>メッセージ本文</label>
+      <textarea id="smsMsg" placeholder="【航空会社】SMSでのご案内…"></textarea>
+    </section>
+
+    <section class="card" id="panelCall">
+      <h3>電話 通知</h3>
+      <p class="muted">最終到達チャネル。音声IVRやオペレーター接続等。</p>
+      <div class="row">
+        <div>
+          <label>発信タイミング（秒）</label>
+          <input type="number" id="callDelay" min="0" step="1" />
+        </div>
+        <div>
+          <label>最大コール時間（秒）</label>
+          <input type="number" id="callMax" min="0" step="1" />
+        </div>
+      </div>
+      <label>音声案内（TTS台本）</label>
+      <textarea id="callMsg" placeholder="お電話ありがとうございます。明日のご搭乗…"></textarea>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:16px">
+    <h3 style="margin:0 0 6px">現在の設定（プレビュー／編集可）</h3>
+    <textarea id="jsonView" style="height:220px"></textarea>
+    <p class="muted">このJSONは <code>window.DEMO_CONFIG.notification</code> と同じ構造です。保存すると <code>localStorage</code> の <code>demo:config:notification</code> に反映されます。</p>
+  </section>
+</main>
+
+<script src="./config.js"></script>
+<script>
+(function(){
+  const KEY = 'demo:config:notification';
+  const defaults = (window.DEMO_CONFIG && window.DEMO_CONFIG.notification) ? JSON.parse(JSON.stringify(window.DEMO_CONFIG.notification)) : {
+    line: { delaySeconds: 0, readWaitSeconds: 15, message: '【航空会社】ご搭乗のご案内です。出発2時間前までにチェックインをお済ませください。' },
+    sms:  { delaySeconds: 30, toCallWaitSeconds: 45, message: '【航空会社】明日のご搭乗案内。詳細はURLをご確認ください。' },
+    call: { delaySeconds: 60, maxDurationSeconds: 120, message: 'お電話ありがとうございます。ご搭乗のご案内です…' }
+  };
+
+  // ===== State helpers =====
+  function current(){
+    try{ const raw = localStorage.getItem(KEY); if(raw){ return JSON.parse(raw); } }catch(e){ console.warn('parse fail', e); }
+    return JSON.parse(JSON.stringify(defaults));
+  }
+  function save(cfg){ localStorage.setItem(KEY, JSON.stringify(cfg)); }
+
+  // ===== Bind fields =====
+  const el = {
+    lineDelay: document.getElementById('lineDelay'), lineReadWait: document.getElementById('lineReadWait'), lineMsg: document.getElementById('lineMsg'),
+    smsDelay: document.getElementById('smsDelay'), smsToCallWait: document.getElementById('smsToCallWait'), smsMsg: document.getElementById('smsMsg'),
+    callDelay: document.getElementById('callDelay'), callMax: document.getElementById('callMax'), callMsg: document.getElementById('callMsg'),
+    jsonView: document.getElementById('jsonView'),
+    ok: document.getElementById('msgOk'), err: document.getElementById('msgErr'),
+    btnSave: document.getElementById('btnSave'), btnReset: document.getElementById('btnReset'), btnExport: document.getElementById('btnExport'), btnImport: document.getElementById('btnImport')
+  };
+
+  function loadToForm(cfg){
+    el.lineDelay.value = cfg.line.delaySeconds;
+    el.lineReadWait.value = cfg.line.readWaitSeconds;
+    el.lineMsg.value = cfg.line.message;
+
+    el.smsDelay.value = cfg.sms.delaySeconds;
+    el.smsToCallWait.value = cfg.sms.toCallWaitSeconds;
+    el.smsMsg.value = cfg.sms.message;
+
+    el.callDelay.value = cfg.call.delaySeconds;
+    el.callMax.value = cfg.call.maxDurationSeconds;
+    el.callMsg.value = cfg.call.message;
+
+    el.jsonView.value = JSON.stringify(cfg, null, 2);
+  }
+
+  function readFromForm(){
+    const num = (v)=> Math.max(0, Number(v||0));
+    return {
+      line: { delaySeconds: num(el.lineDelay.value), readWaitSeconds: num(el.lineReadWait.value), message: String(el.lineMsg.value||'') },
+      sms:  { delaySeconds: num(el.smsDelay.value), toCallWaitSeconds: num(el.smsToCallWait.value), message: String(el.smsMsg.value||'') },
+      call: { delaySeconds: num(el.callDelay.value), maxDurationSeconds: num(el.callMax.value), message: String(el.callMsg.value||'') }
+    };
+  }
+
+  function validate(cfg){
+    const ok = (n)=> Number.isFinite(n) && n >= 0 && n <= 24*3600; // 0〜24h
+    const nonEmpty = (s)=> typeof s === 'string' && s.trim().length > 0;
+    return ok(cfg.line.delaySeconds) && ok(cfg.line.readWaitSeconds) && nonEmpty(cfg.line.message)
+        && ok(cfg.sms.delaySeconds) && ok(cfg.sms.toCallWaitSeconds) && nonEmpty(cfg.sms.message)
+        && ok(cfg.call.delaySeconds) && ok(cfg.call.maxDurationSeconds) && nonEmpty(cfg.call.message);
+  }
+
+  function show(elm){ elm.style.display='block'; setTimeout(()=>{ elm.style.display='none'; }, 1600); }
+
+  // Events
+  el.btnSave.onclick = ()=>{
+    try{ const cfg = readFromForm(); if(!validate(cfg)) throw new Error('invalid'); save(cfg); el.jsonView.value = JSON.stringify(cfg, null, 2); show(el.ok); }
+    catch(e){ console.error(e); show(el.err); }
+  };
+  el.btnReset.onclick = ()=>{ loadToForm(JSON.parse(JSON.stringify(defaults))); };
+  el.btnExport.onclick = ()=>{
+    const blob = new Blob([el.jsonView.value], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'notification-config.json'; a.click(); URL.revokeObjectURL(a.href);
+  };
+  el.btnImport.onclick = async ()=>{
+    try{
+      const text = prompt('JSON を貼り付けてください');
+      if(!text) return; const cfg = JSON.parse(text); if(!validate(cfg)) throw new Error('invalid');
+      save(cfg); loadToForm(cfg); show(el.ok);
+    }catch(e){ console.error(e); show(el.err); }
+  };
+
+  // init
+  const startCfg = current();
+  loadToForm(startCfg);
+
+  // ===== Self tests =====
+  (function selfTests(){
+    // Test 1: validation bounds
+    const bad = JSON.parse(JSON.stringify(startCfg)); bad.line.delaySeconds = -1; console.assert(!validate(bad), 'negative should be invalid');
+    // Test 2: non-empty messages
+    const bad2 = JSON.parse(JSON.stringify(startCfg)); bad2.sms.message=''; console.assert(!validate(bad2), 'empty message should be invalid');
+    // Test 3: save & load cycle
+    const sample = { line:{delaySeconds:5,readWaitSeconds:10,message:'A'}, sms:{delaySeconds:20,toCallWaitSeconds:30,message:'B'}, call:{delaySeconds:60,maxDurationSeconds:90,message:'C'} };
+    save(sample); const loaded = current(); console.assert(loaded.sms.toCallWaitSeconds===30, 'should persist');
+    // Additional Test 4: max bounds
+    const tooBig = JSON.parse(JSON.stringify(startCfg)); tooBig.call.maxDurationSeconds = 25*3600; console.assert(!validate(tooBig), 'over 24h should be invalid');
+    // Restore
+    save(startCfg);
+  })();
+})();
+</script>
+</body>
+</html>
