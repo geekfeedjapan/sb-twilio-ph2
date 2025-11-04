@@ -1,0 +1,19 @@
+/* style.css */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+header {
+  background-color: #007bff;
+  color: white;
+  padding: 10px;
+  text-align: center;
+}
+main {
+  padding: 20px;
+}
+section {
+  margin-bottom: 20px;
+}
+/* ...other styles... */

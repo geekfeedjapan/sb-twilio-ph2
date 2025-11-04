@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LINE認証電話＋Branded Call｜デモ（HTML/CSS/JS）</title>
+  <style>
+    :root{
+      --bg: #f3f6f9; --panel:#fff; --ink:#0f172a; --muted:#64748b; --border:#e2e8f0;
+      --emerald:#10b981; --emerald-50:#ecfdf5; --emerald-100:#d1fae5; --emerald-700:#047857;
+      --rose:#e11d48; --rose-50:#ffe4e6; --slate-50:#f8fafc; --slate-100:#f1f5f9; --slate-900:#0f172a;
+      --blue:#3b82f6;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";background:linear-gradient(135deg,var(--slate-50),var(--slate-100));color:var(--ink)}
+    .wrap{max-width:1100px;margin:24px auto;padding:16px}
+
+    /* header */
+    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .brand-chip{display:grid;place-items:center;width:40px;height:40px;border-radius:14px;background:var(--emerald);color:#fff;font-weight:700}
+    .title{margin-left:12px}
+    .title h1{font-size:20px;margin:0 0 4px}
+    .title p{margin:0;color:var(--muted);font-size:13px}
+    .btn{appearance:none;border:1px solid var(--border);background:#fff;color:#334155;border-radius:12px;padding:8px 12px;cursor:pointer}
+    .btn:hover{box-shadow:0 2px 8px rgba(15,23,42,0.06)}
+
+    /* grid */
+    .grid{display:grid;grid-template-columns:1fr;gap:16px}
+    @media(min-width:900px){.grid{grid-template-columns:1fr 1fr}}
+
+    .panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(15,23,42,.04)}
+    .row{display:flex;gap:10px;align-items:center}
+    .row > *{flex:1}
+    .label{font-size:12px;color:var(--muted)}
+    .input{width:100%;border:1px solid #cbd5e1;border-radius:12px;padding:10px 12px;font:inherit;outline:none}
+    .input:focus{box-shadow:0 0 0 3px rgba(16,185,129,.25);border-color:#99f6e4}
+
+    /* steps */
+    .steps{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    .step{border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:14px;background:#fff;color:#334155}
+    .step.active{background:var(--slate-900);border-color:var(--slate-900);color:#fff}
+    .chev{color:#cbd5e1}
+
+    /* QR area */
+    .qr{width:160px;height:160px;border:1px solid var(--border);background:#f8fafc;border-radius:16px;display:grid;place-items:center}
+    .note{background:var(--emerald-50);color:var(--emerald-700);border:1px solid var(--emerald-100);padding:10px;border-radius:12px;font-size:14px}
+    .cta{display:flex;gap:8px}
+    .btn-primary{background:var(--slate-900);border-color:var(--slate-900);color:#fff}
+    .btn-green{background:var(--emerald);border-color:var(--emerald);color:#fff}
+    .btn-blue{background:var(--blue);border-color:var(--blue);color:#fff}
+
+    /* phone mock */
+    .phone{width:300px;height:620px;border:10px solid var(--slate-900);border-radius:32px;margin:0 auto;position:relative;background:#0b1220;box-shadow:0 20px 40px rgba(2,6,23,.25)}
+    .notch{position:absolute;inset:auto 50% calc(100% - 10px);transform:translateX(-50%);width:110px;height:22px;background:var(--slate-900);border-bottom-left-radius:16px;border-bottom-right-radius:16px}
+    .screen{position:absolute;inset:12px;background:#f1f5f9;border-radius:26px;overflow:hidden}
+
+    .banner{background:var(--emerald);color:#fff;text-align:center;font-weight:600;padding:10px}
+    .center{display:grid;place-items:center;height:100%;padding:24px}
+    .avatar{width:86px;height:86px;border-radius:50%;display:grid;place-items:center;background:#d1fae5;margin:0 auto 12px;font-size:28px;color:#065f46}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .chip{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;background:var(--emerald-50);border:1px solid var(--emerald-100);color:var(--emerald-700);font-size:13px}
+
+    .incoming{height:100%;display:flex;flex-direction:column;background:linear-gradient(180deg,#0f172a,#111827);color:#fff}
+    .incoming-top{display:flex;justify-content:space-between;padding:14px;color:#cbd5e1;font-size:12px}
+    .badge{border:1px solid rgba(16,185,129,.35);background:rgba(16,185,129,.15);color:#bbf7d0;border-radius:999px;padding:3px 8px;font-size:10px}
+    .incoming-center{flex:1;display:grid;place-items:center;padding:24px;text-align:center}
+    .incoming-logo{width:96px;height:96px;border-radius:26px;background:rgba(255,255,255,.1);backdrop-filter:blur(6px);display:grid;place-items:center;margin:0 auto 12px;font-weight:800;font-size:28px}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+    .call-btn{border-radius:999px;padding:12px 20px;border:none;color:#fff;font-weight:700;cursor:pointer}
+    .call-accept{background:#059669}
+    .call-decline{background:#e11d48}
+
+    .overlay{position:absolute;inset:0;background:rgba(255,255,255,.95);backdrop-filter:blur(2px);display:grid;place-items:center;padding:24px}
+    .ov-card{text-align:center}
+    .ov-icon{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;margin:0 auto 12px}
+    .ok{background:var(--emerald-50);color:#065f46}
+    .ng{background:var(--rose-50);color:#9f1239}
+
+    /* form toolbar above phone */
+    .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+
+    /* small helpers */
+    .mt8{margin-top:8px} .mt12{margin-top:12px} .mt16{margin-top:16px}
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Header -->
+    <div class="header">
+      <div class="row" style="flex:1 1 auto">
+        <div class="brand-chip">✓</div>
+        <div class="title">
+          <h1>LINE認証電話＋Branded Call｜デモ</h1>
+          <p id="subtitle">アプリ上で「SBI証券 認証中」を表示しながら、正規番号（03-1234-5678）での発呼・着信を可視化</p>
+        </div>
+      </div>
+      <button class="btn" id="resetBtn">リセット</button>
+    </div>
+
+    <!-- Controls -->
+    <div class="panel" style="margin-bottom:12px">
+      <div class="row mt8">
+        <div>
+          <div class="label">ブランド名</div>
+          <input id="inputBrand" class="input" value="SBI証券" />
+        </div>
+        <div>
+          <div class="label">正規の発信番号（Branded表示）</div>
+          <input id="inputNumber" class="input" value="03-1234-5678" />
+        </div>
+        <div>
+          <div class="label">認証コード（例）</div>
+          <input id="inputOtp" class="input" value="842319" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Steps -->
+    <div class="panel" style="margin-bottom:16px">
+      <div class="steps">
+        <div class="step active" id="step1">1. 登録（QR）</div>
+        <div class="chev">›</div>
+        <div class="step" id="step2">2. LINE発呼で本人認証</div>
+        <div class="chev">›</div>
+        <div class="step" id="step3">3. Branded Call 着信表示</div>
+      </div>
+    </div>
+
+    <!-- Main grid -->
+    <div class="grid">
+      <!-- Left: QR entry -->
+      <div class="panel">
+        <div class="row" style="align-items:center;gap:12px;margin-bottom:12px">
+          <div class="brand-chip" style="background:#0f172a">QR</div>
+          <h2 style="margin:0;font-size:18px">登録入口（QRコード）</h2>
+        </div>
+        <p class="muted" style="font-size:14px">航空会社や金融機関などの事前通知・本人認証の登録入口をQRコードで用意。読み取り後、LINEでの本人認証に遷移します。</p>
+        <div class="row mt16" style="align-items:center;gap:20px">
+          <div class="qr" aria-label="ダミーQR">
+            <!-- simple fake QR -->
+            <svg viewBox="0 0 120 120" width="120" height="120">
+              <rect x="0" y="0" width="120" height="120" fill="#fff"/>
+              <rect x="0" y="0" width="120" height="120" fill="none" stroke="#111" stroke-width="4"/>
+              <g fill="#111">
+                <rect x="8" y="8" width="28" height="28"/>
+                <rect x="84" y="8" width="28" height="28"/>
+                <rect x="8" y="84" width="28" height="28"/>
+                <script>/* dots are drawn below by JS for randomness */</script>
+              </g>
+            </svg>
+          </div>
+          <div style="flex:1">
+            <div class="note">
+              <strong>登録完了後：</strong>
+              <ul style="margin:6px 0 0 18px;padding:0">
+                <li>LINEでの本人認証へ進みます</li>
+                <li>失敗時はSMS→電話へフォールバック可能</li>
+              </ul>
+            </div>
+            <div class="cta mt12">
+              <button class="btn btn-primary" id="goAuth">登録済みとして進む</button>
+              <button class="btn" id="btnReset2">リセット</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: phone mock -->
+      <div class="panel">
+        <div class="row" style="align-items:center;gap:12px;margin-bottom:12px">
+          <div class="brand-chip" style="background:var(--emerald)">☎</div>
+          <h2 style="margin:0;font-size:18px">スマホ画面モック</h2>
+        </div>
+
+        <!-- toolbar -->
+        <div class="toolbar">
+          <button class="btn btn-green" id="btnLineAuth">LINEで本人認証</button>
+          <button class="btn btn-blue" id="btnIncoming">着信をシミュレート</button>
+          <button class="btn" id="btnSuccess">結果：成功</button>
+          <button class="btn" id="btnError">結果：失敗</button>
+        </div>
+
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="screen" id="screen">
+            <!-- initial home -->
+            <div class="home" id="home">
+              <div style="background:#fff;border-bottom:1px solid var(--border);padding:14px">
+                <div style="font-weight:700" id="homeTitle">SBI証券 認証センター</div>
+                <div class="muted" style="font-size:12px">公式アカウント</div>
+              </div>
+              <div class="center">
+                <div style="text-align:center">
+                  <div class="avatar">☎</div>
+                  <div style="font-weight:700">本人認証をはじめる</div>
+                  <div class="muted" style="font-size:14px;margin-top:6px">「LINEで本人認証」を押下してください</div>
+                  <button class="btn btn-green mt12" id="homeStart">LINEで本人認証</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- calling (LINE) -->
+            <div class="calling" id="calling" style="display:none;height:100%;display:flex;flex-direction:column">
+              <div class="banner" id="banner">SBI証券 認証中</div>
+              <div class="center">
+                <div style="text-align:center">
+                  <div class="avatar">☎</div>
+                  <div style="font-weight:700" id="callNumber">03-1234-5678</div>
+                  <div class="muted" style="font-size:14px;margin-top:6px">LINEから発呼しています…</div>
+                  <div class="mt12"><span class="chip">✓ 正規の番号を利用中</span></div>
+                  <div class="mt16">
+                    <button class="btn btn-green" id="mkSuccess1">認証成功にする</button>
+                    <button class="btn" id="mkError1" style="margin-left:8px">認証失敗にする</button>
+                  </div>
+                </div>
+              </div>
+              <div style="text-align:center;padding:10px;font-size:12px;color:#475569">認証コード：<span class="mono" id="otpView">842319</span></div>
+            </div>
+
+            <!-- incoming (branded) -->
+            <div class="incoming" id="incoming" style="display:none">
+              <div class="incoming-top">
+                <div>Branded Call</div>
+                <div class="badge">✓ Verified</div>
+              </div>
+              <div class="incoming-center">
+                <div>
+                  <div class="incoming-logo" id="incLogo">SB</div>
+                  <div style="font-size:22px;font-weight:800" id="incBrand">SBI証券</div>
+                  <div style="color:#cbd5e1;margin-top:4px" id="incNumber">03-1234-5678</div>
+                  <div style="margin-top:8px;font-size:12px;color:#bbf7d0">✓ 正規の発信元を確認</div>
+                  <div class="grid2">
+                    <button class="call-btn call-accept" id="btnAccept">応答</button>
+                    <button class="call-btn call-decline" id="btnDecline">拒否</button>
+                  </div>
+                </div>
+              </div>
+              <div style="text-align:center;padding:10px;color:#cbd5e1;font-size:12px" id="incFooter">着信：SBI証券（公式）</div>
+            </div>
+
+            <!-- result overlay -->
+            <div class="overlay" id="ovSuccess" style="display:none">
+              <div class="ov-card">
+                <div class="ov-icon ok">✓</div>
+                <div style="font-weight:700;font-size:18px">認証が完了しました</div>
+                <div class="muted" style="margin-top:6px">SBI証券 のサービスへ遷移します</div>
+                <button class="btn btn-primary mt12" id="backHome1">最初に戻る</button>
+              </div>
+            </div>
+            <div class="overlay" id="ovError" style="display:none">
+              <div class="ov-card">
+                <div class="ov-icon ng">✕</div>
+                <div style="font-weight:700;font-size:18px">認証に失敗しました</div>
+                <div class="muted" style="margin-top:6px">SMS → 電話へ自動フォールバックします</div>
+                <div class="mt12">
+                  <button class="btn btn-green" id="retryLine">もう一度LINE認証</button>
+                  <button class="btn" id="switchPhone" style="margin-left:8px">電話へ切替</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- explanation -->
+    <div class="panel mt16">
+      <h3 style="margin:0 0 6px">このデモで表現していること</h3>
+      <ul style="margin:0 0 0 18px;padding:0;font-size:14px;color:#334155">
+        <li>LINE発呼中に上部へ <b>「ブランド名 認証中」</b> バナーを表示（正規番号での発呼を明示）</li>
+        <li>Branded Call着信で <b>ブランド名・正規番号・Verifiedバッジ</b> を強調</li>
+        <li>成功/失敗、失敗時の <b>SMS/電話フォールバック</b> の流れを可視化</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // ---- state ----
+    const state = {
+      brand: 'SBI証券',
+      number: '03-1234-5678',
+      otp: '842319',
+      step: 1,
+      calling: false,
+      incoming: false,
+      result: 'idle', // idle|success|error
+    };
+
+    // ---- els ----
+    const el = (id)=>document.getElementById(id);
+    const inputBrand = el('inputBrand');
+    const inputNumber = el('inputNumber');
+    const inputOtp = el('inputOtp');
+
+    const subtitle = el('subtitle');
+
+    const step1 = el('step1');
+    const step2 = el('step2');
+    const step3 = el('step3');
+
+    const home = el('home');
+    const calling = el('calling');
+    const incoming = el('incoming');
+
+    const banner = el('banner');
+    const callNumber = el('callNumber');
+    const otpView = el('otpView');
+
+    const incLogo = el('incLogo');
+    const incBrand = el('incBrand');
+    const incNumber = el('incNumber');
+    const incFooter = el('incFooter');
+
+    const ovSuccess = el('ovSuccess');
+    const ovError = el('ovError');
+
+    // buttons
+    const resetBtn = el('resetBtn');
+    const btnReset2 = el('btnReset2');
+    const goAuth = el('goAuth');
+    const homeStart = el('homeStart');
+    const btnLineAuth = el('btnLineAuth');
+    const btnIncoming = el('btnIncoming');
+    const btnSuccess = el('btnSuccess');
+    const btnError = el('btnError');
+    const mkSuccess1 = el('mkSuccess1');
+    const mkError1 = el('mkError1');
+    const backHome1 = el('backHome1');
+    const retryLine = el('retryLine');
+    const switchPhone = el('switchPhone');
+    const btnAccept = el('btnAccept');
+    const btnDecline = el('btnDecline');
+
+    // ---- helpers ----
+    function setStep(n){ state.step = n; render(); }
+    function setCalling(v){ state.calling = v; render(); }
+    function setIncoming(v){ state.incoming = v; render(); }
+    function setResult(v){ state.result = v; render(); }
+
+    function syncFromInputs(){
+      state.brand = inputBrand.value.trim() || 'SBI証券';
+      state.number = inputNumber.value.trim() || '03-1234-5678';
+      state.otp = inputOtp.value.trim() || '842319';
+      render();
+    }
+
+    function resetAll(){
+      state.brand = 'SBI証券';
+      state.number = '03-1234-5678';
+      state.otp = '842319';
+      state.step = 1; state.calling = false; state.incoming = false; state.result = 'idle';
+      inputBrand.value = state.brand; inputNumber.value = state.number; inputOtp.value = state.otp;
+      render();
+    }
+
+    // ---- render ----
+    function render(){
+      // header subtitle
+      subtitle.textContent = `アプリ上で「${state.brand} 認証中」を表示しながら、正規番号（${state.number}）での発呼・着信を可視化`;
+
+      // steps
+      [step1, step2, step3].forEach((s)=>s.classList.remove('active'));
+      (state.step===1?step1:state.step===2?step2:step3).classList.add('active');
+
+      // screens visibility
+      home.style.display = (!state.calling && !state.incoming && state.result==='idle') ? 'block' : 'none';
+      calling.style.display = state.calling ? 'flex' : 'none';
+      incoming.style.display = state.incoming ? 'flex' : 'none';
+
+      // calling banner and info
+      banner.textContent = `${state.brand} 認証中`;
+      callNumber.textContent = state.number;
+      otpView.textContent = state.otp;
+
+      // branded incoming
+      incLogo.textContent = state.brand.slice(0,2);
+      incBrand.textContent = state.brand;
+      incNumber.textContent = state.number;
+      incFooter.textContent = `着信：${state.brand}（公式）`;
+
+      // overlays
+      ovSuccess.style.display = state.result==='success' ? 'grid' : 'none';
+      ovError.style.display = state.result==='error' ? 'grid' : 'none';
+
+      // home title
+      document.getElementById('homeTitle').textContent = `${state.brand} 認証センター`;
+    }
+
+    // ---- events ----
+    inputBrand.addEventListener('input', syncFromInputs);
+    inputNumber.addEventListener('input', syncFromInputs);
+    inputOtp.addEventListener('input', syncFromInputs);
+
+    resetBtn.addEventListener('click', resetAll);
+    btnReset2.addEventListener('click', resetAll);
+
+    goAuth.addEventListener('click', ()=>{ setStep(2); setCalling(true); setIncoming(false); setResult('idle'); });
+    homeStart.addEventListener('click', ()=>{ setStep(2); setCalling(true); setIncoming(false); setResult('idle'); });
+    btnLineAuth.addEventListener('click', ()=>{ setStep(2); setCalling(true); setIncoming(false); setResult('idle'); });
+
+    btnIncoming.addEventListener('click', ()=>{ setStep(3); setIncoming(true); setCalling(false); setResult('idle'); });
+
+    btnSuccess.addEventListener('click', ()=> setResult('success'));
+    btnError.addEventListener('click', ()=> setResult('error'));
+
+    mkSuccess1.addEventListener('click', ()=> setResult('success'));
+    mkError1.addEventListener('click', ()=> setResult('error'));
+
+    backHome1.addEventListener('click', resetAll);
+    retryLine.addEventListener('click', ()=>{ setStep(2); setCalling(true); setIncoming(false); setResult('idle'); });
+    switchPhone.addEventListener('click', ()=>{ setStep(3); setIncoming(true); setCalling(false); setResult('idle'); });
+
+    btnAccept.addEventListener('click', ()=> setResult('success'));
+    btnDecline.addEventListener('click', ()=> setResult('error'));
+
+    // draw random QR dots
+    (function drawDots(){
+      const svg = document.querySelector('.qr svg g');
+      for(let i=0;i<60;i++){
+        const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        r.setAttribute('x', ((i*11)%100+10));
+        r.setAttribute('y', (((i*7)%80)+20));
+        r.setAttribute('width','4');
+        r.setAttribute('height','4');
+        svg.appendChild(r);
+      }
+    })();
+
+    // init
+    render();
+  </script>
+</body>
+</html>
