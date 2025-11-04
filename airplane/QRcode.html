@@ -1,116 +1,62 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>多段階通知デモ（LINE→SMS→電話）</title>
-<style>
-  body { font-family: sans-serif; background:#f6faff; margin:0; padding:20px; }
-  .container { max-width:800px; margin:0 auto; }
-  .card { background:#fff; padding:16px; margin:8px 0; border-radius:8px; border:1px solid #ddd; }
-  .steps { display:flex; gap:8px; }
-  .step { flex:1; background:#fff; border:1px solid #ddd; border-radius:8px; padding:10px; font-size:14px; }
-  .status { display:inline-block; margin-top:4px; padding:2px 6px; border-radius:4px; background:#eee; font-size:12px; }
-  button { padding:6px 12px; margin-top:8px; }
-  .qr-box { text-align:center; margin-top:10px; }
-  #register { display:none; }
-  textarea { width:100%; height:80px; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>事前通知登録 - ソフトバンクエアライン</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #f0f8ff, #ffffff);
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background-color: #1e90ff;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .qr-section {
+      text-align: center;
+    }
+    .qr-section img {
+      margin: 20px 0;
+    }
+    .qr-section p {
+      font-size: 14px;
+      color: #555;
+    }
+    .footer {
+      text-align: center;
+      padding: 10px;
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
 </head>
 <body>
-<div class="container">
-  <div id="landing">
-    <h2>多段階通知デモ（LINE → SMS → 電話）</h2>
-    <p>時間差で通知が流れるデモ。未読時は次チャネルへフォールバック。</p>
-
-    <div class="card">
-      <h3>事前通知登録（QR入口）</h3>
-      <div class="qr-box">
-        <canvas id="qrcode"></canvas>
-        <div id="regLink"></div>
-        <button id="openReg">この端末で開く</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>デモ設定</h3>
-      <label>LINE既読待ち(秒): <input type="number" id="delayRead" value="6" /></label><br>
-      <label>SMS→電話(秒): <input type="number" id="delayCall" value="8" /></label><br>
-      <button id="startBtn">デモ開始</button>
-      <button id="resetBtn">リセット</button>
-    </div>
-
-    <div class="steps">
-      <div class="step"><b>LINE</b><div id="s1" class="status">未開始</div><textarea readonly id="msg1"></textarea></div>
-      <div class="step"><b>SMS</b><div id="s2" class="status">未開始</div><textarea readonly id="msg2"></textarea></div>
-      <div class="step"><b>電話</b><div id="s3" class="status">未開始</div><textarea readonly id="msg3"></textarea></div>
+  <div class="header">
+    <h1>ソフトバンクエアライン</h1>
+    <p>事前通知登録</p>
+  </div>
+  <div class="container">
+    <div class="qr-section">
+      <h2>QRコードをスキャンして登録</h2>
+      <img src="https://via.placeholder.com/200" alt="QRコード">
+      <p>スマートフォンでQRコードをスキャンして、事前通知の登録を行ってください。</p>
     </div>
   </div>
-
-  <div id="register" class="card">
-    <h3>事前通知登録フォーム</h3>
-    <label>お名前<input id="name" value="山田 太郎"/></label><br>
-    <label>フライト<input id="flight" value="SB123"/></label><br>
-    <label>電話<input id="phone" value="090-1234-5678"/></label><br>
-    <button id="back">登録して戻る</button>
+  <div class="footer">
+    &copy; 2025 ソフトバンクエアライン. All rights reserved.
   </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-<script>
-let hash = location.hash;
-const landing = document.getElementById('landing');
-const register = document.getElementById('register');
-const regUrl = location.origin + location.pathname + '#/register';
-
-function renderRoute(){
-  if(location.hash==="#/register"){ landing.style.display='none'; register.style.display='block'; }
-  else{ landing.style.display='block'; register.style.display='none'; }
-}
-window.addEventListener('hashchange',renderRoute);
-renderRoute();
-
-// QR生成
-const qr = new QRious({ element:document.getElementById('qrcode'), size:160, value:regUrl });
-document.getElementById('regLink').innerText = regUrl;
-
-// UI参照
-const s1=document.getElementById('s1'), s2=document.getElementById('s2'), s3=document.getElementById('s3');
-const m1=document.getElementById('msg1'), m2=document.getElementById('msg2'), m3=document.getElementById('msg3');
-
-let timers=[];
-function reset(){ timers.forEach(clearTimeout); timers=[]; [s1,s2,s3].forEach(x=>x.innerText='未開始'); m1.value=m2.value=m3.value=''; }
-
-function simulate(){
- reset();
- s1.innerText='送信中'; m1.value='明日の搭乗案内...';
-
- timers.push(setTimeout(()=>{ s1.innerText='送信済み'; },800));
- timers.push(setTimeout(()=>{
-   let read = Math.random()<0.5;
-   if(read){ s1.innerText='既読'; }
-   else{
-     s1.innerText='未読→SMSへ'; sms();
-   }
- }, Number(document.getElementById('delayRead').value)*1000));
-}
-
-function sms(){
- s2.innerText='送信中'; m2.value='チェックインは2時間前まで...';
- timers.push(setTimeout(()=>{ s2.innerText='配信済み'; },1200));
- timers.push(setTimeout(()=>{ call(); }, Number(document.getElementById('delayCall').value)*1000));
-}
-
-function call(){
- s3.innerText='発信中'; m3.value='音声案内→オペレーター...';
- timers.push(setTimeout(()=>{ s3.innerText='通話接続'; },1500));
-}
-
-// イベント
- document.getElementById('startBtn').onclick=simulate;
- document.getElementById('resetBtn').onclick=reset;
- document.getElementById('openReg').onclick=()=>{location.hash='/register'};
- document.getElementById('back').onclick=()=>{location.hash=''};
-</script>
 </body>
 </html>
