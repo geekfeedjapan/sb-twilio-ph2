@@ -314,10 +314,10 @@ export default function AirlineCascadeDemo() {
                       <div className="text-xs text-gray-500 mt-2 break-all text-center">{registrationUrl}</div>
                       <div className="flex gap-2 mt-3">
                         <Button variant="secondary" size="sm" onClick={() => copy(registrationUrl)}>
-                          <Copy className="w-4 h-4 mr-1" />リンクをコピー
+                          リンクをコピー
                         </Button>
                         <Button size="sm" onClick={() => push("/register")}>
-                          <ExternalLink className="w-4 h-4 mr-1" />この端末で開く
+                          この端末で開く
                         </Button>
                       </div>
                     </div>
@@ -457,10 +457,8 @@ export default function AirlineCascadeDemo() {
             </div>
 
             <div className="flex gap-2 pt-2">
-              <Button onClick={() => push("") } disabled={!agree}>
-                <Check className="w-4 h-4 mr-1" /> 登録してデモへ戻る
-              </Button>
-              <Button variant="secondary" onClick={() => push("")}>キャンセル</Button>
+              <Button onClick={() => push("")} disabled={!agree}><Check className="w-4 h-4 mr-1" /> 登録してデモへ戻る</Button>
+              <Button variant="secondary" onClick={() => push("#")}>キャンセル</Button>
             </div>
           </CardContent>
         </Card>
