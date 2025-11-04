@@ -140,6 +140,11 @@
         }
 
         .error-message {
+            position: absolute; /* 場所を固定 */
+            top: 80px; /* 上部に固定 */
+            left: 50%; /* 水平方向中央寄せ */
+            transform: translateX(-50%); /* 中央寄せ調整 */
+            z-index: 10; /* 他の要素より前面に表示 */
             color: #d8000c;
             background-color: #ffbaba;
             padding: 10px;
@@ -226,6 +231,7 @@
         }
     #step-2 {
             padding: 0 5px 20px 5px;
+            padding-top: 120px; /* 他のボタンや文字が被らないよう調整 */
             min-height: calc(100% - 55px); /* header分を除外 */
             display: none; /* 初期は非表示、JSでflexに変更 */
             flex-direction: column;
