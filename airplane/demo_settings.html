@@ -9,6 +9,20 @@
 <body>
     <h1>デモ設定</h1>
     <p>フォールバックまでの秒数を調整して挙動を確認します。</p>
+    <div class="demo-settings">
+      <h2>デモ設定</h2>
+      <p>フォールバックまでの秒数を調整して挙動を確認</p>
+      <form>
+        <label for="lineToSms">LINE → SMS</label>
+        <input id="lineToSms" type="number" min="1" value="20">
+        <label for="smsToCall">SMS → 電話</label>
+        <input id="smsToCall" type="number" min="1" value="30">
+        <label for="readTimeout">LINE既読待ち</label>
+        <input id="readTimeout" type="number" min="1" value="15">
+        <button type="button">デモ開始</button>
+        <button type="button">リセット</button>
+      </form>
+    </div>
     <script src="demo_settings.js"></script>
 </body>
 </html>
