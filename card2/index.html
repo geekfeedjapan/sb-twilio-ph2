@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>JCBカードポータル</title>
+  <title>LINE + Branded Call Demo (Pure HTML/CSS/JS)</title>
   <style>
     :root{
       --line-green:#06c755;
@@ -36,91 +36,192 @@
     .muted{color:var(--muted)}
     .badge{display:inline-flex; gap:6px; align-items:center; font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); background:#fff}
 
-    /* Header */
-    .header{background:#fff; padding:16px 0; box-shadow:0 2px 4px rgba(0,0,0,.1)}
-    .header h1{font-size:24px; margin:0; text-align:center}
-    .nav{display:flex; justify-content:center; gap:16px; margin-top:8px}
-    .nav a{font-size:14px; color:var(--ink); text-decoration:none}
-    .nav a:hover{text-decoration:underline}
+    /* Tabs */
+    .tabs{display:flex; gap:8px}
+    .tab{padding:8px 12px; border:1px solid var(--border); border-radius:999px; cursor:pointer; background:#fff; font-size:14px}
+    .tab[aria-selected="true"]{background:#fff; box-shadow: inset 0 0 0 2px var(--ink, #222)}
 
-    /* Main content */
-    .main{flex:1; display:flex; flex-direction:column; gap:16px}
-    .section{padding:16px; border:1px solid var(--border); border-radius:10px; background:#fff}
-    .section h2{font-size:18px; margin:0 0 12px 0}
-    .section p{font-size:14px; color:#555; margin:0 0 12px 0}
-    .section ul{padding-left:20px; margin:0 0 12px 0}
-    .section ul li{font-size:14px; color:#555; margin-bottom:8px}
-    form{display:grid; gap:12px}
-    label{font-size:14px; color:#333}
-    input[type="text"], input[type="email"], textarea{
-      padding:10px; border:1px solid var(--border); border-radius:10px; font-size:14px; width:100%; box-shadow:inset 0 1px 2px rgba(0,0,0,.05)
-    }
-    button[type="submit"]{
-      background:var(--line-green); color:#fff; border:none; padding:10px 16px; border-radius:10px; font-size:16px; cursor:pointer; font-weight:600
-    }
-    button[type="submit"]:hover{
-      background:var(--line-green-d)
-    }
+    /* Phone frames */
+    .phone{width:390px; height:844px; border:1px solid var(--border); border-radius:28px; overflow:hidden; margin:16px auto; background:#fff; position:relative}
+    .statusbar{font-size:11px; padding:6px 12px; display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,.8)}
+    .talkhdr{display:flex; align-items:center; gap:8px; padding:10px 14px; background:var(--line-green); color:#fff}
+    .talkhdr .logo{width:24px; height:24px; border-radius:999px; background:rgba(255,255,255,.25); display:grid; place-items:center; font-weight:700; font-size:12px}
+    .talkbg{height:calc(844px - 40px - 44px - 220px); padding:12px; overflow:auto; background:#dfe3e7; background-image:repeating-linear-gradient(45deg, rgba(255,255,255,.35) 0, rgba(255,255,255,.35) 10px, rgba(255,255,255,.3) 10px, rgba(255,255,255,.3) 20px)}
+    .bubble{max-width:76%; border:1px solid var(--border); background:#fff; border-radius:18px; padding:8px 10px; box-shadow:0 1px 0 rgba(0,0,0,.04); font-size:13px; line-height:1.6}
+    .bubble.me{background:#c8f7d0; border-color:#b8ecbf}
+    .bubble-time{margin-top:4px; font-size:10px; color:#999}
+    .flex{display:flex}
+    .left{justify-content:flex-start}
+    .right{justify-content:flex-end}
+    .notif{border-top:1px solid var(--border); background:#fff; padding:16px}
+    .notif .cardlike{border:1px solid var(--border); border-radius:16px; overflow:hidden}
+    .notif .head{display:flex; gap:8px; align-items:center; padding:10px 12px}
+    .notif .body{padding:10px 12px; color:#555; font-size:13px; background:#fafafa}
+    .notif .foot{padding:12px; display:flex; gap:8px}
 
-    /* Footer */
-    .footer{background:#f9f9f9; padding:16px 0; text-align:center; font-size:12px; color:#777}
+    /* CALL screen */
+    .phone-bg{background:url('https://images.unsplash.com/photo-1503264116251-35a269479413?q=80&w=1887&auto=format&fit=crop') center/cover}
+    .overlay{position:absolute; inset:0; background:rgba(0,0,0,.35); color:#fff}
+    .abs{position:absolute; left:0; right:0}
+
+    /* Web mock */
+    .hero{background:linear-gradient(#fff, #f9fafb); padding:24px}
+    .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .tile{border:1px solid var(--border); border-radius:14px; padding:12px}
+
+    /* Log */
+    .log{height:190px; overflow:auto; border:1px solid var(--border); border-radius:10px; padding:8px; font-size:12px; background:#fff}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <!-- HEADER: Site title and navigation -->
-    <header class="header">
-      <div class="container">
-        <h1>JCBカードポータル</h1>
-        <nav>
-          <ul class="nav">
-            <li><a href="#home">ホーム</a></li>
-            <li><a href="#services">サービス</a></li>
-            <li><a href="#contact">お問い合わせ</a></li>
-          </ul>
-        </nav>
+    <!-- LEFT: Controls -->
+    <section class="card">
+      <div class="card-h">
+        <div style="display:flex; align-items:center; gap:8px"><strong>シナリオ設定</strong></div>
+        <div class="badge" id="statusBadge">待機中</div>
       </div>
-    </header>
-
-    <!-- MAIN CONTENT: Sections for home, services, contact -->
-    <main class="main">
-      <!-- HOME SECTION -->
-      <section id="home" class="section">
-        <h2>ようこそ、JCBカードポータルへ</h2>
-        <p>JCBカードの最新情報やサービスをご確認いただけます。</p>
-      </section>
-
-      <!-- SERVICES SECTION -->
-      <section id="services" class="section">
-        <h2>サービス</h2>
-        <ul>
-          <li>オンライン決済</li>
-          <li>ポイントプログラム</li>
-          <li>カード管理</li>
-        </ul>
-      </section>
-
-      <!-- CONTACT SECTION -->
-      <section id="contact" class="section">
-        <h2>お問い合わせ</h2>
-        <form>
-          <label for="name">お名前</label>
-          <input type="text" id="name" name="name" required>
-          <label for="email">メールアドレス</label>
-          <input type="email" id="email" name="email" required>
-          <label for="message">メッセージ</label>
-          <textarea id="message" name="message" required></textarea>
-          <button type="submit">送信</button>
-        </form>
-      </section>
-    </main>
-
-    <!-- FOOTER: Copyright notice -->
-    <footer class="footer">
-      <div class="container">
-        <p>&copy; 2025 JCBカード. All rights reserved.</p>
+      <div class="card-c">
+        <div class="row">
+          <div>
+            <label>ユーザー名</label>
+            <input id="userName" type="text" value="山田 太郎" />
+          </div>
+          <div>
+            <label>企業名（発信者表示）</label>
+            <input id="brandName" type="text" value="JCBカード" />
+          </div>
+          <div>
+            <label>通話理由（発信表示）</label>
+            <input id="callReason" type="text" value="不正利用確認" />
+          </div>
+          <div>
+            <label>LINE 到達可否</label>
+            <select id="lineReachable" class="switch">
+              <option value="1" selected>到達する（通常）</option>
+              <option value="0">未達（電話へフォールバック）</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
+          <button class="btn prim" id="btnStart">認証フローを開始</button>
+          <button class="btn" id="btnReset">リセット</button>
+          <button class="btn" id="btnOpenWeb">Webサイトを開く</button>
+        </div>
+        <div style="margin-top:16px">
+          <div class="muted" style="font-size:14px; margin-bottom:8px">進行状況</div>
+          <progress id="prog" value="0" max="100" style="width:100%"></progress>
+          <div class="muted" id="otpHint" style="font-size:12px; margin-top:6px"></div>
+        </div>
+        <div style="margin-top:16px">
+          <div class="muted" style="margin-bottom:6px">イベントログ（新しい順）</div>
+          <div class="log" id="log"></div>
+        </div>
       </div>
-    </footer>
+    </section>
+
+    <!-- RIGHT: Phone preview area with tabs -->
+    <section class="card" style="display:flex; flex-direction:column">
+      <div class="card-c" style="display:flex; align-items:center; gap:8px; padding-bottom:8px">
+        <strong>ユーザー端末プレビュー</strong>
+        <div style="margin-left:auto"></div>
+      </div>
+      <div class="card-c" style="padding-top:0">
+        <div class="tabs" role="tablist">
+          <button class="tab" id="tabWeb" role="tab" aria-selected="true">Web</button>
+          <button class="tab" id="tabLine" role="tab" aria-selected="false">LINE</button>
+          <button class="tab" id="tabPhone" role="tab" aria-selected="false">電話</button>
+        </div>
+
+        <!-- WEB PHONE -->
+        <div id="panelWeb" class="phone" role="tabpanel" aria-labelledby="tabWeb">
+          <!-- landing/login/mypage will be injected -->
+        </div>
+
+        <!-- LINE PHONE -->
+        <div id="panelLine" class="phone" role="tabpanel" aria-labelledby="tabLine" hidden>
+          <div class="statusbar"><span>9:41</span><span>4G</span></div>
+          <div class="talkhdr"><div class="logo">L</div><div id="lineBrandTitle">JCBカード 公式</div></div>
+          <div class="talkbg" id="talkArea"></div>
+          <div class="notif">
+            <div id="lineIdleMsg" class="muted">待機中… 認証要求を開始してください。（Web→ログインでも開始できます）</div>
+            <div id="lineNotif" class="cardlike" hidden>
+              <div class="head">
+                <div class="logo" style="background:var(--line-green); color:#fff">L</div>
+                <div id="notifTitle" style="font-size:14px; font-weight:600">JCBカード からの認証リクエスト</div>
+              </div>
+              <div class="body"><span id="notifBody">山田 太郎 様のログインを確認します。OTP 000000 の入力は不要です。</span></div>
+              <div class="foot">
+                <button class="btn prim" id="btnLineApprove">認証する</button>
+                <button class="btn outl" id="btnLineReject">拒否</button>
+              </div>
+            </div>
+            <div id="lineResultOk" class="muted" hidden style="color:#059669">認証されました。続行できます。</div>
+            <div id="lineResultNg" class="muted" hidden style="color:#e11d48">拒否されました。不審な試行として報告します。</div>
+            <div id="fallbackMsg" class="muted" hidden>LINE 未達のため、電話での承認に切り替えています。『電話』タブをご確認ください。</div>
+          </div>
+        </div>
+
+        <!-- CALL PHONE -->
+        <div id="panelPhone" class="phone phone-bg" role="tabpanel" aria-labelledby="tabPhone" hidden>
+          <div class="statusbar" style="color:#fff; background:rgba(0,0,0,.2)"><span>9:41</span><span>LTE</span></div>
+          <div id="callStageRinging" class="overlay" hidden>
+            <div class="abs" style="top:80px; text-align:center">
+              <div style="opacity:.9">着信</div>
+              <div id="callAvatar" style="width:96px; height:96px; border-radius:999px; background:rgba(255,255,255,.2); margin:12px auto; display:grid; place-items:center; font-size:28px; font-weight:700">J</div>
+              <div id="callBrand" style="font-size:28px; font-weight:700">JCBカード</div>
+              <div id="callReason" style="opacity:.9; margin-top:4px">不正利用確認</div>
+            </div>
+            <div class="abs" style="bottom:88px; display:flex; justify-content:center; gap:64px">
+              <button class="btn" id="btnCallReject" style="width:64px; height:64px; background:#e11d48; color:#fff; border-color:#e11d48">✕</button>
+              <button class="btn" id="btnCallAnswer" style="width:64px; height:64px; background:#10b981; color:#fff; border-color:#10b981">📞</button>
+            </div>
+            <div class="abs" style="bottom:56px; text-align:center; opacity:.9">拒否 / 応答</div>
+          </div>
+
+          <div id="callStageOngoing" class="overlay" hidden>
+            <div class="abs" style="top:80px; text-align:center">
+              <div style="opacity:.85">通話中</div>
+              <div id="callBrand2" style="font-size:28px; font-weight:700">JCBカード</div>
+              <div id="callReason2" style="opacity:.85">不正利用確認</div>
+              <div style="opacity:.75; margin-top:4px">00:24</div>
+            </div>
+            <div class="abs" style="top:240px; left:0; right:0">
+              <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:24px; padding:0 24px">
+                <div style="text-align:center">
+                  <div style="width:56px; height:56px; border-radius:999px; background:rgba(255,255,255,.15); margin:0 auto 6px"></div>
+                  <div style="font-size:11px; opacity:.85">ミュート</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="width:56px; height:56px; border-radius:999px; background:rgba(255,255,255,.15); margin:0 auto 6px"></div>
+                  <div style="font-size:11px; opacity:.85">キーパッド</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="width:56px; height:56px; border-radius:999px; background:rgba(255,255,255,.15); margin:0 auto 6px"></div>
+                  <div style="font-size:11px; opacity:.85">スピーカー</div>
+                </div>
+              </div>
+            </div>
+            <div class="abs" style="top:420px; left:0; right:0">
+              <div style="margin:0 24px; border:1px solid rgba(255,255,255,.25); border-radius:16px; padding:12px; background:rgba(255,255,255,.1)">
+                <div style="font-size:12px; opacity:.85">音声ガイダンス:</div>
+                <div style="font-size:13px; line-height:1.7">本人確認のため、<b>承認は『承認』</b>、<b>不審な場合は『拒否』</b>を押してください。追加のコード入力は不要です。</div>
+                <div style="display:flex; gap:8px; margin-top:8px">
+                  <button class="btn" id="btnCallApprove">承認</button>
+                  <button class="btn outl" id="btnCallReject2">拒否</button>
+                </div>
+                <div id="callApproveMsg" style="margin-top:8px; color:#a7f3d0; display:none">承認されました。セッションを確立しています…</div>
+                <div id="callRejectMsg" style="margin-top:8px; color:#fecaca; display:none">拒否されました。不審な試行として報告します。</div>
+              </div>
+            </div>
+            <div class="abs" style="bottom:24px; text-align:center">
+              <div style="width:76px; height:76px; border-radius:999px; background:#e11d48; margin:0 auto 6px"></div>
+              <div style="font-size:11px; opacity:.85">通話を終了</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script>
