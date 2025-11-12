@@ -42,3 +42,28 @@ body {
 .store-list a:hover {
   text-decoration: underline;
 }
+
+/* カテゴリごとの色分け */
+.store-list li:nth-child(1) a {
+  background-color: #ffcccc;
+  border-radius: 5px;
+  padding: 10px;
+  display: block;
+  text-align: center;
+}
+
+.store-list li:nth-child(2) a {
+  background-color: #ccffcc;
+  border-radius: 5px;
+  padding: 10px;
+  display: block;
+  text-align: center;
+}
+
+.store-list li:nth-child(3) a {
+  background-color: #ccccff;
+  border-radius: 5px;
+  padding: 10px;
+  display: block;
+  text-align: center;
+}
