@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>店舗サイト ランチャー（別タブで2店舗表示）</title>
+  <style>
+    :root{--ink:#0a2540;--muted:#5a6b7b;--brand:#f22f46;--bg:#f6f8fb;--card:#fff;--shadow:0 8px 24px rgba(16,24,40,.08);--radius:16px}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",Meiryo,sans-serif;color:var(--ink)}
+    .wrap{max-width:980px;margin:0 auto;padding:24px}
+    h1{margin:0 0 8px;font-size:28px}
+    p.lead{margin:0 0 20px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+    .card h2{margin:0 0 6px}
+    .card p{margin:6px 0;color:var(--muted)}
+    .btn{appearance:none;border:0;background:var(--brand);color:#fff;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer}
+    .btn.secondary{background:#e9eef5;color:#0a2540}
+    .meta{display:grid;gap:4px;font-size:.95rem;margin:8px 0}
+    code{background:#f1f4f8;padding:2px 6px;border-radius:8px}
+    @media (max-width:720px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🏪 店舗サイト（別タブで開く）サンプル</h1>
+    <p class="lead">クリックすると、それぞれの店舗用ウェブサイトが <strong>別タブ</strong> で開き、<strong>実際の電話番号</strong>（デモ用）を大きく表示します。telリンクで発信も可能です。</p>
+
+    <div class="grid">
+      <div class="card">
+        <h2>店舗A：Geekfeed Bakery 渋谷店</h2>
+        <div class="meta">
+          <div>住所：東京都渋谷区道玄坂 1-2-3</div>
+          <div>電話番号：<code>03-1234-5678</code></div>
+          <div>営業時間：10:00 – 20:00（年中無休）</div>
+        </div>
+        <button class="btn" onclick="openStore('渋谷店','Geekfeed Bakery 渋谷店','03-1234-5678','81312345678','東京都渋谷区道玄坂 1-2-3','10:00 – 20:00','https://maps.example.com/shibuya')">店舗Aサイトを開く（別タブ）</button>
+      </div>
+
+      <div class="card">
+        <h2>店舗B：Geekfeed Bakery 大阪店</h2>
+        <div class="meta">
+          <div>住所：大阪府大阪市北区梅田 4-5-6</div>
+          <div>電話番号：<code>06-1234-5678</code></div>
+          <div>営業時間：10:00 – 20:00（年中無休）</div>
+        </div>
+        <button class="btn" onclick="openStore('大阪店','Geekfeed Bakery 大阪店','06-1234-5678','81612345678','大阪府大阪市北区梅田 4-5-6','10:00 – 20:00','https://maps.example.com/osaka')">店舗Bサイトを開く（別タブ）</button>
+      </div>
+    </div>
+
+    <p style="margin-top:20px;color:var(--muted)">※ 電話番号はデモ用の表記です。<br/>Twilioのトラッキング番号を発番したら、下の関数引数の <code>displayNumber</code> / <code>e164</code> を差し替えるだけでOKです。</p>
+
+    <div class="card" style="margin-top:8px">
+      <h3 style="margin:0 0 8px">連携メモ</h3>
+      <p style="margin:6px 0;color:var(--muted)">コールトラッカードメインからは <code>window.open</code> の代わりに、CMSやLP生成バッチで静的HTMLを配布してもOK。gclid/utm をクエリ引き渡しすれば、着信時にIVRやWebhookでキャンペーン紐付けが可能です。</p>
+      <button class="btn secondary" onclick="previewSource()">この店舗テンプレのソースを見る</button>
+    </div>
+  </div>
+
+  <script>
+    function storeTemplate({city,name,displayNumber,e164,address,hours,mapUrl}){
+      const css = `:root{--brand:#f22f46;--ink:#0a2540;--muted:#667085;--bg:#fff7f8;--card:#fff;--shadow:0 10px 28px rgba(16,24,40,.1);--radius:20px}
+      *{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",Meiryo,sans-serif;color:var(--ink)}
+      .hero{padding:28px;display:grid;gap:16px;max-width:900px;margin:0 auto}
+      .brand{display:flex;align-items:center;gap:12px}
+      .logo{width:42px;height:42px;border-radius:10px;background:var(--brand);display:grid;place-items:center;color:#fff;font-weight:900}
+      h1{margin:0;font-size:28px}
+      .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+      .cols{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+      .tel{font-size:36px;font-weight:900;letter-spacing:.5px}
+      .cta{display:grid;gap:8px}
+      .btn{appearance:none;border:0;background:var(--brand);color:#fff;border-radius:14px;padding:14px 16px;font-weight:800;font-size:18px;cursor:pointer}
+      .muted{color:var(--muted)}
+      .meta{display:grid;gap:6px}
+      iframe{width:100%;height:260px;border:0;border-radius:14px}
+      @media(max-width:760px){.cols{grid-template-columns:1fr}.tel{font-size:30px}}
+      footer{max-width:900px;margin:18px auto 28px;color:#98a2b3;font-size:.9rem;text-align:center}
+      `;
+
+      const html = `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+      <title>${name} | 公式サイト</title><style>${css}</style></head><body>
+        <div class="hero">
+          <div class="brand"><div class="logo">GF</div><div><h1>${name}</h1><div class="muted">${city}｜毎日焼きたてのパンをどうぞ</div></div></div>
+          <div class="cols">
+            <div class="card cta">
+              <div>ご予約・お問い合わせ</div>
+              <div class="tel">${displayNumber}</div>
+              <a class="btn" href="tel:+${e164}">この番号に電話する</a>
+              <div class="muted">受付時間：${hours}</div>
+            </div>
+            <div class="card meta">
+              <strong>アクセス</strong>
+              <div>${address}</div>
+              <iframe src="about:blank" title="map"></iframe>
+            </div>
+          </div>
+          <div class="card">
+            <strong>お知らせ</strong>
+            <ul class="muted">
+              <li>本日、季節限定「ショコラ・オランジュ」入荷しています。</li>
+              <li>電話予約で取り置き可能です。お気軽にお電話ください。</li>
+            </ul>
+          </div>
+        </div>
+        <footer>Powered by Twilio コールトラッカー（デモ）</footer>
+      </body></html>`;
+      return html;
+    }
+
+    function openStore(city,name,displayNumber,e164,address,hours,mapUrl){
+      const html = storeTemplate({city,name,displayNumber,e164,address,hours,mapUrl});
+      const blob = new Blob([html], {type:'text/html'});
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener');
+      setTimeout(()=>URL.revokeObjectURL(url), 60000);
+    }
+
+    function previewSource(){
+      const sample = storeTemplate({city:'渋谷店',name:'Geekfeed Bakery 渋谷店',displayNumber:'03-1234-5678',e164:'81312345678',address:'東京都渋谷区道玄坂 1-2-3',hours:'10:00 – 20:00',mapUrl:'#'});
+      const w = window.open('', '_blank');
+      w.document.write('<pre>'+sample.replace(/[&<>]/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]))+'</pre>');
+      w.document.close();
+    }
+  </script>
+</body>
+</html>
