@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ja" data-state="reservation">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不動産内見予約後の連絡デモ（Masked Phone Number）</title>
+    <style>
+        :root {
+            --bg: #f4f7fb;
+            --card-bg: #ffffff;
+            --accent: #2b7cff;
+            --accent-soft: #e1edff;
+            --text-main: #222;
+            --text-sub: #666;
+            --border: #dde3ee;
+            --danger: #ff6b6b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top left, #e4eeff, #f4f7fb 55%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .demo-wrapper {
+            width: 100%;
+            max-width: 1200px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 24px;
+            box-shadow: 0 18px 60px rgba(15, 23, 42, 0.18);
+            padding: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .demo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .title-block h1 {
+            font-size: 20px;
+            margin: 0;
+        }
+
+        .title-block p {
+            margin: 4px 0 0;
+            font-size: 13px;
+            color: var(--text-sub);
+        }
+
+        .state-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            font-size: 12px;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .state-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: var(--accent);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.1fr) minmax(0, 1.2fr);
+            gap: 18px;
+        }
+
+        .phone {
+            background: linear-gradient(145deg, #f8fafc, #edf2ff);
+            border-radius: 32px;
+            padding: 12px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 320px;
+            aspect-ratio: 9 / 19.5;
+            border-radius: 26px;
+            border: 5px solid #111827;
+            background: #f3f4f6;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .phone-notch {
+            width: 96px;
+            height: 18px;
+            background: #111827;
+            border-radius: 0 0 20px 20px;
+            position: absolute;
+            top: -1px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .phone-inner {
+            flex: 1;
+            margin-top: 16px;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .phone-header {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .phone-header-title {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .phone-header-sub {
+            font-size: 11px;
+            color: var(--text-sub);
+        }
+
+        .phone-body {
+            flex: 1;
+            padding: 10px 12px 12px;
+            font-size: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #f9fafb;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            background: #e5f2ff;
+            color: #2563eb;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #2563eb;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #e5e7eb;
+            font-size: 10px;
+            color: #374151;
+        }
+
+        .section-box {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 8px 10px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .section-text {
+            font-size: 11px;
+            color: #4b5563;
+        }
+
+        .phone-footer {
+            padding: 8px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #ffffff;
+        }
+
+        .btn-outline {
+            background: #ffffff;
+            color: var(--accent);
+            border: 1px solid var(--accent-soft);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #ffffff;
+        }
+
+        .btn-primary .dot {
+            background: #ffffff;
+        }
+
+        .btn-outline .dot {
+            background: var(--accent);
+        }
+
+        .btn-secondary .dot {
+            background: #9ca3af;
+        }
+
+        .center-panel {
+            background: #f8fafc;
+            border-radius: 18px;
+            padding: 14px 14px 10px;
+            border: 1px dashed #cbd5f5;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .center-header {
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pill {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .masked-number-box {
+            background: #111827;
+            color: #e5e7eb;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-family: "SF Mono", Menlo, monospace;
+            font-size: 12px;
+        }
+
+        .masked-number-main {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+
+        .masked-number-sub {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        .center-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 11px;
+            color: #4b5563;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .center-list li::before {
+            content: "●";
+            font-size: 6px;
+            margin-right: 4px;
+            color: #2563eb;
+        }
+
+        .flow-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .flow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 11px;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .flow-step span.arrow {
+            font-size: 13px;
+        }
+
+        .mini-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .mini-label {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+        }
+
+        .kpi-box {
+            margin-top: 4px;
+            font-size: 10px;
+            color: #6b7280;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .kpi-box strong {
+            color: #111827;
+        }
+
+        /* 状態別の表示制御 */
+        .state-block {
+            display: none;
+        }
+
+        html[data-state="reservation"] .state-reservation,
+        html[data-state="calling"] .state-calling,
+        html[data-state="connected"] .state-connected {
+            display: block;
+        }
+
+        /* 状態ラベルの文言（プレゼン用） */
+        html[data-state="reservation"] .state-label-text::after {
+            content: "内見予約完了（まだ通話していない状態）";
+        }
+        html[data-state="calling"] .state-label-text::after {
+            content: "内見者がマスク番号に発信中";
+        }
+        html[data-state="connected"] .state-label-text::after {
+            content: "担当者とマスク番号経由で通話中";
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+            body {
+                align-items: stretch;
+            }
+            .demo-wrapper {
+                max-width: 100%;
+                height: auto;
+                border-radius: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="demo-wrapper">
+    <div class="demo-header">
+        <div class="title-block">
+            <h1>不動産内見予約後の連絡デモ（Masked Phone Number）</h1>
+            <p>内見予約完了後、入居希望者と担当者が「マスクド番号」で安心して連絡を取り合うイメージを可視化したデモ画面です。</p>
+        </div>
+        <div class="state-indicator">
+            <div class="state-dot"></div>
+            <span class="state-label-text"></span>
+        </div>
+    </div>
+
+    <div class="layout">
+        <!-- 左：入居希望者側 -->
+        <div class="phone">
+            <div style="font-size: 12px; margin-bottom: 6px; color: #4b5563;">入居希望者スマホ画面</div>
+            <div class="phone-frame">
+                <div class="phone-notch"></div>
+                <div class="phone-inner">
+                    <!-- 予約完了 -->
+                    <div class="state-block state-reservation">
+                        <div class="phone-header">
+                            <div class="phone-header-title">内見予約 完了</div>
+                            <div class="phone-header-sub">サンライトレジデンス 302号室</div>
+                        </div>
+                        <div class="phone-body">
+                            <div class="section-box">
+                                <div class="section-title">ご予約内容</div>
+                                <div class="section-text">
+                                    日時：2025/11/20（木）10:00〜<br>
+                                    担当：山田 太郎（不動産のスマイル）<br>
+                                    集合：現地エントランス前
+                                </div>
+                            </div>
+                            <div class="section-box">
+                                <div class="section-title">連絡用電話番号</div>
+                                <div class="section-text">
+                                    <span class="tag">マスクド番号</span><br>
+                                    <strong>050-1234-5678</strong><br>
+                                    ※担当者にはあなたの本当の番号は通知されません。
+                                </div>
+                            </div>
+                            <div class="section-box">
+                                <div class="section-title">こんなときにお電話ください</div>
+                                <div class="section-text">
+                                    ・5分以上遅れそうなとき<br>
+                                    ・場所がわからないとき<br>
+                                    ・急なキャンセル・時間変更のご相談 など
+                                </div>
+                            </div>
+                        </div>
+                        <div class="phone-footer">
+                            <button class="btn btn-secondary" onclick="setState('calling')">
+                                <span class="dot"></span> 遅刻しそうなので連絡する
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 発信中 -->
+                    <div class="state-block state-calling">
+                        <div class="phone-header">
+                            <div class="phone-header-title">発信中...</div>
+                            <div class="phone-header-sub">内見担当（マスクド番号宛）</div>
+                        </div>
+                        <div class="phone-body">
+                            <div class="info-row">
+                                <span class="badge"><span class="badge-dot"></span> Masked Phone Number</span>
+                                <span class="tag">あなたの番号は相手に非表示</span>
+                            </div>
+
+                            <div class="section-box">
+                                <div class="section-title">発信先番号</div>
+                                <div class="section-text">
+                                    発信先：050-1234-5678（システム発行の一時的な番号）<br>
+                                    あなたの実際の電話番号：090-1234-5678（例）<br>
+                                    <span style="font-size:10px;color:#6b7280;">※担当者のスマホには「050-1234-5678」または名前のみが表示され、090番号は通知されません。</span><br>
+                                    <span style="font-size:10px;color:#6b7280;">※この050番号から担当者の実番号に自動転送されます。</span>
+                                </div>
+                            </div>
+
+                            <div class="section-box">
+                                <div class="section-title">想定している通話内容</div>
+                                <div class="section-text">
+                                    「10分ほど遅れそうです。」「エントランスの場所を教えてください。」など、<br>
+                                    当日のちょっとした確認連絡を想定しています。
+                                </div>
+                            </div>
+                        </div>
+                        <div class="phone-footer">
+                            <button class="btn btn-outline" onclick="setState('reservation')">
+                                <span class="dot"></span> 戻る
+                            </button>
+                            <button class="btn btn-primary" onclick="setState('connected')">
+                                <span class="dot"></span> 担当者が出た想定にする
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 通話中 -->
+                    <div class="state-block state-connected">
+                        <div class="phone-header">
+                            <div class="phone-header-title">通話中：内見担当</div>
+                            <div class="phone-header-sub">00:23</div>
+                        </div>
+                        <div class="phone-body">
+                            <div class="section-box">
+                                <div class="section-title">会話イメージ</div>
+                                <div class="section-text">
+                                    あなた：「すみません、電車が遅れていて10分ほど遅れそうです。」<br><br>
+                                    担当者：「承知しました。到着されましたら、この番号に着いた旨をご連絡ください。」<br><br>
+                                    <span style="font-size:10px;color:#6b7280;">※相手には、終始マスクド番号からの着信として表示されます。</span>
+                                </div>
+                            </div>
+                            <div class="section-box">
+                                <div class="section-title">プライバシー</div>
+                                <div class="section-text">
+                                    通話が終わったあとも、相手方にあなたの本当の番号で折り返しが来ることはありません。
+                                </div>
+                            </div>
+                        </div>
+                        <div class="phone-footer">
+                            <button class="btn btn-danger btn-secondary" onclick="setState('reservation')">
+                                <span class="dot"></span> 通話を終了（デモを最初に戻す）
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- 中央：仕組みとポイント -->
+        <div class="center-panel">
+            <div class="center-header">
+                内見予約後の連絡 × Masked Phone Number
+                <span class="pill">デモ説明用</span>
+            </div>
+
+            <div class="masked-number-box">
+                <div class="masked-number-main">050-1234-5678</div>
+                <div class="masked-number-sub">
+                    入居希望者と担当者の間に入る「一時的な連絡専用番号」<br>
+                    実番号はシステム内のマッピングテーブルで管理し、双方には非公開。
+                </div>
+            </div>
+
+            <ul class="center-list">
+                <li>内見予約完了画面に「マスクド番号」を表示し、その番号だけをユーザーに知らせる。</li>
+                <li>ユーザーが 050 番号に発信すると、システムが担当者の実番号へ自動転送。</li>
+                <li>担当者のスマホには「内見予約 #A-1023／〇〇様」などの情報をポップアップ表示（連携デモ用）。</li>
+                <li>通話後は、セッション終了または一定時間後にマスクド番号のマッピングを無効化。</li>
+            </ul>
+
+            <div class="flow-label">CALL FLOW</div>
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <span>入居希望者</span>
+                    <span class="arrow">→</span>
+                    <span>050-1234-5678（マスクド番号）</span>
+                    <span class="arrow">→</span>
+                    <span>不動産担当者</span>
+                </div>
+                <div class="flow-step" style="font-size:10px;color:#6b7280;">
+                    ※通話録音・要約・CRM登録（YouWire / Salesforce 連携など）をここにぶら下げる説明も可能。
+                </div>
+            </div>
+
+            <div class="mini-legend">
+                <div class="mini-label">プライバシー保護（実番号は非公開）</div>
+                <div class="mini-label">一時利用（内見期間中のみ有効）</div>
+                <div class="mini-label">カスハラ対策・ログ管理</div>
+                <div class="mini-label">既存CPaaS / PBXと連携可能</div>
+            </div>
+
+            <div class="kpi-box">
+                <div><strong>デモの訴求ポイント：</strong> 「現場のリアルなユースケース」と「技術的な実現性」を同時に伝えられる。</div>
+                <div>プレゼンでは、左：入居者画面 → 中央：仕組み → 右：担当者画面 の順にストーリーを話すと通じやすいです。</div>
+            </div>
+        </div>
+
+        <!-- 右：不動産担当者側 -->
+        <div class="phone">
+            <div style="font-size: 12px; margin-bottom: 6px; color: #4b5563;">不動産会社担当者スマホ画面</div>
+            <div class="phone-frame">
+                <div class="phone-notch"></div>
+                <div class="phone-inner">
+                    <!-- 予約完了状態（まだ着信なし） -->
+                    <div class="state-block state-reservation">
+                        <div class="phone-header">
+                            <div class="phone-header-title">本日の内見予定</div>
+                            <div class="phone-header-sub">不動産のスマイル - 山田</div>
+                        </div>
+                        <div class="phone-body">
+                            <div class="section-box">
+                                <div class="section-title">10:00〜 サンライトレジデンス302</div>
+                                <div class="section-text">
+                                    お客様：佐藤 花子 様<br>
+                                    予約ID：A-1023<br>
+                                    連絡用：050-1234-5678（マスクド番号）
+                                </div>
+                            </div>
+                            <div class="section-box">
+                                <div class="section-title">メモ</div>
+                                <div class="section-text">
+                                    ・初めての一人暮らし予定<br>
+                                    ・駅からの距離と周辺環境を気にされている<br>
+                                    ・他2件と比較検討中
+                                </div>
+                            </div>
+                        </div>
+                        <div class="phone-footer">
+                            <button class="btn btn-secondary" onclick="setState('calling')">
+                                <span class="dot"></span> お客様からの着信を待機（デモ）
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 入居希望者が発信中のときの着信表示 -->
+                    <div class="state-block state-calling">
+                        <div class="phone-header" style="background:#0f172a;color:#e5e7eb;">
+                            <div class="phone-header-title">着信中...</div>
+                            <div class="phone-header-sub">内見予約 A-1023</div>
+                        </div>
+                        <div class="phone-body" style="background:#020617;color:#e5e7eb;">
+                            <div class="section-box" style="background:#020617;border-color:#1e293b;">
+                                <div class="section-title">着信元情報（システム連携）</div>
+                                <div class="section-text">
+                                    表示名：内見予約 佐藤 花子 様<br>
+                                    経路：050-1234-5678（マスクド番号経由）<br>
+                                    理由：内見当日の連絡（想定）
+                                </div>
+                            </div>
+                            <div class="section-box" style="background:#020617;border-color:#1e293b;">
+                                <div class="section-title">オペレーター向けガイダンス</div>
+                                <div class="section-text">
+                                    「本日はご内見ありがとうございます。駅からの距離や周辺環境についても、あわせてご案内可能です。」
+                                </div>
+                            </div>
+                        
+                            <div class="section-box" style="background:#020617;border-color:#1e293b;">
+                                <div class="section-title">スマホ側の表示イメージ（テスト発信時）</div>
+                                <div class="section-text">
+                                    実際の発信者番号：090-1234-5678（システム内のみで保持）<br>
+                                    担当者のスマホに表示される番号：050-1234-5678（マスクド番号）<br>
+                                    または：名前のみ「内見予約 A-1023（佐藤 花子 様）」として表示する構成も可能です。<br><br>
+                                    <span style="font-size:10px;color:#9ca3af;">※デモでは「090から発信しているが、担当者には050または名前だけが見える」ことをここで説明できます。</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="phone-footer" style="background:#020617;border-top-color:#1e293b;">
+                            <button class="btn btn-primary" onclick="setState('connected')">
+                                <span class="dot"></span> 通話に出る（デモ）
+                            </button>
+                            <button class="btn btn-secondary" onclick="setState('reservation')">
+                                <span class="dot"></span> キャンセル（デモ）
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 通話中 -->
+                    <div class="state-block state-connected">
+                        <div class="phone-header">
+                            <div class="phone-header-title">通話中：内見予約 A-1023</div>
+                            <div class="phone-header-sub">00:23｜佐藤 花子 様</div>
+                        </div>
+                        <div class="phone-body">
+                            <div class="section-box">
+                                <div class="section-title">会話メモ（手動 or 音声認識）</div>
+                                <div class="section-text">
+                                    ・電車遅延で10分ほど遅れる見込み<br>
+                                    ・到着後に再度お電話いただくようご案内<br>
+                                    ・周辺のスーパー・コンビニ情報も当日説明予定
+                                </div>
+                            </div>
+                            <div class="section-box">
+                                <div class="section-title">システム連携イメージ</div>
+                                <div class="section-text">
+                                    ・通話録音 → YouWire で保存・要約<br>
+                                    ・要約結果 → Salesforce / 内見管理システムに自動登録<br>
+                                    ・カスハラ検知・NGワード検知のトリガーにも活用可能
+                                </div>
+                            </div>
+                        </div>
+                        <div class="phone-footer">
+                            <button class="btn btn-secondary" onclick="setState('reservation')">
+                                <span class="dot"></span> 通話終了（内見予約一覧に戻る）
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function setState(state) {
+        document.documentElement.setAttribute('data-state', state);
+    }
+</script>
+</body>
+</html>
