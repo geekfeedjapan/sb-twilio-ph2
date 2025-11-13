@@ -3,457 +3,756 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Twilio コールトラッカー デモ - アナリティクス（強化版）</title>
+  <title>Twilio コールトラッカー デモ - 設定管理 / ダッシュボード / ポータル</title>
   <style>
     :root {
-      --brand: #f22f46;
-      --ink: #333;
-      --muted: #666;
-      --bg: #f4f7f6;
-      --blue: #0078a1;
-      --card: #fff;
-      --shadow: 0 4px 10px rgba(0,0,0,.08);
-      --radius: 12px;
+      --bg: #050816;
+      --bg-elevated: #0f172a;
+      --bg-soft: #020617;
+      --card: #0b1220;
+      --accent: #f22f46;
+      --accent-grad: linear-gradient(135deg,#f97316,#f22f46);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border-subtle: rgba(148,163,184,0.3);
+      --shadow-soft: 0 18px 45px rgba(15,23,42,0.8);
+      --radius-lg: 18px;
     }
+
     * { box-sizing: border-box; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, sans-serif; background: var(--bg); color: var(--ink); margin: 0; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
-    h1 { color: var(--brand); border-bottom: 2px solid var(--brand); padding-bottom: 10px; margin: 0 0 20px; }
-    .section-title { font-size: 1.25rem; color: var(--blue); margin: 28px 0 12px; display: flex; align-items: center; gap: 8px; }
-
-    /* controls */
-    .controls { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end; margin: 6px 0 18px; }
-    .field { display: grid; gap: 6px; }
-    .field label { font-size: .85rem; color: var(--muted); }
-    .field input[type="date"], .field select, .field input[type="text"] {
-      padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; background: #fff;
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+        'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      background: radial-gradient(circle at top, #1f2937 0, #020617 55%, #000 100%);
+      color: var(--text);
     }
-    .btn { background: var(--brand); color: #fff; border: 0; padding: 10px 14px; border-radius: 10px; cursor: pointer; box-shadow: var(--shadow); }
-    .btn.secondary { background: #e8ecf1; color: #0a2540; }
 
-    /* KPIs */
-    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 16px 0 28px; }
-    .kpi-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; display: grid; gap: 6px; }
-    .kpi-value { font-size: 2rem; font-weight: 800; color: var(--brand); line-height: 1.1; }
-    .kpi-label { font-size: .9rem; color: var(--muted); }
-
-    /* chart */
-    .panel { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
-    .chart-wrap { position: relative; height: 280px; }
-    canvas { width: 100%; height: 100%; display: block; }
-
-    /* tables */
-    .table-container { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-    table { width: 100%; border-collapse: collapse; }
-    thead th { background: var(--blue); color: #fff; text-align: left; padding: 12px 14px; font-weight: 700; }
-    tbody td { padding: 12px 14px; border-bottom: 1px solid #eee; }
-    tr:hover td { background: #fafafa; }
-    .status-badge { padding: 4px 10px; border-radius: 999px; font-size: .8rem; font-weight: 700; }
-    .status-active { background: #e6ffe6; color: #008000; }
-    .status-inactive { background: #ffe6e6; color: #cc0000; }
-    .table-actions { display: flex; gap: 8px; }
-    .link { color: var(--blue); text-decoration: none; font-weight: 700; }
-
-    /* modal */
-    dialog { border: 0; border-radius: 16px; width: min(720px, 92vw); box-shadow: var(--shadow); }
-    dialog::backdrop { background: rgba(0,0,0,.35); }
-    .modal-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 14px; }
-    .modal-body { padding: 12px 14px; }
-    .close-x { background: transparent; border: 0; font-size: 20px; cursor: pointer; }
-
-    /* responsive */
-    @media (max-width: 980px) {
-      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-      .controls { grid-template-columns: 1fr 1fr; }
+    .app-shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
     }
-    @media (max-width: 560px) {
+
+    /* ==== HEADER / NAV ==== */
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 18px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      box-shadow: 0 18px 40px rgba(15,23,42,0.9);
+      border: 1px solid rgba(148,163,184,0.35);
+      backdrop-filter: blur(18px);
+      margin-bottom: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: radial-gradient(circle at 30% 0, #fee2e2, #b91c1c);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 800;
+      font-size: 17px;
+    }
+    .brand-text h1 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: 0.02em;
+    }
+    .brand-text span {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .topnav {
+      display: inline-flex;
+      background: rgba(15,23,42,0.9);
+      border-radius: 999px;
+      padding: 3px;
+      gap: 4px;
+      border: 1px solid rgba(148,163,184,0.4);
+    }
+    .anchor-btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--muted);
+      background: transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.18s ease, color 0.18s ease, transform 0.12s ease;
+    }
+    .anchor-btn[data-active="true"] {
+      background: radial-gradient(circle at 0 0, #fecaca, #b91c1c);
+      color: #f9fafb;
+    }
+    .anchor-btn:hover { transform: translateY(-1px); }
+
+    .pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22c55e;
+    }
+
+    .views-wrapper { margin-top: 18px; }
+
+    .view { display: none; }
+    .view[data-active="true"] { display: block; }
+
+    /* ==== PANELS / LAYOUT ==== */
+    .layout-main {
+      display: grid;
+      grid-template-columns: 3fr 2.1fr;
+      gap: 18px;
+    }
+
+    .panel {
+      background: radial-gradient(circle at top, #111827, #020617);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px 18px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--border-subtle);
+      position: relative;
+      overflow: hidden;
+    }
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 0 -20%, rgba(248,250,252,0.08), transparent 55%);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+    .panel-inner { position: relative; z-index: 1; }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .panel-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .panel-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ==== KPI ==== */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .kpi-card {
+      background: radial-gradient(circle at top, rgba(15,23,42,0.9), #020617);
+      border-radius: 14px;
+      padding: 10px 11px;
+      border: 1px solid rgba(148,163,184,0.35);
+      display: grid;
+      gap: 4px;
+    }
+    .kpi-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .kpi-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #e5e7eb;
+    }
+    .kpi-meta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ==== FILTER CHIPS ==== */
+    .filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+      margin-top: 4px;
+    }
+    .chip {
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.5);
+      padding: 5px 9px;
+      font-size: 11px;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(15,23,42,0.7);
+    }
+    .chip strong { color: #e5e7eb; font-weight: 500; }
+
+    /* ==== CHART PLACEHOLDER ==== */
+    .chart-placeholder {
+      border-radius: 16px;
+      border: 1px dashed rgba(148,163,184,0.55);
+      background: radial-gradient(circle at top, rgba(31,41,55,0.8), rgba(15,23,42,0.9));
+      height: 200px;
+      margin-top: 6px;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      padding: 0 16px;
+    }
+
+    /* ==== TABLE ==== */
+    .table-container {
+      margin-top: 10px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: rgba(15,23,42,0.95);
+      border: 1px solid rgba(148,163,184,0.45);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    thead {
+      background: radial-gradient(circle at top, #111827, #020617);
+    }
+    th, td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(31,41,55,0.9);
+      text-align: left;
+      color: #e5e7eb;
+    }
+    th { font-weight: 500; color: var(--muted); font-size: 11px; }
+    tbody tr:hover { background: rgba(15,23,42,0.9); }
+
+    .status-badge {
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .status-active {
+      background: rgba(34,197,94,0.1);
+      color: #4ade80;
+    }
+    .status-inactive {
+      background: rgba(248,113,113,0.1);
+      color: #fca5a5;
+    }
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    /* ==== BUTTONS ==== */
+    .btn-soft {
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.6);
+      padding: 6px 10px;
+      background: rgba(15,23,42,0.7);
+      color: var(--muted);
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary {
+      border-radius: 999px;
+      border: 0;
+      padding: 7px 13px;
+      background-image: var(--accent-grad);
+      color: #f9fafb;
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 12px 30px rgba(248,113,113,0.4);
+    }
+
+    /* ==== PORTAL PREVIEW ==== */
+    .portal-preview {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 14px;
+      margin-top: 10px;
+      align-items: flex-start;
+    }
+    .portal-hero {
+      background: radial-gradient(circle at top, #0f172a, #020617);
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid rgba(148,163,184,0.45);
+      display: grid;
+      gap: 8px;
+    }
+    .portal-hero h2 {
+      margin: 0;
+      font-size: 15px;
+    }
+    .portal-lead { font-size: 12px; color: var(--muted); }
+
+    .store-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .store-card {
+      background: rgba(15,23,42,0.9);
+      border-radius: 12px;
+      padding: 10px 11px;
+      border: 1px solid rgba(148,163,184,0.4);
+      font-size: 12px;
+      display: grid;
+      gap: 4px;
+    }
+    .store-name { font-weight: 600; }
+    .store-tel {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: #e5e7eb;
+    }
+    .store-meta { font-size: 11px; color: var(--muted); }
+
+    .diag-box {
+      margin-top: 14px;
+      border-radius: 12px;
+      padding: 10px 11px;
+      background: rgba(15,23,42,0.9);
+      border: 1px dashed rgba(148,163,184,0.6);
+      font-size: 11px;
+    }
+
+    @media (max-width: 960px) {
+      .layout-main { grid-template-columns: 1fr; }
+      .app-header { flex-direction: column; align-items: flex-start; }
+      .topnav { align-self: stretch; justify-content: space-between; }
+      .portal-preview { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
       .kpi-grid { grid-template-columns: 1fr; }
-      .controls { grid-template-columns: 1fr; }
-      thead { display: none; }
-      table, tbody, tr, td { display: block; width: 100%; }
-      tbody tr { border-bottom: 1px solid #eee; }
-      tbody td { display: grid; grid-template-columns: 38% 1fr; gap: 8px; }
-      tbody td::before { content: attr(data-th); color: var(--muted); font-weight: 700; }
+      .store-grid { grid-template-columns: 1fr; }
     }
-    .topnav{display:flex;gap:8px;justify-content:flex-end;margin-top:-6px;margin-bottom:10px}
-    .anchor-btn{background:#e8ecf1;color:#0a2540;border:0;padding:8px 12px;border-radius:10px;cursor:pointer;box-shadow:var(--shadow)}
   </style>
+  <script>
+    // ===============================
+    // ✅ ポップアップ安全ヘルパー（nullガード）
+    // ===============================
+    function openSafeWindow(url = '', name = '_blank', features = 'noopener') {
+      const w = window.open(url, name, features);
+      if (!w || w.closed || typeof w.closed === 'undefined') {
+        alert('ポップアップがブロックされました。ブラウザ設定でこのサイトのポップアップを許可してください。');
+        return null;
+      }
+      return w;
+    }
+
+    // =============== 店舗HTML 生成（テンプレの入れ子なし） ===============
+    function createStoreHTML(city, name, displayNumber, e164, address, hours) {
+      return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>${name} | 店舗サイト</title><style>body{font-family:Arial,sans-serif;background:#020617;color:#e5e7eb;margin:0;padding:20px;}h1{color:#f22f46;} .tel{font-size:28px;font-weight:bold;margin:20px 0;} .btn{background:#f22f46;color:#fff;padding:10px 14px;border:none;border-radius:999px;cursor:pointer;}</style></head><body><h1>${name}</h1><p>${city}｜${address}</p><p class="tel">${displayNumber}</p><a href="tel:+${e164}" class="btn">この番号に電話する</a><p>営業時間：${hours}</p><p style="margin-top:40px;color:#9ca3af;font-size:0.9em">Powered by Twilio コールトラッカー（デモ）</p></body></html>`;
+    }
+
+    // =============== ポータル（別タブ） ===============
+    function openPortal() {
+      const storeAhtml = createStoreHTML('渋谷店','Geekfeed Bakery 渋谷店','03-1234-5678','81312345678','東京都渋谷区道玄坂 1-2-3','10:00 – 20:00');
+      const storeBhtml = createStoreHTML('大阪店','Geekfeed Bakery 大阪店','06-1234-5678','81612345678','大阪府大阪市北区梅田 4-5-6','10:00 – 20:00');
+
+      const storeABlob = new Blob([storeAhtml], { type: 'text/html' });
+      const storeBBlob = new Blob([storeBhtml], { type: 'text/html' });
+      const storeAUrl  = URL.createObjectURL(storeABlob);
+      const storeBUrl  = URL.createObjectURL(storeBBlob);
+
+      const portalHTML =
+        `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"/>` +
+        `<meta name="viewport" content="width=device-width,initial-scale=1"/>` +
+        `<title>ポータルサイト — 店舗一覧</title>` +
+        `<style>` +
+        `body{font-family:Arial,sans-serif;background:#020617;color:#e5e7eb;margin:0;padding:24px;}` +
+        `h1{color:#e5e7eb;margin:0 0 6px;}` +
+        `.muted{color:#9ca3af;font-size:0.9em;margin-bottom:16px;}` +
+        `.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:6px;}` +
+        `.card{background:#020617;border-radius:14px;border:1px solid rgba(148,163,184,0.5);padding:12px 13px;box-shadow:0 18px 40px rgba(15,23,42,0.8);}` +
+        `.btn{display:inline-block;margin-top:8px;background:#f22f46;color:#fff;padding:8px 12px;border-radius:999px;text-decoration:none;font-size:12px;}` +
+        `.tel{font-size:18px;font-weight:700;letter-spacing:0.04em;}` +
+        `@media(max-width:720px){.grid{grid-template-columns:1fr;}}` +
+        `</style></head><body>` +
+        `<h1>🏪 Geekfeed Bakery 店舗ポータル</h1>` +
+        `<p class="muted">各店舗の正規の電話番号を掲載しています。このページからの発信と、同じ番号からの着信は正規の店舗からのご連絡です。</p>` +
+        `<div class="grid">` +
+        `<div class="card"><h2>店舗A：Geekfeed Bakery 渋谷店</h2>` +
+        `<div class="tel">03-1234-5678</div>` +
+        `<div class="muted">東京都渋谷区道玄坂 1-2-3 / 10:00–20:00</div>` +
+        `<a class="btn" href="${storeAUrl}" target="_blank" rel="noopener">店舗Aの詳細ページを開く</a>` +
+        `</div>` +
+        `<div class="card"><h2>店舗B：Geekfeed Bakery 大阪店</h2>` +
+        `<div class="tel">06-1234-5678</div>` +
+        `<div class="muted">大阪府大阪市北区梅田 4-5-6 / 10:00–20:00</div>` +
+        `<a class="btn" href="${storeBUrl}" target="_blank" rel="noopener">店舗Bの詳細ページを開く</a>` +
+        `</div>` +
+        `</div></body></html>`;
+
+      const w = openSafeWindow('about:blank', '_blank', 'noopener');
+      if (!w) return;
+      w.document.open();
+      w.document.write(portalHTML);
+      w.document.close();
+
+      setTimeout(() => {
+        URL.revokeObjectURL(storeAUrl);
+        URL.revokeObjectURL(storeBUrl);
+      }, 60000);
+    }
+
+    // ====== ビュー切り替え ======
+    function setView(viewId) {
+      document.querySelectorAll('.view').forEach(v => {
+        v.dataset.active = (v.id === viewId) ? 'true' : 'false';
+      });
+      document.querySelectorAll('.anchor-btn').forEach(btn => {
+        btn.dataset.active = (btn.dataset.view === viewId) ? 'true' : 'false';
+      });
+    }
+
+    // ====== 🧪 簡易テスト（既存方針維持） ======
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        console.assert(typeof openPortal === 'function', 'openPortal should be defined');
+      } catch (e) {}
+    });
+  </script>
 </head>
 <body>
-  <div class="container">
-    <h1 id="top">📞 Twilio Powered コールトラッカー アナリティクスダッシュボード</h1>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-badge">CT</div>
+        <div class="brand-text">
+          <h1>Twilio コールトラッカー</h1>
+          <span>設定管理・ダッシュボード・ポータルサイト デモ</span>
+        </div>
+      </div>
+      <nav class="topnav">
+        <button class="anchor-btn" data-view="dashboard" data-active="true" onclick="setView('dashboard')">
+          <span class="pill-dot"></span> ダッシュボード
+        </button>
+        <button class="anchor-btn" data-view="settings" data-active="false" onclick="setView('settings')">
+          ⚙ 設定管理
+        </button>
+        <button class="anchor-btn" data-view="portal" data-active="false" onclick="setView('portal')">
+          🌐 ポータルサイト
+        </button>
+      </nav>
+    </header>
 
-    <!-- Top Navigation -->
-    <div class="topnav">
-      <button class="anchor-btn" onclick="document.getElementById('top').scrollIntoView({behavior:'smooth'})">ダッシュボード</button>
-      <button class="anchor-btn" onclick="document.getElementById('admin').scrollIntoView({behavior:'smooth'})">管理</button>
-    </div>
+    <main class="views-wrapper">
+      <!-- ==== DASHBOARD ==== -->
+      <section id="dashboard" class="view" data-active="true">
+        <div class="layout-main">
+          <section class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">Analytics Dashboard</div>
+                  <div class="panel-sub">Twilio通話ログベースの媒体・キャンペーン別パフォーマンス</div>
+                </div>
+                <button class="btn-soft">期間: 過去30日 ▾</button>
+              </div>
 
-    <!-- Controls -->
-    <div class="controls">
-      <div class="field">
-        <label>期間</label>
-        <select id="rangeSelect">
-          <option value="7">過去7日</option>
-          <option value="30" selected>過去30日</option>
-          <option value="90">過去90日</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>媒体/キャンペーン</label>
-        <select id="campaignSelect">
-          <option value="all" selected>すべて</option>
-          <option value="店舗A_リスティング広告">店舗A_リスティング広告</option>
-          <option value="店舗B_ポータルサイト">店舗B_ポータルサイト</option>
-          <option value="本社_コーポレートサイト">本社_コーポレートサイト</option>
-          <option value="店舗C_チラシキャンペーン">店舗C_チラシキャンペーン</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>検索（番号/キーワード）</label>
-        <input id="searchInput" type="text" placeholder="例: 50-XXXX-1234 / コーポレート" />
-      </div>
-      <button class="btn" id="refreshBtn">最新データに更新</button>
-    </div>
+              <div class="kpi-grid">
+                <div class="kpi-card">
+                  <div class="kpi-label">合計着信数</div>
+                  <div class="kpi-value">1,254</div>
+                  <div class="kpi-meta">前月比 +18%</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">応答率</div>
+                  <div class="kpi-value">92.5%</div>
+                  <div class="kpi-meta">SLA 90% をキープ</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">平均通話時間</div>
+                  <div class="kpi-value">3:15</div>
+                  <div class="kpi-meta">有望リードの応対が増加</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">ユニーク発信者数</div>
+                  <div class="kpi-value">850</div>
+                  <div class="kpi-meta">新規問い合わせ 520 件</div>
+                </div>
+              </div>
 
-    <!-- KPI -->
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-value" id="total-calls">1,254</div>
-        <div class="kpi-label">合計着信数（選択期間）</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-value" id="answer-rate">92.5%</div>
-        <div class="kpi-label">応答率</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-value" id="avg-duration">3:15</div>
-        <div class="kpi-label">平均通話時間</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-value" id="unique-callers">850</div>
-        <div class="kpi-label">ユニーク発信者数</div>
-      </div>
-    </div>
+              <div class="filters-row">
+                <div class="chip"><strong>店舗:</strong> 全店舗</div>
+                <div class="chip"><strong>媒体:</strong> すべて</div>
+                <div class="chip"><strong>チャネル:</strong> 音声通話</div>
+              </div>
 
-    <!-- Chart -->
-    <div class="section-title">📈 媒体・キャンペーン別 パフォーマンス</div>
-    <div class="panel">
-      <div class="chart-wrap">
-        <canvas id="trendChart" width="1000" height="280" aria-label="着信数推移"></canvas>
-      </div>
-    </div>
+              <div class="chart-placeholder">
+                （ここに「日別 着信数 & 応答率」折れ線グラフを描画）<br />
+                Twilioの通話ログ / Calls API から取得したデータをプロットします。
+              </div>
 
-    <!-- Table: campaign perf -->
-    <div class="section-title">📋 キャンペーン別 指標</div>
-    <div class="table-container" id="campaignTableWrap">
-      <table id="campaignTable">
-        <thead>
-          <tr>
-            <th>キャンペーン名 / 媒体</th>
-            <th>トラッキング番号 (Twilio Number)</th>
-            <th>着信数</th>
-            <th>応答率</th>
-            <th>平均通話時間</th>
-            <th>録音</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- rows injected by JS -->
-        </tbody>
-      </table>
-    </div>
+              <div class="table-container" style="margin-top:12px;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>キャンペーン / 媒体</th>
+                      <th>トラッキング番号</th>
+                      <th>着信数</th>
+                      <th>応答率</th>
+                      <th>平均通話</th>
+                      <th>録音</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>店舗A_リスティング広告</td>
+                      <td>+81 50-XXXX-1234</td>
+                      <td>580</td>
+                      <td>95%</td>
+                      <td>4:10</td>
+                      <td><a href="#" style="color:#93c5fd;">🔊 ログ</a></td>
+                    </tr>
+                    <tr>
+                      <td>店舗B_ポータルサイト</td>
+                      <td>+81 50-XXXX-5678</td>
+                      <td>350</td>
+                      <td>88%</td>
+                      <td>2:45</td>
+                      <td><a href="#" style="color:#93c5fd;">🔊 ログ</a></td>
+                    </tr>
+                    <tr>
+                      <td>本社_コーポレートサイト</td>
+                      <td>+81 50-XXXX-9012</td>
+                      <td>124</td>
+                      <td>98%</td>
+                      <td>3:50</td>
+                      <td><a href="#" style="color:#93c5fd;">🔊 ログ</a></td>
+                    </tr>
+                    <tr>
+                      <td>店舗C_チラシキャンペーン</td>
+                      <td>+81 50-XXXX-3456</td>
+                      <td>200</td>
+                      <td>90%</td>
+                      <td>2:10</td>
+                      <td><a href="#" style="color:#93c5fd;">🔊 ログ</a></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
 
-    <!-- Table: number management -->
-    <div class="section-title" id="admin">⚙️ トラッキング番号設定・管理 (Twilio API連携)</div>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>トラッキング番号 (Twilio)</th>
-            <th>転送先電話番号</th>
-            <th>紐づけキャンペーン</th>
-            <th>ステータス</th>
-            <th>アクション</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>+81 50-XXXX-1234</td>
-            <td>03-XXXX-1111 (店舗A)</td>
-            <td>店舗A_リスティング広告</td>
-            <td><span class="status-badge status-active">有効</span></td>
-            <td class="table-actions">
-              <button class="btn secondary" onclick="toast('ルーティングを更新しました（デモ）')">設定変更</button>
-            </td>
-          </tr>
-          <tr>
-            <td>+81 50-XXXX-5678</td>
-            <td>03-XXXX-2222 (店舗B)</td>
-            <td>店舗B_ポータルサイト</td>
-            <td><span class="status-badge status-active">有効</span></td>
-            <td class="table-actions">
-              <button class="btn secondary" onclick="toast('IVRを更新しました（デモ）')">設定変更</button>
-            </td>
-          </tr>
-          <tr>
-            <td>+81 50-XXXX-9999 <span style="color: var(--brand); font-size: .9em;">(新規番号)</span></td>
-            <td>未設定</td>
-            <td>新規キャンペーン用</td>
-            <td><span class="status-badge status-inactive">待機中</span></td>
-            <td class="table-actions">
-              <button class="btn" onclick="toast('番号の購入・有効化（デモ）')">番号を取得</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+          <aside class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">Diagnostic</div>
+                  <div class="panel-sub">openPortal の疎通確認</div>
+                </div>
+                <button class="btn-soft" id="runTestsBtn">テスト実行</button>
+              </div>
+              <div id="testResults" class="diag-box">
+                「テスト実行」を押すと openPortal が定義されているか / 例外が出ないかをチェックします。
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ==== SETTINGS ==== -->
+      <section id="settings" class="view" data-active="false">
+        <div class="layout-main">
+          <section class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">Tracking Numbers</div>
+                  <div class="panel-sub">Twilio番号と店舗・キャンペーンの紐づけ設定</div>
+                </div>
+                <button class="btn-primary">＋ 新規トラッキング番号を取得</button>
+              </div>
+
+              <div class="filters-row">
+                <div class="chip"><strong>店舗:</strong> 全店舗</div>
+                <div class="chip"><strong>媒体:</strong> リスティング / ポータル / チラシ</div>
+                <div class="chip"><strong>ステータス:</strong> 有効 / 待機中</div>
+              </div>
+
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Twilio番号</th>
+                      <th>転送先（実店舗）</th>
+                      <th>キャンペーン / 媒体</th>
+                      <th>録音</th>
+                      <th>営業時間</th>
+                      <th>ステータス</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>+81 50-XXXX-1234</td>
+                      <td>03-XXXX-1111（渋谷店）</td>
+                      <td>店舗A_リスティング広告</td>
+                      <td>ON（90日保存）</td>
+                      <td>10:00–20:00</td>
+                      <td><span class="status-badge status-active"><span class="badge-dot"></span> 有効</span></td>
+                    </tr>
+                    <tr>
+                      <td>+81 50-XXXX-5678</td>
+                      <td>06-XXXX-2222（大阪店）</td>
+                      <td>店舗B_ポータルサイト</td>
+                      <td>ON（180日保存）</td>
+                      <td>10:00–20:00</td>
+                      <td><span class="status-badge status-active"><span class="badge-dot"></span> 有効</span></td>
+                    </tr>
+                    <tr>
+                      <td>+81 50-XXXX-9012</td>
+                      <td>03-XXXX-0000（本社）</td>
+                      <td>本社_コーポレートサイト</td>
+                      <td>ON（365日保存）</td>
+                      <td>9:00–18:00（平日）</td>
+                      <td><span class="status-badge status-active"><span class="badge-dot"></span> 有効</span></td>
+                    </tr>
+                    <tr>
+                      <td>+81 50-XXXX-9999</td>
+                      <td>未設定</td>
+                      <td>新規キャンペーン用</td>
+                      <td>OFF</td>
+                      <td>-</td>
+                      <td><span class="status-badge status-inactive"><span class="badge-dot"></span> 待機中</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <aside class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">Campaign Detail</div>
+                  <div class="panel-sub">選択中キャンペーンの想定設定例</div>
+                </div>
+              </div>
+              <ul style="margin:4px 0 0;padding-left:18px;font-size:12px;color:var(--muted);">
+                <li>キャンペーン名：店舗A_リスティング広告</li>
+                <li>媒体種別：検索リスティング（Google広告）</li>
+                <li>計測タグ：utm_campaign=storeA_list &amp; utm_source=google</li>
+                <li>CV条件：通話時間 60秒以上でコンバージョンカウント</li>
+                <li>通話フロー：Inbound_Routing_v2（IVR → 店舗A直通）</li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ==== PORTAL VIEW (説明 + 起動ボタン) ==== -->
+      <section id="portal" class="view" data-active="false">
+        <section class="panel">
+          <div class="panel-inner">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">Portal Site</div>
+                <div class="panel-sub">エンドユーザー向け店舗一覧ページ（別タブで起動）</div>
+              </div>
+              <button class="btn-primary" onclick="openPortal()">🌐 ポータルサイトを別タブで開く</button>
+            </div>
+
+            <div class="portal-preview">
+              <div class="portal-hero">
+                <h2>🏪 Geekfeed Bakery 店舗ポータル</h2>
+                <p class="portal-lead">
+                  エンドユーザーには、このような「正規の店舗電話番号」を一覧で見せるポータルサイトを提供します。
+                  着信時に同じ番号が表示されることで、なりすまし対策やブランド信用向上にもつながります。
+                </p>
+                <ul style="margin:0;padding-left:18px;font-size:12px;color:var(--muted);">
+                  <li>各店舗の「実際の電話番号」を大きく掲載</li>
+                  <li>タップでそのまま発信可能（スマートフォン）</li>
+                  <li>キャンペーン毎のTwilio番号と紐づけて、通話をトラッキング</li>
+                </ul>
+              </div>
+              <div class="store-grid">
+                <div class="store-card">
+                  <div class="store-name">店舗A：Geekfeed Bakery 渋谷店</div>
+                  <div class="store-tel">03-1234-5678</div>
+                  <div class="store-meta">東京都渋谷区道玄坂 1-2-3</div>
+                  <div class="store-meta">営業時間：10:00–20:00（年中無休）</div>
+                </div>
+                <div class="store-card">
+                  <div class="store-name">店舗B：Geekfeed Bakery 大阪店</div>
+                  <div class="store-tel">06-1234-5678</div>
+                  <div class="store-meta">大阪府大阪市北区梅田 4-5-6</div>
+                  <div class="store-meta">営業時間：10:00–20:00（年中無休）</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="diag-box" style="margin-top:16px;">
+              「🌐 ポータルサイトを別タブで開く」ボタンをクリックすると、別タブに
+              <strong>店舗ポータル</strong> が開きます。そこからさらに各店舗ページ（電話番号を大きく見せるページ）
+              を別タブで開く構成になっています。
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
   </div>
 
-  <!-- modal: recordings -->
-  <dialog id="recordingModal">
-    <div class="modal-head">
-      <strong>🔊 録音ログ（サンプル）</strong>
-      <button class="close-x" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>日時</th>
-              <th>発信者</th>
-              <th>通話時間</th>
-              <th>文字起こし</th>
-              <th>再生</th>
-            </tr>
-          </thead>
-          <tbody id="recordingTbody"></tbody>
-        </table>
-      </div>
-    </div>
-  </dialog>
-
   <script>
-    // ------------------------------
-    // ダミーデータ（実運用はサーバーでTwilio REST APIから取得して返す）
-    // Calls API: /2010-04-01/Accounts/{AccountSid}/Calls.json
-    // Recordings API: /2010-04-01/Accounts/{AccountSid}/Recordings.json
-    // ------------------------------
-    const seedCampaignRows = [
-      { campaign: '店舗A_リスティング広告', number: '+81 50-XXXX-1234', calls: 580, answerRate: 0.95, avgSec: 250, recKey: 'a' },
-      { campaign: '店舗B_ポータルサイト', number: '+81 50-XXXX-5678', calls: 350, answerRate: 0.88, avgSec: 165, recKey: 'b' },
-      { campaign: '本社_コーポレートサイト', number: '+81 50-XXXX-9012', calls: 124, answerRate: 0.98, avgSec: 230, recKey: 'c' },
-      { campaign: '店舗C_チラシキャンペーン', number: '+81 50-XXXX-3456', calls: 200, answerRate: 0.90, avgSec: 130, recKey: 'd' },
-    ];
-
-    const recordingsMap = {
-      a: [
-        { at: '2025-11-01 10:12', from: '+81 90-1234-0001', sec: 180, text: 'Webを見て問い合わせました。空き状況はありますか？' },
-        { at: '2025-10-28 15:40', from: '+81 80-2222-0033', sec: 420, text: '見積をお願いしたいのですが、2店舗分で…' },
-      ],
-      b: [
-        { at: '2025-11-02 09:05', from: '+81 70-3333-4567', sec: 95, text: '営業時間を教えてください。' },
-      ],
-      c: [
-        { at: '2025-11-05 13:22', from: '+81 50-5555-8888', sec: 210, text: '採用についての問い合わせです。' },
-      ],
-      d: [
-        { at: '2025-10-26 16:01', from: '+81 90-6666-1212', sec: 130, text: 'チラシを見ました、在庫は？' },
-      ],
-    };
-
-    // ランダム推移データ（チャート用）
-    function genSeries(days) {
-      const today = new Date();
-      const xs = []; const ys = [];
-      for (let i = days - 1; i >= 0; i--) {
-        const d = new Date(today);
-        d.setDate(today.getDate() - i);
-        xs.push(`${d.getMonth()+1}/${d.getDate()}`);
-        const base = 20 + Math.random() * 15;
-        ys.push(Math.round(base + (Math.sin(i/3) * 10)));
+    // 追加テスト: openPortal が例外を投げないこと、ボタン要素が存在すること など
+    document.getElementById('runTestsBtn').addEventListener('click', () => {
+      const out = document.getElementById('testResults');
+      try {
+        const t1 = typeof openPortal === 'function';
+        const t2 = !!document.querySelector('.topnav .anchor-btn');
+        let threw = false;
+        try { openPortal(); } catch (e) { threw = true; }
+        const msgs = [
+          t1 ? '✅ openPortal は定義されています。' : '❌ openPortal が未定義です。',
+          t2 ? '✅ ナビゲーションボタン要素があります。' : '❌ ナビゲーションボタンが見つかりません。',
+          !threw ? '✅ openPortal() 実行で例外は発生しませんでした。' : '❌ openPortal() 実行で例外が発生しました。'
+        ];
+        out.innerHTML = msgs.join('<br>');
+      } catch (e) {
+        out.textContent = '❌ テスト中に例外: ' + (e && e.message ? e.message : e);
       }
-      return { xs, ys };
-    }
-
-    // 秒→MM:SS
-    const fmtMMSS = (sec) => {
-      const m = Math.floor(sec / 60).toString();
-      const s = (sec % 60).toString().padStart(2, '0');
-      return `${m}:${s}`;
-    };
-
-    // KPI更新（フィルタに応じて簡易算出）
-    function updateKPIs(rows) {
-      const total = rows.reduce((a, r) => a + r.calls, 0);
-      const answered = rows.reduce((a, r) => a + r.calls * r.answerRate, 0);
-      const avgSec = Math.round(rows.reduce((a, r) => a + r.avgSec * r.calls, 0) / Math.max(1, total));
-      const unique = Math.round(total * 0.68); // ダミー
-      document.getElementById('total-calls').textContent = total.toLocaleString();
-      document.getElementById('answer-rate').textContent = (answered / Math.max(1, total) * 100).toFixed(1) + '%';
-      document.getElementById('avg-duration').textContent = fmtMMSS(avgSec);
-      document.getElementById('unique-callers').textContent = unique.toLocaleString();
-    }
-
-    // テーブル描画
-    function renderTable(rows, q = '') {
-      const tbody = document.querySelector('#campaignTable tbody');
-      tbody.innerHTML = '';
-      const query = q.trim().toLowerCase();
-      rows
-        .filter(r => !query || r.campaign.toLowerCase().includes(query) || r.number.toLowerCase().includes(query))
-        .forEach(r => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td data-th="キャンペーン名 / 媒体">${r.campaign}</td>
-            <td data-th="トラッキング番号 (Twilio Number)">${r.number}</td>
-            <td data-th="着信数">${r.calls}</td>
-            <td data-th="応答率">${Math.round(r.answerRate * 100)}%</td>
-            <td data-th="平均通話時間">${fmtMMSS(r.avgSec)}</td>
-            <td data-th="録音"><a href="#" class="link" data-reckey="${r.recKey}">🔊 ログ</a></td>
-          `;
-          tbody.appendChild(tr);
-        });
-
-      // 録音モーダル
-      tbody.querySelectorAll('a[data-reckey]').forEach(a => {
-        a.addEventListener('click', (e) => {
-          e.preventDefault();
-          const key = e.currentTarget.getAttribute('data-reckey');
-          openRecordings(key);
-        });
-      });
-    }
-
-    // トレンドチャート（自前Canvas描画）
-    function drawChart(labels, values) {
-      const canvas = document.getElementById('trendChart');
-      const ctx = canvas.getContext('2d');
-      const W = canvas.width; const H = canvas.height;
-      ctx.clearRect(0, 0, W, H);
-
-      // padding
-      const padL = 48, padR = 10, padT = 14, padB = 30;
-      const innerW = W - padL - padR;
-      const innerH = H - padT - padB;
-
-      // axes
-      ctx.strokeStyle = '#e3e7eb';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(padL, padT);
-      ctx.lineTo(padL, H - padB);
-      ctx.lineTo(W - padR, H - padB);
-      ctx.stroke();
-
-      // y scale
-      const maxV = Math.max(10, Math.max(...values));
-      const steps = 4;
-      ctx.fillStyle = '#8a9099';
-      ctx.font = '12px system-ui, sans-serif';
-      for (let i = 0; i <= steps; i++) {
-        const y = padT + innerH - (innerH * (i / steps));
-        const v = Math.round(maxV * (i / steps));
-        ctx.fillText(v.toString(), 8, y + 4);
-        ctx.strokeStyle = '#f0f2f5';
-        ctx.beginPath();
-        ctx.moveTo(padL, y);
-        ctx.lineTo(W - padR, y);
-        ctx.stroke();
-      }
-
-      // x labels (sparse)
-      const skip = Math.ceil(labels.length / 10);
-      labels.forEach((lb, i) => {
-        if (i % skip === 0 || i === labels.length - 1) {
-          const x = padL + innerW * (i / (labels.length - 1));
-          ctx.fillStyle = '#8a9099';
-          ctx.fillText(lb, x - 10, H - 10);
-        }
-      });
-
-      // line
-      ctx.strokeStyle = '#0a2540';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      values.forEach((v, i) => {
-        const x = padL + innerW * (i / (values.length - 1));
-        const y = padT + innerH - innerH * (v / maxV);
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-
-      // points
-      ctx.fillStyle = '#f22f46';
-      values.forEach((v, i) => {
-        const x = padL + innerW * (i / (values.length - 1));
-        const y = padT + innerH - innerH * (v / maxV);
-        ctx.beginPath();
-        ctx.arc(x, y, 3, 0, Math.PI * 2);
-        ctx.fill();
-      });
-    }
-
-    // レコーディングモーダル
-    function openRecordings(key) {
-      const tbody = document.getElementById('recordingTbody');
-      tbody.innerHTML = '';
-      (recordingsMap[key] || []).forEach(r => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${r.at}</td>
-          <td>${r.from}</td>
-          <td>${fmtMMSS(r.sec)}</td>
-          <td>${r.text}</td>
-          <td><button class="btn secondary" onclick="toast('録音を再生（デモ）')">▶ 再生</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-      document.getElementById('recordingModal').showModal();
-    }
-    function closeModal(){ document.getElementById('recordingModal').close(); }
-
-    // トースト（簡易）
-    function toast(msg){
-      const el = document.createElement('div');
-      el.textContent = msg;
-      el.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0a2540;color:#fff;padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:9999;';
-      document.body.appendChild(el);
-      setTimeout(()=>el.remove(), 1600);
-    }
-
-    // フィルタ適用
-    function applyFilters() {
-      const sel = document.getElementById('campaignSelect').value;
-      const q = document.getElementById('searchInput').value || '';
-      let rows = [...seedCampaignRows];
-      if (sel !== 'all') rows = rows.filter(r => r.campaign === sel);
-      renderTable(rows, q);
-      updateKPIs(rows);
-      const days = parseInt(document.getElementById('rangeSelect').value, 10);
-      const { xs, ys } = genSeries(days);
-      drawChart(xs, ys.map(v => Math.round(v * rows.length / seedCampaignRows.length)));
-    }
-
-    // Twilioデータ取得のイメージ（実運用はfetchで自社サーバーへ → サーバーがTwilio APIへ）
-    async function fetchTwilioData() {
-      // ここでfetch('/api/twilio/calls?from=..&to=..')など。
-      // デモでは疑似遅延のみ。
-      console.log('Twilio APIから最新のコールログデータを取得中（デモ）...');
-      await new Promise(r => setTimeout(r, 400));
-      toast('最新データを反映しました（デモ）');
-      applyFilters();
-    }
-
-    // init
-    document.getElementById('refreshBtn').addEventListener('click', fetchTwilioData);
-    document.getElementById('rangeSelect').addEventListener('change', applyFilters);
-    document.getElementById('campaignSelect').addEventListener('change', applyFilters);
-    document.getElementById('searchInput').addEventListener('input', applyFilters);
-
-    // 初期描画
-    applyFilters();
+    });
   </script>
 </body>
 </html>
