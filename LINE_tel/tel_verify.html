@@ -1,397 +1,516 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LINE認証失敗時の電話認証デモ</title>
-    <style>
-        /* ==================================== */
-        /* CSS: スマートフォンとLINE風インターフェース */
-        /* ==================================== */
-        body {
-            font-family: 'Helvetica Neue', 'Arial', sans-serif;
-            background-color: #f4f7f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px 0;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Twilio × LINE 2FA デモ（簡易版）</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #020617;
+      color: #111827;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .app {
+      width: 1100px;
+      max-width: 100%;
+      background: #f9fafb;
+      border-radius: 20px;
+      box-shadow: 0 16px 40px rgba(15,23,42,0.6);
+      padding: 18px 20px 22px;
+    }
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+    .app-title { font-weight: 700; }
+    .app-sub { font-size: 0.8rem; color: #6b7280; }
+    .badge-row { display:flex; gap:6px; }
+    .badge {
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .badge.twilio { background:#fee2e2; color:#b91c1c; }
+    .badge.line { background:#dcfce7; color:#15803d; }
 
-        /* スマートフォン外枠のスタイル */
-        .smartphone-frame {
-            width: 100%;
-            max-width: 375px; /* iPhone X/11/12の幅を想定 */
-            height: 750px; /* スマートフォンの高さを想定 */
-            background-color: #333;
-            border: 10px solid #222;
-            border-radius: 40px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            position: relative;
-            overflow: hidden;
-        }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .col-title {
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+      color:#4b5563;
+    }
 
-        /* 画面上部のノッチ/ステータスバーをシミュレート */
-        .notch {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 150px;
-            height: 30px;
-            background-color: #222;
-            border-radius: 0 0 15px 15px;
-            z-index: 10;
-        }
-        
-        .line-auth-container {
-            width: 100%;
-            height: 100%;
-            background-color: white;
-            padding-top: 50px; /* ステータスバーとノッチの回避 */
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
-            position: relative;
-            overflow-y: auto;
-        }
+    .phone {
+      margin-top: 2px;
+      background:#020617;
+      border-radius: 26px;
+      padding: 10px;
+      width: 360px;
+      max-width: 100%;
+      box-shadow: 0 16px 32px rgba(15,23,42,0.8);
+      position: relative;
+    }
+    .notch {
+      position:absolute;
+      top:0;
+      left:50%;
+      transform:translate(-50%, -2px);
+      width:90px;
+      height:16px;
+      background:#020617;
+      border-radius:0 0 14px 14px;
+    }
+    .screen-wrap {
+      margin-top:14px;
+      border-radius:18px;
+      background:#e5e7eb;
+      padding:8px;
+      height:620px;
+      display:flex;
+      flex-direction:column;
+      font-size:0.8rem;
+    }
+    .status {
+      display:flex;
+      justify-content:space-between;
+      font-size:0.7rem;
+      color:#4b5563;
+      margin-bottom:4px;
+    }
 
-        .line-header-bar {
-            background-color: #f7f7f7;
-            border-bottom: 1px solid #e0e0e0;
-            padding: 15px;
-            position: absolute;
-            top: 30px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 17px;
-            font-weight: 600;
-            color: #333;
-            z-index: 5;
-            pointer-events: none; /* ヘッダーがクリックをブロックしないように */
-        }
+    .inner {
+      flex:1;
+      border-radius:16px;
+      background:#ffffff;
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+    }
+    .bank-bar {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding-bottom:6px;
+      border-bottom:1px solid #e5e7eb;
+      margin-bottom:8px;
+      font-size:0.78rem;
+    }
+    .bank-name { font-weight:700; }
+    .bank-sub { font-size:0.7rem; color:#6b7280; }
+    .tag { font-size:0.7rem; color:#e5e7eb; }
 
-        .content {
-            padding: 0 5px 20px 5px;
-            flex-grow: 1;
-            margin-top: 55px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 100%;
-        }
+    .screen { display:none; flex-direction:column; gap:8px; }
+    .screen.active { display:flex; }
+    .title { font-weight:700; font-size:0.88rem; }
+    .caption { font-size:0.75rem; color:#6b7280; }
 
-        .line-logo {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .line-logo img {
-            width: 70px;
-            height: 70px;
-            border-radius: 15px;
-        }
+    .field { margin-top:4px; }
+    .field label { display:block; font-size:0.75rem; font-weight:600; margin-bottom:2px; }
+    .field input {
+      width:100%;
+      padding:7px 8px;
+      border-radius:8px;
+      border:1px solid #d1d5db;
+      font-size:0.8rem;
+    }
+    .field input:focus {
+      outline:none;
+      border-color:#2563eb;
+      box-shadow:0 0 0 1px rgba(37,99,235,0.3);
+    }
 
-        h3 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 25px;
-            font-size: 18px;
-            font-weight: 600;
-        }
+    .btn {
+      margin-top:6px;
+      border:none;
+      border-radius:999px;
+      padding:8px 10px;
+      background:linear-gradient(135deg,#2563eb,#0ea5e9);
+      color:white;
+      font-size:0.8rem;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .btn:active { transform:translateY(1px); }
 
-        .input-group {
-            margin-bottom: 20px;
-        }
+    .helper { font-size:0.72rem; color:#6b7280; }
 
-        .input-group label {
-            display: block;
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 5px;
-        }
+    .code-row { display:flex; justify-content:center; gap:4px; margin-top:4px; }
+    .code-row input {
+      width:30px;
+      height:38px;
+      text-align:center;
+      border-radius:8px;
+      border:1px solid #d1d5db;
+      font-size:0.9rem;
+    }
+    .mask { font-size:0.72rem; text-align:center; color:#4b5563; }
+    .err { font-size:0.72rem; color:#b91c1c; min-height:1em; text-align:center; }
+    .link-row { font-size:0.7rem; text-align:center; }
+    .link-row a { color:#2563eb; text-decoration:none; }
 
-        .input-group input {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
+    .ok-chip {
+      display:inline-block;
+      padding:4px 8px;
+      border-radius:999px;
+      background:#dcfce7;
+      color:#166534;
+      font-size:0.74rem;
+      margin-bottom:4px;
+    }
+    .summary-box {
+      background:#f3f4f6;
+      border-radius:10px;
+      padding:8px;
+      font-size:0.74rem;
+    }
 
-        .btn-primary {
-            width: 90%;
-            margin: 0 auto;
-            padding: 16px;
-            background-color: #00b900;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
+    /* LINE 側 */
+    .line-wrap {
+      border-radius:18px;
+      background:#020617;
+      padding:8px;
+      height:620px;
+      display:flex;
+      flex-direction:column;
+      color:#e5e7eb;
+      font-size:0.78rem;
+    }
+    .line-header {
+      display:flex;
+      align-items:center;
+      gap:6px;
+      margin-bottom:6px;
+    }
+    .line-avatar {
+      width:26px; height:26px; border-radius:999px;
+      background:#22c55e; display:flex; align-items:center; justify-content:center;
+      font-size:0.8rem; font-weight:800; color:#052e16;
+    }
+    .line-h-main { display:flex; flex-direction:column; }
+    .line-h-name { font-size:0.86rem; font-weight:700; }
+    .line-h-sub { font-size:0.7rem; color:#9ca3af; }
 
-        .btn-primary:hover {
-            background-color: #00a000;
-        }
+    .chat-box {
+      flex:1;
+      background:#020617;
+      border-radius:14px;
+      padding:8px;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .chat-scroll { flex:1; overflow-y:auto; padding-right:4px; }
+    .row { display:flex; margin-bottom:4px; }
+    .row.me { justify-content:flex-end; }
+    .row.bot { justify-content:flex-start; }
+    .bubble {
+      max-width:78%;
+      padding:6px 8px;
+      border-radius:14px;
+      font-size:0.76rem;
+      line-height:1.4;
+    }
+    .bubble.bot { background:#1f2937; border-bottom-left-radius:4px; }
+    .bubble.me { background:#22c55e; color:#052e16; border-bottom-right-radius:4px; }
 
-        .error-message {
-            position: absolute; /* 場所を固定 */
-            top: 100px; /* 固定位置をさらに20px下げる */
-            left: 50%; /* 水平方向中央寄せ */
-            transform: translateX(-50%); /* 中央寄せ調整 */
-            z-index: 10; /* 他の要素より前面に表示 */
-            color: #d8000c;
-            background-color: #ffbaba;
-            padding: 10px;
-            border-radius: 8px;
-            margin: 0 auto 20px auto;
-            display: none;
-            text-align: center;
-            font-weight: 500;
-            border: 1px solid #d8000c;
-            width: 90%;
-            box-sizing: border-box;
-        }
+    .actions { margin-top:6px; display:flex; gap:6px; }
+    .line-btn {
+      flex:1; border:none; border-radius:999px; padding:6px 8px;
+      font-size:0.76rem; font-weight:600; cursor:pointer;
+    }
+    .line-btn.yes { background:#22c55e; color:#052e16; }
+    .line-btn.no { background:#111827; color:#e5e7eb; }
 
-        .success-message {
-            color: #0f5132;
-            background-color: #d1e7dd;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 16px;
-            display: none;
-            text-align: center;
-            font-weight: 600;
-            border: 1px solid #badbcc;
-        }
+    .line-input {
+      margin-top:6px; font-size:0.7rem; color:#9ca3af;
+      display:flex; align-items:center; gap:6px;
+    }
+    .input-bar { flex:1; border-radius:999px; background:#020617; padding:4px 8px; }
 
-        .alt-auth-option {
-            text-align: center;
-            margin-top: 30px;
-            padding: 0 10px;
-        }
+    .note { margin-top:4px; font-size:0.7rem; color:#6b7280; text-align:center; }
 
-        .alt-auth-option p {
-            color: #555;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-
-        .btn-secondary-voice {
-            width: 100%;
-            padding: 15px;
-            background-color: #f0f0f0;
-            color: #007bff;
-            border: 2px solid #007bff;
-            border-radius: 8px;
-            font-size: 15px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background-color 0.2s;
-            display: none;
-            margin-top: 10px;
-        }
-
-        .btn-secondary-voice:hover {
-            background-color: #e0e0e0;
-        }
-        
-        /* 音声通知のシミュレーション（着信画面風） */
-        .voice-notification {
-            background-color: #333;
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-            display: none;
-            text-align: center;
-            transition: all 0.5s;
-        }
-        .voice-notification strong {
-            color: #ffc107;
-            display: block;
-            margin-top: 5px;
-        }
-        .voice-notification .call-info {
-            font-size: 28px;
-            margin: 10px 0;
-            font-weight: bold;
-        }
-        .voice-notification .info {
-            font-size: 12px;
-            color: #bbb;
-        }
-        .call-icon {
-            font-size: 40px;
-        }
-    #step-2 {
-            padding: 0 5px 20px 5px;
-            padding-top: 120px; /* 他のボタンや文字が被らないよう調整 */
-            min-height: calc(100% - 55px); /* header分を除外 */
-            display: none; /* 初期は非表示、JSでflexに変更 */
-            flex-direction: column;
-            justify-content: center;
-            box-sizing: border-box;
-        }
-    #step-1 {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-#code-error {
-    margin-top: 10px; /* ボタンとの間を10px空ける（エラーはボタンの下に表示されるため上余白で調整） */
-    margin-bottom: 0;
-}
-</style>
+    @media (max-width: 900px) {
+      .layout { grid-template-columns:1fr; }
+      .phone { margin-inline:auto; }
+    }
+  </style>
 </head>
 <body>
-
-    <div class="smartphone-frame">
-        <div class="notch"></div>
-        <div class="line-auth-container">
-            <div class="line-header-bar" id="step-title">LINEで認証</div>
-
-            <div class="content">
-                
-
-                <div id="step-1">
-    <h3>サービスにログイン</h3>
-    <button class="btn-primary" type="button" onclick="tryLineAuth()">LINEでログイン</button>
-</div>
-                    
-                </div>
-
-                <div id="step-2" style="display: none;">
-                    <div class="error-message" id="error-msg">
-                        認証に失敗しました。<br>パスワードがロックされています。
-                    </div>
-                    
-                    <div class="alt-auth-option">
-                        <p><strong>パスワード再設定のため、ご登録の電話番号に認証コードをお送りします。</strong></p>
-                        
-                        <div class="voice-notification" id="voice-notify">
-                            <span class="call-icon">📞</span>
-                            <div class="call-info">
-                                0800-XXX-XXXX
-                            </div>
-                            <span class="info">ソフトバンク Twilio Programmable Voice</span>
-                            <strong>まもなく自動音声で認証コードが流れます。</strong>
-                        </div>
-                        
-                        <button class="btn-secondary-voice" id="voice-auth-btn" onclick="triggerVoiceAuth()">
-                            電話（音声通知）で認証コードを受け取る
-                        </button>
-
-                        <div class="input-group" style="margin-top: 30px;">
-                            <label for="auth-code">電話で通知された認証コード</label>
-                            <input type="text" id="auth-code" placeholder="6桁のコードを入力" maxlength="6" inputmode="numeric" />
-                        </div>
-                        <button class="btn-primary" id="verify-btn" onclick="verifyVoiceCode()" disabled>
-                            認証を完了する
-                        </button>
-
-                        <div class="success-message" id="success-msg">認証に成功しました。ログインを完了しました。</div>
-                        <div class="error-message" id="code-error">認証コードが正しくありません。もう一度お試しください。</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div class="app">
+    <div class="app-header">
+      <div>
+        <div class="app-title">電話 + LINE を組み合わせた二要素認証 (2FA) デモ</div>
+        <div class="app-sub">左: Webログイン〜Twilio 2FA / 右: LINE公式アカウントでログイン確認＆ブロック</div>
+      </div>
+      <div class="badge-row">
+        <span class="badge twilio">Twilio Voice / SMS</span>
+        <span class="badge line">LINE 公式アカウント</span>
+      </div>
     </div>
 
-    <script>
-        const step1 = document.getElementById('step-1');
-        const step2 = document.getElementById('step-2');
-        const errorMsg = document.getElementById('error-msg');
-        const stepTitle = document.getElementById('step-title');
-        const voiceNotify = document.getElementById('voice-notify');
-        const voiceAuthBtn = document.getElementById('voice-auth-btn');
-        const authCodeInput = document.getElementById('auth-code');
-        const verifyButton = document.getElementById('verify-btn');
-        const successMsg = document.getElementById('success-msg');
-        const codeError = document.getElementById('code-error');
-        
-        const correctCode = '567890'; // デモ用認証コード
+    <div class="layout">
+      <!-- 左：Web + 2FA -->
+      <div>
+        <div class="col-title">ユーザー側: Webサービスのログイン画面</div>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="screen-wrap">
+            <div class="status"><span>Fortress Bank</span><span>4G ▴ 100%</span></div>
+            <div class="inner">
+              <div class="bank-bar">
+                <div>
+                  <div class="bank-name">Fortress Bank</div>
+                  <div class="bank-sub">Secure Online Banking</div>
+                </div>
+                <div class="tag">2FA デモ</div>
+              </div>
 
-        function tryLineAuth() {
-            // 認証失敗をシミュレート
-            stepTitle.textContent = 'LINE認証失敗';
-            step1.style.display = 'none';
+              <!-- screen 1: login -->
+              <div id="screen-login" class="screen active">
+                <div class="title">セキュアログイン</div>
+                <div class="caption">ステップ1〜2: ユーザーIDとパスワードでログインを開始します。</div>
+                <div class="field">
+                  <label for="uid">ユーザーID</label>
+                  <input id="uid" type="text" value="demo_user" />
+                </div>
+                <div class="field">
+                  <label for="pw">パスワード</label>
+                  <input id="pw" type="password" value="password" />
+                </div>
+                <button id="loginBtn" class="btn">ログインして2要素認証へ進む</button>
+                <div class="helper">一次認証成功後、Twilioが登録電話番号に6桁のコードを送信します。</div>
+              </div>
 
-            // 初期画面全体を隠し、失敗画面を中央寄せで表示
-            const contentEl = document.querySelector('.content');
-            if (contentEl) contentEl.style.display = 'none';
+              <!-- screen 2: 2FA -->
+              <div id="screen-2fa" class="screen">
+                <div class="title">二要素認証 (2FA)</div>
+                <div class="caption">ステップ3: TwilioがSMS/音声で6桁コードを送信。ステップ4: 同時にLINEへログイン試行を通知します。</div>
+                <div class="mask">送信先: ***-***-1234 宛てに確認コードを送信しました。</div>
+                <div class="code-row">
+                  <input maxlength="1" class="code" />
+                  <input maxlength="1" class="code" />
+                  <input maxlength="1" class="code" />
+                  <input maxlength="1" class="code" />
+                  <input maxlength="1" class="code" />
+                  <input maxlength="1" class="code" />
+                </div>
+                <div id="err" class="err"></div>
+                <button id="verifyBtn" class="btn">コードを認証してログイン</button>
+                <div class="link-row">コードが届かない場合は <a href="#" id="resend">再送信（デモ）</a></div>
+                <div class="helper">実運用では SMS / 自動音声コールを選択可能です。（Twilio Verify）</div>
+              </div>
 
-            errorMsg.style.display = 'block';
-            step2.style.display = 'flex'; // 中央寄せのためflexで表示
-            voiceAuthBtn.style.display = 'block'; // 電話認証ボタンを表示
+              <!-- screen 3: success -->
+              <div id="screen-success" class="screen">
+                <div class="title">ログイン完了</div>
+                <span class="ok-chip">✅ ステップ5: 2要素認証 OK</span>
+                <div class="caption">電話認証 + LINE確認により、安全にログインが完了しました。</div>
+                <div class="summary-box">
+                  <div>・普通預金残高：¥1,234,567</div>
+                  <div>・最近のログイン：東京 / Chrome</div>
+                  <div style="margin-top:4px; color:#6b7280;">※本番では実際のマイページに遷移。</div>
+                </div>
+                <button id="restartBtn" class="btn">デモを最初からやり直す</button>
+              </div>
+
+              <!-- screen 4: blocked by LINE -->
+              <div id="screen-blocked" class="screen">
+                <div class="title">アクセスがブロックされました</div>
+                <div class="caption">LINEで「心当たりがありません」が押されたため、このセッションは停止されました。</div>
+                <div class="summary-box">
+                  <div>・不正アクセスの可能性があるため、ログインを無効化しました。</div>
+                  <div>・必要に応じてコールセンターからご連絡します（デモ表現）。</div>
+                </div>
+                <button id="restartBtn2" class="btn">もう一度ログインを試す（デモ）</button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右：LINE トーク画面 -->
+      <div>
+        <div class="col-title">管理側: LINE公式アカウントでログイン試行を確認</div>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="screen-wrap">
+            <div class="status"><span>LINE</span><span>4G ▴ 100%</span></div>
+            <div class="line-wrap">
+              <div class="line-header">
+                <div class="line-avatar">L</div>
+                <div class="line-h-main">
+                  <span class="line-h-name">Fortress Bank 公式</span>
+                  <span class="line-h-sub">ログイン通知 & セキュリティ</span>
+                </div>
+              </div>
+              <div class="chat-box">
+                <div id="chat" class="chat-scroll"></div>
+                <div class="actions">
+                  <button id="yesBtn" class="line-btn yes">はい、私です</button>
+                  <button id="noBtn" class="line-btn no">心当たりがありません</button>
+                </div>
+                <div class="line-input">
+                  <div class="input-bar">メッセージを入力（デモ）</div>
+                  <span>＋</span>
+                </div>
+              </div>
+              <div class="note">ステップ4: ログイン試行をLINEにプッシュし、「本人／心当たりなし」を即座に選択できます。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 画面切替
+    const screens = {
+      login: document.getElementById('screen-login'),
+      twofa: document.getElementById('screen-2fa'),
+      success: document.getElementById('screen-success'),
+      blocked: document.getElementById('screen-blocked')
+    };
+    function showScreen(name) {
+      Object.values(screens).forEach(s => s.classList.remove('active'));
+      if (screens[name]) screens[name].classList.add('active');
+    }
+
+    // 左側要素
+    const loginBtn = document.getElementById('loginBtn');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const restartBtn2 = document.getElementById('restartBtn2');
+    const codeInputs = Array.from(document.querySelectorAll('.code'));
+    const err = document.getElementById('err');
+    const resend = document.getElementById('resend');
+
+    // 右側要素
+    const chat = document.getElementById('chat');
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+
+    const CORRECT_CODE = '123456';
+    let blockedByLine = false;
+    let lineConfirmed = false;
+
+    function addMessage(text, from) {
+      const row = document.createElement('div');
+      row.className = 'row ' + (from === 'me' ? 'me' : 'bot');
+      const b = document.createElement('div');
+      b.className = 'bubble ' + (from === 'me' ? 'me' : 'bot');
+      b.textContent = text;
+      row.appendChild(b);
+      chat.appendChild(row);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    // 初期メッセージ
+    addMessage('こんにちは。Fortress Bank セキュリティ通知チャネルです。', 'bot');
+    addMessage('Webからのログイン時に、ここで本人確認とブロック操作ができます。', 'bot');
+
+    // ログイン → 二要素認証へ
+    loginBtn.addEventListener('click', function () {
+      blockedByLine = false;
+      lineConfirmed = false;
+      showScreen('twofa');
+      err.textContent = '';
+      codeInputs.forEach(function (i) { i.value = ''; });
+      if (codeInputs[0]) codeInputs[0].focus();
+
+      // Twilioでコード送信（デモ）
+      console.log('Twilio: 6桁コード ' + CORRECT_CODE + ' をSMS/音声で送信しました。');
+
+      // LINEへログイン試行をプッシュ
+      addMessage('【ログイン試行】ユーザーID "demo_user" からのログインが検知されました。心当たりはありますか？', 'bot');
+    });
+
+    // コード入力フォーカス移動
+    codeInputs.forEach(function (input, idx) {
+      input.addEventListener('input', function () {
+        if (input.value && idx < codeInputs.length - 1) {
+          codeInputs[idx + 1].focus();
         }
-
-        function triggerVoiceAuth() {
-            // Twilio Programmable Voiceの発信をシミュレート
-            voiceAuthBtn.disabled = true;
-            voiceAuthBtn.textContent = '☎️ Twilioで発信処理を開始...';
-            
-            // 認証コード入力欄をリセット
-            authCodeInput.value = '';
-            authCodeInput.placeholder = '6桁のコードを入力';
-            verifyButton.disabled = true;
-            codeError.style.display = 'none';
-            successMsg.style.display = 'none';
-
-            // 着信画面風UIを表示
-            voiceNotify.style.display = 'block';
-            voiceNotify.style.backgroundColor = '#333';
-            voiceNotify.querySelector('.call-icon').textContent = '📞';
-            voiceNotify.querySelector('.call-info').textContent = '0800-XXX-XXXX';
-            voiceNotify.querySelector('strong').textContent = 'まもなく自動音声で認証コードが流れます。';
-
-            // 2秒後に音声通知が完了したことをシミュレート
-            setTimeout(() => {
-                voiceNotify.style.backgroundColor = '#28a745';
-                voiceNotify.querySelector('.call-info').textContent = '✅ 音声通知完了';
-                voiceNotify.querySelector('.call-icon').textContent = '🔊';
-                voiceNotify.querySelector('strong').textContent = '「認証コード」を自動音声で読み上げました。入力してください。';
-                voiceAuthBtn.textContent = '音声通知を再送する';
-                voiceAuthBtn.disabled = false;
-            }, 2000);
+      });
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Backspace' && !input.value && idx > 0) {
+          codeInputs[idx - 1].focus();
         }
+      });
+    });
 
-        function verifyVoiceCode() {
-            codeError.style.display = 'none';
-            successMsg.style.display = 'none';
-
-            const value = authCodeInput.value.trim();
-            if (value.length !== 6) {
-                codeError.textContent = '6桁の認証コードを入力してください。';
-                codeError.style.display = 'block';
-                return;
-            }
-
-            if (value === correctCode) {
-                stepTitle.textContent = '認証完了';
-                successMsg.style.display = 'block';
-                voiceAuthBtn.disabled = true;
-                verifyButton.disabled = true;
-                authCodeInput.disabled = true;
-            } else {
-                codeError.textContent = '認証コードが正しくありません。もう一度お試しください。';
-                codeError.style.display = 'block';
-            }
+    // コード認証
+    verifyBtn.addEventListener('click', function () {
+      const entered = codeInputs.map(function (i) { return i.value; }).join('');
+      if (blockedByLine) {
+        err.textContent = 'LINEで「心当たりがありません」が選択されたため、このセッションはブロックされました。';
+        showScreen('blocked');
+        return;
+      }
+      if (entered === CORRECT_CODE) {
+        showScreen('success');
+        if (!lineConfirmed) {
+          addMessage('LINE側で本人確認済みとして処理しました。（デモ）', 'bot');
         }
+      } else {
+        err.textContent = '認証コードが正しくありません。';
+        codeInputs.forEach(function (i) { i.value = ''; });
+        if (codeInputs[0]) codeInputs[0].focus();
+      }
+    });
 
-        // 入力長に応じてボタン活性化
-        authCodeInput.addEventListener('input', () => {
-            verifyButton.disabled = authCodeInput.value.trim().length !== 6;
-            codeError.style.display = 'none';
-            successMsg.style.display = 'none';
-        });
-    </script>
+    // コード再送
+    resend.addEventListener('click', function (e) {
+      e.preventDefault();
+      console.log('Twilio: 確認コードを再送しました（デモ）。');
+      alert('Twilio: 確認コードを再送しました。（デモ）');
+    });
+
+    // LINE: はい、私です
+    yesBtn.addEventListener('click', function () {
+      if (blockedByLine) return;
+      lineConfirmed = true;
+      addMessage('はい、私です。', 'me');
+      addMessage('ありがとうございます。続けてWeb画面で認証コードを入力してください。', 'bot');
+      alert('LINE Webhook: 「はい、私です」が押されました。
+このログインを正規アクセスとして扱います。');
+    });
+
+    // LINE: 心当たりがありません
+    noBtn.addEventListener('click', function () {
+      if (blockedByLine) return;
+      blockedByLine = true;
+      addMessage('心当たりがありません。', 'me');
+      addMessage('不正アクセスの可能性ありとして、このログインセッションを強制終了します。', 'bot');
+      alert('LINE Webhook: 「心当たりがありません」が押されました。
+Twilio側でセッションを強制終了し、必要に応じてお客様に連絡します。');
+    });
+
+    // 再スタート
+    function resetDemo() {
+      showScreen('login');
+      blockedByLine = false;
+      lineConfirmed = false;
+      err.textContent = '';
+      codeInputs.forEach(function (i) { i.value = ''; });
+    }
+    restartBtn.addEventListener('click', resetDemo);
+    restartBtn2.addEventListener('click', resetDemo);
+  </script>
 </body>
 </html>
