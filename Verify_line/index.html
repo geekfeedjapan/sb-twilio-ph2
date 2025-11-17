@@ -267,6 +267,48 @@
                 text-align: center;
             }
         }
+
+        /* 追加: スマホ画面のスタイル */
+        .phone-screen {
+            background-color: #f4f4f4;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .app-main {
+            padding: 20px;
+            flex: 1;
+        }
+
+        .line-auth {
+            background-color: #fff;
+            padding: 20px;
+            border-top: 3px solid #007bff;
+        }
+
+        .line-auth .line-header {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .line-auth h3 {
+            margin: 0;
+            font-size: 1.1em;
+            color: #007bff;
+        }
+
+        .line-auth p {
+            margin: 8px 0;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -330,6 +372,30 @@
         <div class="line-buttons">
             <button onclick="handleLineAction(true)">はい、私です</button>
             <button onclick="handleLineAction(false)">心当たりがありません</button>
+        </div>
+    </div>
+
+    <!-- 追加: スマホ画面レイアウト -->
+    <div class="container">
+        <!-- 左側のスマホ画面 -->
+        <div class="phone-screen">
+            <div class="app-main">
+                <h2>アプリ画面</h2>
+                <p>ここにアプリのメイン画面が表示されます。</p>
+            </div>
+        </div>
+
+        <!-- 右側のLINE認証画面 -->
+        <div class="phone-screen">
+            <div class="line-auth">
+                <div class="line-header">
+                    <h3>LINE</h3>
+                </div>
+                <div class="line-body">
+                    <p>認証コード: <strong>123456</strong></p>
+                    <p>このコードを入力してください。</p>
+                </div>
+            </div>
         </div>
     </div>
 
