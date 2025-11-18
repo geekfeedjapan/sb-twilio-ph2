@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>複数チャネル本人確認・リマインド デモ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* ==============================
+           全体レイアウト
+        =============================== */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #0f172a;
+            color: #0f172a;
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            min-height: 100vh;
+        }
+
+        .app-shell {
+            max-width: 1200px;
+            width: 100%;
+            margin: 16px;
+            background: #f9fafb;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(15,23,42,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header.app-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(90deg, #0f172a, #1d4ed8);
+            color: #f9fafb;
+        }
+
+        .app-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .app-subtitle {
+            font-size: 13px;
+            opacity: 0.85;
+        }
+
+        .app-body {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        @media (max-width: 900px) {
+            .app-body {
+                flex-direction: column;
+            }
+        }
+
+        /* ==============================
+           左ペイン（Webサービス側）
+        =============================== */
+        .panel-left {
+            flex: 0.9;
+            padding: 20px 20px 20px 24px;
+            border-right: 1px solid #e5e7eb;
+            background: #f9fafb;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .panel-left h2 {
+            font-size: 16px;
+            margin: 0 0 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            background: rgba(37,99,235,0.1);
+            color: #1d4ed8;
+        }
+
+        .scenario-steps {
+            font-size: 12px;
+            line-height: 1.6;
+            background: #fff;
+            border-radius: 12px;
+            padding: 12px 12px 12px 16px;
+            border: 1px solid #e5e7eb;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .scenario-steps ol {
+            padding-left: 18px;
+            margin: 6px 0 0;
+        }
+
+        .scenario-steps li {
+            margin-bottom: 4px;
+        }
+
+        .web-card {
+            background: #111827;
+            color: #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .web-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .web-card-title {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .badge-critical {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: rgba(248, 113, 113, 0.15);
+            color: #fecaca;
+            border: 1px solid rgba(248, 113, 113, 0.4);
+        }
+
+        .web-card-body {
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .web-form-row {
+            margin-bottom: 8px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .web-form-row label {
+            font-size: 12px;
+            color: #9ca3af;
+            min-width: 90px;
+        }
+
+        .web-form-row input {
+            flex: 1;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid #374151;
+            background: #020617;
+            color: #e5e7eb;
+            font-size: 12px;
+        }
+
+        .web-actions {
+            margin-top: 8px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-primary {
+            border: none;
+            border-radius: 999px;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #022c22;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .btn-ghost {
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 11px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid #374151;
+            color: #9ca3af;
+            cursor: pointer;
+        }
+
+        .hint-text {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .event-log {
+            flex: 1;
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            padding: 10px 12px;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .event-log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .event-log-title {
+            font-weight: 500;
+            font-size: 12px;
+        }
+
+        .event-log-body {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .event-log-item {
+            margin-bottom: 4px;
+        }
+
+        .event-log-item time {
+            color: #9ca3af;
+            margin-right: 4px;
+        }
+
+        .event-log-item span {
+            color: #111827;
+        }
+
+        /* ==============================
+           右ペイン（スマホ＆ステータス）
+        =============================== */
+        .panel-right {
+            flex: 1.1;
+            padding: 20px 24px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: radial-gradient(circle at top left, #e0f2fe, #eff6ff 40%, #eef2ff);
+        }
+
+        .status-bar {
+            background: rgba(15, 23, 42, 0.9);
+            color: #e5e7eb;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .status-main {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .status-step {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-caption {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .status-channels {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            border: 1px solid rgba(148,163,184,0.7);
+            background: rgba(15,23,42,0.8);
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6b7280;
+        }
+
+        .status-dot.active {
+            background: #22c55e;
+        }
+
+        .status-dot.alert {
+            background: #f97316;
+        }
+
+        .status-dot.idle {
+            background: #6b7280;
+        }
+
+        .status-dot.done {
+            background: #38bdf8;
+        }
+
+        .phone-grid {
+            display: flex;
+            gap: 12px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        @media (max-width: 900px) {
+            .panel-right {
+                padding-top: 0;
+            }
+            .phone-grid {
+                margin-top: 4px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .phone-grid {
+                flex-direction: column;
+            }
+        }
+
+        .phone-frame {
+            flex: 1;
+            max-width: 260px;
+            margin: 0 auto;
+            background: #0b1120;
+            border-radius: 26px;
+            padding: 10px 6px;
+            box-shadow: 0 15px 30px rgba(15,23,42,0.8);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .phone-notch {
+            width: 60%;
+            height: 10px;
+            background: #020617;
+            border-radius: 0 0 16px 16px;
+            margin: 0 auto 6px;
+        }
+
+        .phone-inner {
+            flex: 1;
+            background: #e5e7eb;
+            border-radius: 18px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .phone-header {
+            padding: 6px 10px;
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #16a34a;
+            color: #ecfdf5;
+        }
+
+        .phone-header.sms {
+            background: #1d4ed8;
+            color: #eff6ff;
+        }
+
+        .phone-header-title {
+            font-weight: 600;
+        }
+
+        .phone-header-sub {
+            font-size: 10px;
+            opacity: 0.9;
+        }
+
+        .phone-body {
+            flex: 1;
+            padding: 8px 8px 4px;
+            font-size: 11px;
+            background: #dbeafe;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow-y: auto;
+        }
+
+        .message-row {
+            display: flex;
+            margin-bottom: 4px;
+        }
+
+        .message-row.system {
+            justify-content: flex-start;
+        }
+
+        .message-row.user {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 6px 8px;
+            border-radius: 12px;
+            line-height: 1.4;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message-bubble.system {
+            background: #f9fafb;
+            border-bottom-left-radius: 2px;
+        }
+
+        .message-bubble.user {
+            background: #22c55e;
+            color: #052e16;
+            border-bottom-right-radius: 2px;
+        }
+
+        .bubble-meta {
+            font-size: 9px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .bubble-meta-right {
+            text-align: right;
+        }
+
+        .unread-pill {
+            display: inline-flex;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: #ef4444;
+            color: #fee2e2;
+            font-size: 9px;
+            margin-left: 4px;
+        }
+
+        .phone-footer {
+            padding: 6px 8px;
+            background: #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .phone-footer button {
+            width: 100%;
+            border-radius: 999px;
+            border: none;
+            font-size: 11px;
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+
+        .btn-line {
+            background: #16a34a;
+            color: #ecfdf5;
+        }
+
+        .btn-line:disabled,
+        .btn-sms:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-sms {
+            background: #1d4ed8;
+            color: #eff6ff;
+        }
+
+        .phone-bottom-bar {
+            width: 36%;
+            height: 4px;
+            background: #020617;
+            border-radius: 999px;
+            margin: 6px auto 0;
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <header class="app-header">
+        <div class="app-title">複数のチャネルを跨いだ本人確認・リマインド デモ</div>
+        <div class="app-subtitle">
+            まずは LINE に本人確認を送信し、未読なら自動で SMS にフォールバック。完了通知は再び LINE へ返すフローを可視化します。
+        </div>
+    </header>
+
+    <div class="app-body">
+        <!-- 左ペイン：Webサービス側 -->
+        <section class="panel-left">
+            <div>
+                <h2>
+                    Webサービス画面
+                    <span class="pill">Twilio Channels シナリオ</span>
+                </h2>
+                <div class="scenario-steps">
+                    <strong>シナリオ概要</strong><br>
+                    ユーザーの操作に応じて、<strong>LINE → SMS（電話）→ LINE</strong> とチャネルを跨ぎながら本人確認・完了通知を行うデモです。
+                    <ol>
+                        <li><strong>本人確認リクエスト</strong><br>ユーザーがパスワード再設定などを実行。</li>
+                        <li><strong>優先チャネル (LINE)</strong><br>本人確認URL／ワンタイムパスワードを LINE に送信。</li>
+                        <li><strong>未読時のフォールバック</strong><br>一定時間（例：5分）未読なら SMS／電話に自動送信。</li>
+                        <li><strong>完了通知は LINE</strong><br>SMS 等で認証完了後、LINE に「完了しました」を通知。</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="web-card">
+                <div class="web-card-header">
+                    <div class="web-card-title">パスワード再設定リクエスト画面（イメージ）</div>
+                    <span class="badge-critical">重要操作の本人確認</span>
+                </div>
+                <div class="web-card-body">
+                    <div class="web-form-row">
+                        <label for="web-userid">ユーザーID</label>
+                        <input id="web-userid" type="text" value="user_001234" />
+                    </div>
+                    <div class="web-form-row">
+                        <label for="web-phone">携帯電話番号</label>
+                        <input id="web-phone" type="text" value="+81 90-1234-5678" />
+                    </div>
+                    <div class="web-actions">
+                        <button id="btn-start" class="btn-primary">
+                            🔐 本人確認を開始
+                        </button>
+                        <button id="btn-reset" class="btn-ghost" type="button">
+                            リセット
+                        </button>
+                    </div>
+                    <div class="hint-text">
+                        ※実際の Twilio API 呼び出しは行わず、画面上の挙動のみをシミュレーションしています。
+                    </div>
+                </div>
+            </div>
+
+            <div class="event-log">
+                <div class="event-log-header">
+                    <div class="event-log-title">イベントログ（チャネル遷移の流れ）</div>
+                    <button id="btn-clear-log" class="btn-ghost" type="button" style="padding:2px 8px;font-size:10px;">
+                        ログをクリア
+                    </button>
+                </div>
+                <div id="event-log-body" class="event-log-body">
+                    <!-- JSでログを追加 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 右ペイン：スマホ画面 & ステータス -->
+        <section class="panel-right">
+            <div class="status-bar">
+                <div class="status-main">
+                    <div id="status-step" class="status-step">ステップ 1：待機中</div>
+                    <div id="status-caption" class="status-caption">
+                        「本人確認を開始」ボタンを押すと、まず LINE にメッセージが送信されます。
+                    </div>
+                </div>
+                <div class="status-channels">
+                    <div class="status-chip">
+                        <span class="status-dot idle" id="dot-web"></span> Web
+                    </div>
+                    <div class="status-chip">
+                        <span class="status-dot idle" id="dot-line"></span> LINE
+                    </div>
+                    <div class="status-chip">
+                        <span class="status-dot idle" id="dot-sms"></span> SMS
+                    </div>
+                </div>
+            </div>
+
+            <div class="phone-grid">
+                <!-- LINE スマホ -->
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-inner">
+                        <div class="phone-header">
+                            <div>
+                                <div class="phone-header-title">公式アカウント</div>
+                                <div class="phone-header-sub">LINE（優先チャネル）</div>
+                            </div>
+                            <div style="font-size:10px;">オンライン</div>
+                        </div>
+                        <div id="line-body" class="phone-body">
+                            <!-- JSでメッセージを追加 -->
+                            <div class="message-row system">
+                                <div class="message-bubble system">
+                                    ここに本人確認の LINE メッセージが表示されます。
+                                    <div class="bubble-meta">デモ開始前のサンプル表示</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="phone-footer">
+                            <button id="btn-open-line" class="btn-line" type="button" disabled>
+                                ✅ LINE メッセージを開く（既読にする）
+                            </button>
+                            <div class="hint-text" style="font-size:10px;">
+                                ※メッセージを開くと「未読」のままにならないため、SMS へのフォールバックが発生しないパターンを再現できます。
+                            </div>
+                        </div>
+                    </div>
+                    <div class="phone-bottom-bar"></div>
+                </div>
+
+                <!-- SMS スマホ -->
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-inner">
+                        <div class="phone-header sms">
+                            <div>
+                                <div class="phone-header-title">SMS 認証コード</div>
+                                <div class="phone-header-sub">フォールバックチャネル</div>
+                            </div>
+                            <div style="font-size:10px;">圏内</div>
+                        </div>
+                        <div id="sms-body" class="phone-body" style="background:#eff6ff;">
+                            <!-- JSでメッセージを追加 -->
+                            <div class="message-row system">
+                                <div class="message-bubble system">
+                                    LINE未読の場合、自動でここに SMS が届きます。
+                                    <div class="bubble-meta">デモ開始前のサンプル表示</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="phone-footer">
+                            <button id="btn-complete-sms" class="btn-sms" type="button" disabled>
+                                🔓 このコードで本人確認完了（デモ）
+                            </button>
+                            <div class="hint-text" style="font-size:10px;">
+                                ※SMS で本人確認を完了すると、LINE に「パスワード再設定が完了しました」という完了通知が届きます。
+                            </div>
+                        </div>
+                    </div>
+                    <div class="phone-bottom-bar"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const btnStart = document.getElementById('btn-start');
+        const btnReset = document.getElementById('btn-reset');
+        const btnOpenLine = document.getElementById('btn-open-line');
+        const btnCompleteSms = document.getElementById('btn-complete-sms');
+        const btnClearLog = document.getElementById('btn-clear-log');
+
+        const eventLogBody = document.getElementById('event-log-body');
+        const lineBody = document.getElementById('line-body');
+        const smsBody = document.getElementById('sms-body');
+
+        const statusStep = document.getElementById('status-step');
+        const statusCaption = document.getElementById('status-caption');
+        const dotWeb = document.getElementById('dot-web');
+        const dotLine = document.getElementById('dot-line');
+        const dotSms = document.getElementById('dot-sms');
+
+        let state = {
+            running: false,
+            lineSent: false,
+            lineOpened: false,
+            smsSent: false,
+            verified: false,
+            fallbackTimer: null
+        };
+
+        function addLog(message) {
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+
+            const div = document.createElement('div');
+            div.className = 'event-log-item';
+            const time = document.createElement('time');
+            time.textContent = `${hh}:${mm}:${ss}`;
+            const span = document.createElement('span');
+            span.textContent = message;
+
+            div.appendChild(time);
+            div.appendChild(span);
+            eventLogBody.appendChild(div);
+            eventLogBody.scrollTop = eventLogBody.scrollHeight;
+        }
+
+        function clearLog() {
+            eventLogBody.innerHTML = '';
+        }
+
+        function resetDots() {
+            [dotWeb, dotLine, dotSms].forEach(dot => {
+                dot.classList.remove('active', 'alert', 'done');
+                dot.classList.add('idle');
+            });
+        }
+
+        function setDot(dot, status) {
+            dot.classList.remove('idle', 'active', 'alert', 'done');
+            if (status === 'active') dot.classList.add('active');
+            else if (status === 'alert') dot.classList.add('alert');
+            else if (status === 'done') dot.classList.add('done');
+            else dot.classList.add('idle');
+        }
+
+        function clearPhoneBodies() {
+            lineBody.innerHTML = '';
+            smsBody.innerHTML = '';
+        }
+
+        function appendLineMessage(text, options = {}) {
+            const row = document.createElement('div');
+            row.className = 'message-row system';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble system';
+            bubble.innerHTML = text.replace(/\n/g, '<br>');
+
+            if (options.unread) {
+                const unread = document.createElement('span');
+                unread.className = 'unread-pill';
+                unread.textContent = '未読';
+                bubble.appendChild(document.createElement('br'));
+                bubble.appendChild(unread);
+            }
+
+            const meta = document.createElement('div');
+            meta.className = 'bubble-meta';
+            meta.textContent = options.meta || '数秒前';
+
+            bubble.appendChild(meta);
+            row.appendChild(bubble);
+            lineBody.appendChild(row);
+            lineBody.scrollTop = lineBody.scrollHeight;
+        }
+
+        function markLineRead() {
+            const pills = lineBody.querySelectorAll('.unread-pill');
+            pills.forEach(pill => pill.remove());
+            const metas = lineBody.querySelectorAll('.bubble-meta');
+            if (metas.length > 0) {
+                metas[metas.length - 1].textContent = '既読';
+            }
+        }
+
+        function appendSmsMessage(text, options = {}) {
+            const row = document.createElement('div');
+            row.className = 'message-row system';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble system';
+            bubble.innerHTML = text.replace(/\n/g, '<br>');
+
+            const meta = document.createElement('div');
+            meta.className = 'bubble-meta';
+            meta.textContent = options.meta || 'SMS受信';
+
+            bubble.appendChild(meta);
+            row.appendChild(bubble);
+            smsBody.appendChild(row);
+            smsBody.scrollTop = smsBody.scrollHeight;
+        }
+
+        function updateStatus(stepText, captionText) {
+            statusStep.textContent = stepText;
+            statusCaption.textContent = captionText;
+        }
+
+        function clearFallbackTimer() {
+            if (state.fallbackTimer) {
+                clearTimeout(state.fallbackTimer);
+                state.fallbackTimer = null;
+            }
+        }
+
+        function resetState() {
+            clearFallbackTimer();
+            state = {
+                running: false,
+                lineSent: false,
+                lineOpened: false,
+                smsSent: false,
+                verified: false,
+                fallbackTimer: null
+            };
+            btnStart.disabled = false;
+            btnOpenLine.disabled = true;
+            btnCompleteSms.disabled = true;
+            resetDots();
+            updateStatus('ステップ 1：待機中', '「本人確認を開始」ボタンを押すと、まず LINE にメッセージが送信されます。');
+            clearPhoneBodies();
+            appendLineMessage('ここに本人確認の LINE メッセージが表示されます。', { meta: 'デモ開始前のサンプル表示' });
+            appendSmsMessage('LINE未読の場合、自動でここに SMS が届きます。', { meta: 'デモ開始前のサンプル表示' });
+        }
+
+        function startFlow() {
+            // 初期化
+            clearFallbackTimer();
+            state.running = true;
+            state.lineSent = false;
+            state.lineOpened = false;
+            state.smsSent = false;
+            state.verified = false;
+
+            btnStart.disabled = true;
+            btnOpenLine.disabled = false;
+            btnCompleteSms.disabled = true;
+
+            resetDots();
+            setDot(dotWeb, 'active');
+            setDot(dotLine, 'idle');
+            setDot(dotSms, 'idle');
+
+            clearPhoneBodies();
+            addLog('ユーザーがパスワード再設定等の重要操作を実行しました。本人確認フローを開始します。');
+            updateStatus('ステップ 1：本人確認リクエスト', 'Web からの操作をトリガーに、優先チャネルである LINE に本人確認を送信します。');
+
+            // 少し待ってから LINE に送る演出
+            setTimeout(() => {
+                sendLineVerification();
+            }, 600);
+        }
+
+        function sendLineVerification() {
+            state.lineSent = true;
+            setDot(dotWeb, 'done');
+            setDot(dotLine, 'active');
+
+            const userId = document.getElementById('web-userid').value || 'user_xxx';
+            const code = Math.floor(100000 + Math.random() * 900000); // 6桁コード
+
+            addLog(`ステップ2：優先チャネル（LINE）に本人確認を送信しました。対象ユーザーID: ${userId} / ワンタイムコード: ${code}`);
+            updateStatus('ステップ 2：LINE に本人確認を送信',
+                'ユーザーが最も確認しやすい LINE を優先チャネルとして活用しています。');
+
+            const text = [
+                '【本人確認のお願い】',
+                '',
+                'パスワード再設定のリクエストを受け付けました。',
+                '',
+                '以下のワンタイムコードを入力して本人確認を完了してください。',
+                `認証コード：${code}`,
+                '',
+                '※このコードは5分間有効です。'
+            ].join('\n');
+
+            appendLineMessage(text, { unread: true, meta: 'たった今' });
+
+            // フォールバック用タイマー（5秒 = デモ用。実運用では 5 分 等）
+            clearFallbackTimer();
+            state.fallbackTimer = setTimeout(() => {
+                handleFallback();
+            }, 5000);
+        }
+
+        function handleFallback() {
+            state.fallbackTimer = null;
+
+            if (state.lineOpened || state.smsSent || state.verified) {
+                // 既に開かれている or フォールバック済みなら何もしない
+                return;
+            }
+
+            state.smsSent = true;
+            setDot(dotLine, 'alert');
+            setDot(dotSms, 'active');
+
+            addLog('ステップ3：一定時間 LINE が未読だったため、自動的に SMS へフォールバックしました。');
+            updateStatus('ステップ 3：LINE 未読のため SMS にフォールバック',
+                'LINE に気づかなかったユーザーにも、SMS を使って確実に本人確認情報を届けます。');
+
+            const text = [
+                '【本人確認コードのお知らせ】',
+                '',
+                'パスワード再設定のための本人確認コードです。',
+                '',
+                '認証コード：******',
+                '',
+                '※この SMS 経由で本人確認が完了すると、LINE には完了通知のみ送信されます。'
+            ].join('\n');
+
+            appendSmsMessage(text, { meta: 'たった今 (自動送信)' });
+
+            btnCompleteSms.disabled = false;
+        }
+
+        function openLine() {
+            if (!state.lineSent) return;
+            if (state.lineOpened) return;
+
+            state.lineOpened = true;
+            setDot(dotLine, 'done');
+
+            addLog('ユーザーが LINE 上の本人確認メッセージを開きました。（未読 → 既読）');
+            updateStatus('ステップ 2：LINE メッセージを確認',
+                'ユーザーが優先チャネルである LINE で本人確認メッセージを確認しました。');
+
+            markLineRead();
+            clearFallbackTimer();
+        }
+
+        function completeViaSms() {
+            if (!state.smsSent || state.verified) return;
+
+            state.verified = true;
+            setDot(dotSms, 'done');
+            setDot(dotWeb, 'done');
+
+            addLog('ユーザーが SMS 経由で本人確認を完了しました。完了通知を LINE に送信します。');
+            updateStatus('ステップ 4：本人確認完了 → LINE に完了通知',
+                '重要な認証は SMS で行い、ユーザーとの日常的なコミュニケーションは LINE で行う使い分けを表現しています。');
+
+            // SMS 画面に「本人確認完了」をユーザー発話として追加してもよい
+            const row = document.createElement('div');
+            row.className = 'message-row user';
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble user';
+            bubble.textContent = '認証コードを入力しました。';
+            const meta = document.createElement('div');
+            meta.className = 'bubble-meta bubble-meta-right';
+            meta.textContent = '送信済み';
+            bubble.appendChild(meta);
+            row.appendChild(bubble);
+            smsBody.appendChild(row);
+            smsBody.scrollTop = smsBody.scrollHeight;
+
+            // LINE に完了通知メッセージを送る
+            const text = [
+                '【パスワード再設定が完了しました】',
+                '',
+                'SMS を通じた本人確認が正常に完了しました。',
+                '',
+                'これにより、アカウントのセキュリティが維持されつつ、',
+                'お手元の端末から安全にご利用いただけます。'
+            ].join('\n');
+
+            appendLineMessage(text, { meta: '数秒前' });
+            setDot(dotLine, 'done');
+
+            btnCompleteSms.disabled = true;
+            btnStart.disabled = false;
+        }
+
+        // イベントハンドラ
+        btnStart.addEventListener('click', startFlow);
+        btnReset.addEventListener('click', () => {
+            addLog('--- 画面をリセットしました。---');
+            resetState();
+        });
+        btnOpenLine.addEventListener('click', openLine);
+        btnCompleteSms.addEventListener('click', completeViaSms);
+        btnClearLog.addEventListener('click', clearLog);
+
+        // 初期状態
+        resetState();
+    })();
+</script>
+</body>
+</html>
