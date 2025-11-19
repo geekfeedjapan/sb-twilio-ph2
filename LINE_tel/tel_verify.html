@@ -519,20 +519,6 @@
       lineConfirmed = true;
       addMessage('はい、私です。', 'me');
       addMessage('ありがとうございます。続けてWeb画面で認証コードを入力してください。', 'bot');
-
-      // UIに通知を表示
-      const notification = document.createElement('div');
-      notification.className = 'notification';
-      notification.textContent = 'LINE Webhook: 「はい、私です」が押されました。このログインを正規アクセスとして扱います。';
-      document.body.appendChild(notification);
-
-      console.log('Notification added to the DOM:', notification);
-
-      // 通知を数秒後に削除
-      setTimeout(() => {
-        notification.remove();
-        console.log('Notification removed from the DOM');
-      }, 5000);
     });
 
     // LINE: 心当たりがありません
