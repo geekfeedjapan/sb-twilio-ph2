@@ -526,9 +526,12 @@
       notification.textContent = 'LINE Webhook: 「はい、私です」が押されました。このログインを正規アクセスとして扱います。';
       document.body.appendChild(notification);
 
+      console.log('Notification added to the DOM:', notification);
+
       // 通知を数秒後に削除
       setTimeout(() => {
         notification.remove();
+        console.log('Notification removed from the DOM');
       }, 5000);
     });
 
@@ -541,7 +544,7 @@
       alert('LINE Webhook: 「心当たりがありません」が押されました。\nTwilio側でセッションを強制終了し、必要に応じてお客様に連絡します。');
     });
 
-    // 通知用のスタイルを完全に分離
+    // 通知用のスタイルをさらに分離
     const style = document.createElement('style');
     style.textContent = `
       .notification {
@@ -555,9 +558,14 @@
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         z-index: 1000;
         font-size: 0.9rem;
-        border: 2px solid red; /* デバッグ用の境界線 */
         transform: none; /* レイアウトに影響を与えない */
         transition: none; /* アニメーションを無効化 */
+        pointer-events: none; /* ユーザー操作を無効化 */
+      }
+
+      body {
+        margin: 0; /* レイアウトのズレを防ぐ */
+        overflow-x: hidden; /* 横スクロールを防ぐ */
       }
     `;
     document.head.appendChild(style);
