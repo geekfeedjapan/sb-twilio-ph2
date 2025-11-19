@@ -541,6 +541,26 @@
       alert('LINE Webhook: 「心当たりがありません」が押されました。\nTwilio側でセッションを強制終了し、必要に応じてお客様に連絡します。');
     });
 
+    // 通知用のスタイルを修正
+    const style = document.createElement('style');
+    style.textContent = `
+      .notification {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: #22c55e;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 5px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        font-size: 0.9rem;
+        transform: translateX(0); /* 修正: レイアウトに影響を与えない */
+        transition: none; /* アニメーションを無効化 */
+      }
+    `;
+    document.head.appendChild(style);
+
     // 再スタート
     function resetDemo() {
       showScreen('login');
