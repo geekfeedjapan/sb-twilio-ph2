@@ -461,21 +461,33 @@
 
     // コード認証
     verifyBtn.addEventListener('click', function () {
-      const entered = codeInputs.map(function (i) { return i.value; }).join('');
-      if (blockedByLine) {
-        err.textContent = 'LINEで「心当たりがありません」が選択されたため、このセッションはブロックされました。';
-        showScreen('blocked');
-        return;
-      }
-      if (entered === CORRECT_CODE) {
-        showScreen('success');
-        if (!lineConfirmed) {
-          addMessage('LINE側で本人確認済みとして処理しました。（デモ）', 'bot');
+      console.log('認証ボタンがクリックされました。'); // デバッグ用ログ
+
+      try {
+        const entered = codeInputs.map(function (i) { return i.value; }).join('');
+        console.log(`入力されたコード: ${entered}`); // デバッグ用ログ
+
+        if (blockedByLine) {
+          err.textContent = 'LINEで「心当たりがありません」が選択されたため、このセッションはブロックされました。';
+          showScreen('blocked');
+          return;
         }
-      } else {
-        err.textContent = '認証コードが正しくありません。';
-        codeInputs.forEach(function (i) { i.value = ''; });
-        if (codeInputs[0]) codeInputs[0].focus();
+
+        if (entered === CORRECT_CODE) {
+          console.log('認証コードが正しいです。ログイン成功。'); // デバッグ用ログ
+          showScreen('success');
+          if (!lineConfirmed) {
+            addMessage('LINE側で本人確認済みとして処理しました。（デモ）', 'bot');
+          }
+        } else {
+          console.log('認証コードが間違っています。'); // デバッグ用ログ
+          err.textContent = '認証コードが正しくありません。';
+          codeInputs.forEach(function (i) { i.value = ''; });
+          if (codeInputs[0]) codeInputs[0].focus();
+        }
+      } catch (error) {
+        console.error('認証中にエラーが発生しました:', error);
+        alert('認証中にエラーが発生しました。コンソールを確認してください。');
       }
     });
 
