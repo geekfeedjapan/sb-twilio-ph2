@@ -403,6 +403,24 @@
     // デバッグ用ログ追加
     console.log('スクリプトが正しく読み込まれました。');
 
+    // LINEメッセージ送信ロジックの修正
+    function addMessage(text, from) {
+      try {
+        console.log(`メッセージを追加: ${text} (from: ${from})`); // デバッグ用ログ
+        const row = document.createElement('div');
+        row.className = 'row ' + (from === 'me' ? 'me' : 'bot');
+        const b = document.createElement('div');
+        b.className = 'bubble ' + (from === 'me' ? 'me' : 'bot');
+        b.textContent = text;
+        row.appendChild(b);
+        chat.appendChild(row);
+        chat.scrollTop = chat.scrollHeight;
+      } catch (error) {
+        console.error('LINEメッセージの追加中にエラーが発生しました:', error);
+        alert('LINEメッセージの追加中にエラーが発生しました。コンソールを確認してください。');
+      }
+    }
+
     // ログイン → 二要素認証へ
     loginBtn.addEventListener('click', function () {
       console.log('ログインボタンがクリックされました。'); // デバッグ用ログ
