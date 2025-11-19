@@ -426,22 +426,32 @@
       console.log('ログインボタンがクリックされました。'); // デバッグ用ログ
 
       try {
-        blockedByLine = false;
-        lineConfirmed = false;
-        console.log('画面を二要素認証に切り替えます。');
-        showScreen('twofa');
-        err.textContent = '';
-        codeInputs.forEach(function (i) { i.value = ''; });
-        if (codeInputs[0]) codeInputs[0].focus();
+        const userId = document.getElementById('uid').value;
+        const password = document.getElementById('pw').value;
+        console.log(`入力されたID: ${userId}, パスワード: ${password}`); // デバッグ用ログ
 
-        // Twilioでコード送信（デモ）
-        console.log('Twilio: 6桁コード ' + CORRECT_CODE + ' をSMS/音声で送信しました。');
+        // IDとパスワードの簡易検証（デモ用）
+        if (userId === 'demo_user' && password === 'password') {
+          console.log('IDとパスワードが正しいです。'); // デバッグ用ログ
+          blockedByLine = false;
+          lineConfirmed = false;
+          showScreen('twofa');
+          err.textContent = '';
+          codeInputs.forEach(function (i) { i.value = ''; });
+          if (codeInputs[0]) codeInputs[0].focus();
 
-        // LINEへログイン試行をプッシュ
-        addMessage('【ログイン試行】ユーザーID "demo_user" からのログインが検知されました。心当たりはありますか？', 'bot');
+          // Twilioでコード送信（デモ）
+          console.log('Twilio: 6桁コード ' + CORRECT_CODE + ' をSMS/音声で送信しました。');
+
+          // LINEへログイン試行をプッシュ
+          addMessage('【ログイン試行】ユーザーID "demo_user" からのログインが検知されました。心当たりはありますか？', 'bot');
+        } else {
+          console.log('IDまたはパスワードが間違っています。'); // デバッグ用ログ
+          alert('IDまたはパスワードが正しくありません。');
+        }
       } catch (error) {
-        console.error('エラーが発生しました:', error);
-        alert('エラーが発生しました。コンソールを確認してください。');
+        console.error('ログイン処理中にエラーが発生しました:', error);
+        alert('ログイン処理中にエラーが発生しました。コンソールを確認してください。');
       }
     });
 
