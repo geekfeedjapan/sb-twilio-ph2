@@ -451,7 +451,7 @@
         }
       } catch (error) {
         console.error('ログイン処理中にエラーが発生しました:', error);
-        alert('ログイン処理中にエラーが発生しました。コンソールを確認してください。');
+        alert(`エラーが発生しました。詳細: ${error.message}`); // エラー内容を表示
       }
     });
 
@@ -478,6 +478,7 @@
         console.log(`入力されたコード: ${entered}`); // デバッグ用ログ
 
         if (blockedByLine) {
+          console.log('LINEで「心当たりがありません」が選択されました。'); // デバッグ用ログ
           err.textContent = 'LINEで「心当たりがありません」が選択されたため、このセッションはブロックされました。';
           showScreen('blocked');
           return;
@@ -497,7 +498,7 @@
         }
       } catch (error) {
         console.error('認証中にエラーが発生しました:', error);
-        alert('認証中にエラーが発生しました。コンソールを確認してください。');
+        alert(`認証中にエラーが発生しました。詳細: ${error.message}`); // エラー内容を表示
       }
     });
 
