@@ -400,32 +400,12 @@
     const err = document.getElementById('err');
     const resend = document.getElementById('resend');
 
-    // 右側要素
-    const chat = document.getElementById('chat');
-    const yesBtn = document.getElementById('yesBtn');
-    const noBtn = document.getElementById('noBtn');
-
-    const CORRECT_CODE = '123456';
-    let blockedByLine = false;
-    let lineConfirmed = false;
-
-    function addMessage(text, from) {
-      const row = document.createElement('div');
-      row.className = 'row ' + (from === 'me' ? 'me' : 'bot');
-      const b = document.createElement('div');
-      b.className = 'bubble ' + (from === 'me' ? 'me' : 'bot');
-      b.textContent = text;
-      row.appendChild(b);
-      chat.appendChild(row);
-      chat.scrollTop = chat.scrollHeight;
-    }
-
-    // 初期メッセージ
-    addMessage('こんにちは。Fortress Bank セキュリティ通知チャネルです。', 'bot');
-    addMessage('Webからのログイン時に、ここで本人確認とブロック操作ができます。', 'bot');
+    // デバッグ用ログ追加
+    console.log('スクリプトが正しく読み込まれました。');
 
     // ログイン → 二要素認証へ
     loginBtn.addEventListener('click', function () {
+      console.log('ログインボタンがクリックされました。'); // デバッグ用ログ
       blockedByLine = false;
       lineConfirmed = false;
       showScreen('twofa');
@@ -487,8 +467,7 @@
       lineConfirmed = true;
       addMessage('はい、私です。', 'me');
       addMessage('ありがとうございます。続けてWeb画面で認証コードを入力してください。', 'bot');
-      alert('LINE Webhook: 「はい、私です」が押されました。
-このログインを正規アクセスとして扱います。');
+      alert('LINE Webhook: 「はい、私です」が押されました。\nこのログインを正規アクセスとして扱います。');
     });
 
     // LINE: 心当たりがありません
@@ -497,8 +476,7 @@
       blockedByLine = true;
       addMessage('心当たりがありません。', 'me');
       addMessage('不正アクセスの可能性ありとして、このログインセッションを強制終了します。', 'bot');
-      alert('LINE Webhook: 「心当たりがありません」が押されました。
-Twilio側でセッションを強制終了し、必要に応じてお客様に連絡します。');
+      alert('LINE Webhook: 「心当たりがありません」が押されました。\nTwilio側でセッションを強制終了し、必要に応じてお客様に連絡します。');
     });
 
     // 再スタート
