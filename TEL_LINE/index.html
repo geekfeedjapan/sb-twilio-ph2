@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twilio本人確認・リマインド デモ</title>
+    <style>
+        /*
+        ----------------------------------
+        基本スタイル
+        ----------------------------------
+        */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            display: flex;
+            gap: 20px;
+            box-sizing: border-box;
+        }
+
+        /*
+        ----------------------------------
+        管理画面スタイル
+        ----------------------------------
+        */
+        #admin-panel {
+            flex: 0 0 350px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            border-left: 5px solid #ff4500; /* Twilioカラーを意識 */
+        }
+        #admin-panel h2 {
+            color: #ff4500;
+            border-bottom: 2px solid #ff4500;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        #admin-panel label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #333;
+        }
+        #admin-panel input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        #admin-panel button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        #admin-panel button:hover {
+            background-color: #0056b3;
+        }
+        .scenario-controls {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+        }
+        .scenario-controls button {
+            margin-top: 10px;
+            background-color: #28a745;
+        }
+        .scenario-controls button:hover {
+             background-color: #1e7e34;
+        }
+
+        /*
+        ----------------------------------
+        ユーザー画面コンテナスタイル
+        ----------------------------------
+        */
+        #user-screen-container {
+            flex: 1;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+            min-height: 800px;
+        }
+
+        #user-screen-container h2 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        #user-screen {
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* PC (固定電話) 表示 */
+        .pc-view {
+            width: 100%;
+            max-width: 1000px;
+            height: 600px;
+            border-radius: 6px;
+        }
+
+        /* スマホ (携帯電話) 表示 */
+        .smartphone-view {
+            width: 375px; /* iPhone SE/8/X くらいの幅 */
+            height: 667px; /* iPhone 8 くらいの高さ */
+            border-radius: 40px;
+            border: 10px solid #333;
+            box-shadow: 0 0 0 2px #555, inset 0 0 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        .smartphone-view::before { /* スマホのノッチをシミュレート */
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+
+
+        /*
+        ----------------------------------
+        旅行会社ウェブサイト スタイル (共通)
+        ----------------------------------
+        */
+        .website-header {
+            background-color: #005a9c; /* ブランドカラー: ディープブルー */
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .smartphone-view .website-header {
+             padding: 10px 15px;
+        }
+        .website-header h1 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+        .smartphone-view .website-header h1 {
+             font-size: 18px;
+        }
+        .website-header .nav-right button {
+            background-color: #ffaa00; /* アクセントカラー: ゴールド */
+            color: #005a9c;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.3s;
+        }
+
+        .website-header nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+        .smartphone-view .website-header nav {
+             display: none; /* スマホではナビゲーションを非表示 */
+        }
+
+
+        .website-content {
+            padding: 20px;
+            overflow-y: auto;
+            height: calc(100% - 60px); /* ヘッダーの高さを引く */
+            box-sizing: border-box;
+        }
+        .smartphone-view .website-content {
+             padding: 10px;
+             height: calc(100% - 46px); /* スマホヘッダーを考慮 */
+        }
+        .login-form {
+            max-width: 350px;
+            margin: 30px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        .smartphone-view .login-form {
+             margin: 15px auto;
+             padding: 15px;
+        }
+        .login-form input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .login-form button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .login-form .forgot-password {
+            display: block;
+            margin-top: 15px;
+            color: #005a9c;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .auth-screen, .password-reset-screen {
+            text-align: center;
+            padding: 30px 20px;
+        }
+        .smartphone-view .auth-screen {
+            padding: 15px 10px;
+        }
+        .phone-number-guide {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ff4500;
+            margin: 20px 0;
+            padding: 10px;
+            border: 2px dashed #ff4500;
+            display: inline-block;
+        }
+        .line-auth-guide {
+            padding: 15px;
+            background-color: #e6f7ff;
+            border: 1px solid #91d5ff;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .line-auth-button {
+            display: inline-block;
+            background-color: #00b900; /* LINEカラー */
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .alt-button {
+            background-color: #ffaa00 !important;
+            color: #005a9c !important;
+            font-weight: bold !important;
+            padding: 10px 15px !important;
+            border: none !important;
+            border-radius: 4px !important;
+            cursor: pointer !important;
+            width: 100% !important;
+            margin-top: 10px;
+        }
+        .alt-button:hover {
+            opacity: 0.8;
+        }
+        
+        /*
+        ----------------------------------
+        アプリ オーバーレイ スタイル (LINE/SMS)
+        ----------------------------------
+        */
+        .app-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            z-index: 100; /* 最前面に表示 */
+            display: none;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        /* LINE */
+        .line-header {
+            background-color: #00b900;
+            color: white;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .line-header span {
+            margin-left: 10px;
+        }
+        .line-chat-box {
+            flex-grow: 1;
+            padding: 10px;
+            background-color: #e9e9e9; /* LINEの背景色 */
+            overflow-y: auto;
+        }
+        .line-message {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .line-bot-msg {
+            justify-content: flex-start;
+        }
+        .line-bot-msg .bubble {
+            background-color: white;
+            border-radius: 15px;
+            padding: 10px 15px;
+            max-width: 80%;
+            position: relative;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+        }
+        .line-bot-msg .auth-action-buttons button {
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 0 5px;
+        }
+
+        /* SMSアプリ画面のスタイルを大幅修正 (リアリティ向上) */
+        
+        /* 共通ヘッダー（ステータスバーをシミュレート） */
+        .sms-status-bar {
+            background-color: #f7f7f7;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #333;
+            font-weight: 600;
+        }
+        .sms-header {
+            background-color: #ffffff;
+            color: #333;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            font-size: 17px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid #ddd;
+        }
+        .sms-header span {
+            margin-left: 15px;
+            color: #007bff;
+            font-size: 18px;
+        }
+        .sms-inbox {
+            flex-grow: 1;
+            padding: 10px 15px;
+            background-color: #f0f0f0; /* メッセージ背景色 */
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 吹き出しのコンテナ */
+        .sms-message-container {
+             display: flex;
+             justify-content: flex-start;
+             margin-bottom: 15px;
+        }
+        
+        /* メッセージ吹き出し */
+        .sms-message-bubble {
+            background-color: #ffffff; /* 白い吹き出し */
+            color: #333;
+            padding: 10px 15px;
+            border-radius: 20px; /* 角を丸く */
+            max-width: 80%;
+            font-size: 15px;
+            line-height: 1.4;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        /* 吹き出しの左の尖った部分 */
+        .sms-message-bubble::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 10px;
+            border: 4px solid transparent;
+            border-right-color: #ffffff;
+        }
+        .sms-message-bubble strong {
+            display: block;
+            font-size: 14px;
+            color: #007bff; 
+            margin-bottom: 5px;
+        }
+        .sms-message-bubble a {
+            color: #007bff;
+            text-decoration: underline;
+            font-weight: 600;
+            display: block;
+            margin-top: 5px;
+        }
+        .sms-message-bubble small {
+             display: block;
+             text-align: right;
+             color: #999;
+             font-size: 11px;
+             margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="admin-panel">
+        <h2>✅ Twilio デモ管理パネル</h2>
+        <p>デモするシナリオをここで設定します。</p>
+
+        <label for="user-phone-type">ユーザー電話番号種別</label>
+        <select id="user-phone-type" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <option value="fixed">固定電話 (03-xxxx-xxxx)</option>
+            <option value="mobile-line">携帯電話 (090-xxxx-xxxx) - LINE既読</option>
+            <option value="mobile-sms">携帯電話 (090-xxxx-xxxx) - LINE未読→SMS</option>
+        </select>
+
+        <label for="input-phone-number">登録電話番号</label>
+        <input type="text" id="input-phone-number" value="03-1234-5678" readonly>
+
+        <p style="margin-top: 10px; font-size: 12px; color: gray;">💡選択肢に応じて、ユーザー画面の見た目と挙動が変わります。</p>
+
+        <div class="scenario-controls">
+            <p><strong>シナリオ操作 (デモ用)</strong></p>
+            <button id="start-scenario">デモを開始 / 画面をリセット</button>
+
+            <div id="fixed-scenario-controls" style="display: none; margin-top: 15px;">
+                <p>📞 <strong>固定電話: 電話応答シミュレーション</strong></p>
+                <button id="simulate-phone-call">電話をかける/認証成功</button>
+            </div>
+
+            <div id="mobile-line-scenario-controls" style="display: none; margin-top: 15px;">
+                <p>💬 <strong>携帯電話: LINE操作シミュレーション</strong></p>
+                <button id="simulate-line-read" style="background-color: #00b900;">LINEメッセージを既読にする</button>
+                <button id="simulate-line-auth" style="background-color: #5cb85c; margin-top: 5px;">LINEで「認証する」を押す</button>
+            </div>
+
+             <div id="mobile-sms-scenario-controls" style="display: none; margin-top: 15px;">
+                <p>📱 <strong>携帯電話: SMS認証コード</strong></p>
+                <p style="color: red; font-weight: bold;">認証コード: <span id="sms-code-display"></span></p>
+                <p style="font-size: 12px; color: gray;">※5秒後に自動でSMSが送信されます</p>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="user-screen-container">
+        <h2>🌐 ユーザー側画面 (ウェブサイト & コミュニケーションアプリ)</h2>
+        <div id="user-screen" class="pc-view">
+            </div>
+    </div>
+
+    <script>
+        // DOM要素の取得
+        const userScreen = document.getElementById('user-screen');
+        const phoneTypeSelect = document.getElementById('user-phone-type');
+        const inputPhoneNumber = document.getElementById('input-phone-number');
+        const startButton = document.getElementById('start-scenario');
+        const fixedControls = document.getElementById('fixed-scenario-controls');
+        const mobileLineControls = document.getElementById('mobile-line-scenario-controls');
+        const mobileSmsControls = document.getElementById('mobile-sms-scenario-controls');
+        const simulatePhoneCallButton = document.getElementById('simulate-phone-call');
+        const simulateLineReadButton = document.getElementById('simulate-line-read');
+        const simulateLineAuthButton = document.getElementById('simulate-line-auth');
+        const smsCodeDisplay = document.getElementById('sms-code-display');
+
+        let currentScenario = 'fixed';
+        let smsAuthCode = '';
+        let timerId = null; // LINE未読タイマー用
+
+        /**
+         * 認証コードを生成
+         */
+        function generateAuthCode() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        /**
+         * 管理画面の設定に応じて画面の見た目とコントロールを更新
+         */
+        function updateAdminAndScreenType() {
+            currentScenario = phoneTypeSelect.value;
+            const isFixed = currentScenario === 'fixed';
+            const isMobileLine = currentScenario === 'mobile-line';
+            const isMobileSms = currentScenario === 'mobile-sms';
+
+            // 電話番号表示の切り替え
+            if (isFixed) {
+                inputPhoneNumber.value = '03-1234-5678';
+            } else {
+                inputPhoneNumber.value = '090-9876-5432';
+            }
+
+            // ユーザー画面の見た目の切り替え
+            userScreen.classList.remove('pc-view', 'smartphone-view');
+            userScreen.classList.add(isFixed ? 'pc-view' : 'smartphone-view');
+
+            // 管理パネルの操作ボタンの切り替え
+            fixedControls.style.display = isFixed ? 'block' : 'none';
+            mobileLineControls.style.display = isMobileLine ? 'block' : 'none';
+            mobileSmsControls.style.display = isMobileSms ? 'block' : 'none';
+            smsCodeDisplay.textContent = '未送信';
+
+            // リセット
+            resetScreen();
+        }
+
+        /**
+         * 画面を初期状態 (ホームページ) にリセット
+         */
+        function resetScreen() {
+            clearTimeout(timerId); // タイマーをクリア
+            // コントロールをリセット
+            if(simulateLineReadButton) simulateLineReadButton.disabled = true;
+            if(simulateLineAuthButton) simulateLineAuthButton.disabled = true;
+            if(simulatePhoneCallButton) simulatePhoneCallButton.disabled = false;
+
+
+            // 初期ホームページのHTML (旅行会社風)
+            const initialHtml = `
+                <div class="website-header">
+                    <h1>✈️ WONDER TRIP</h1>
+                    <nav>
+                        <a href="#">ツアー検索</a>
+                        <a href="#">現地情報</a>
+                        <a href="#">マイページ</a>
+                    </nav>
+                    <div class="nav-right">
+                        <button id="login-trigger">ログイン</button>
+                    </div>
+                </div>
+                <div class="website-content">
+                    <h2 style="text-align: center; margin-top: 20px; color: #005a9c;">世界へ、驚きの旅を。</h2>
+                    <p style="text-align: center; font-size: 14px; color: #666;">次の休みは、あなただけの特別な旅を見つけましょう。</p>
+                    <div style="margin-top: 30px; text-align: center;">
+                        <img src="https://via.placeholder.com/600x300.png?text=Breathtaking+View+of+Paris+or+Kyoto" alt="旅のイメージ" style="max-width: 90%; height: auto; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    </div>
+                    <div style="margin-top: 30px; padding: 0 5%;">
+                        <h3 style="color: #005a9c;">⭐ おすすめツアー</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="border-bottom: 1px dashed #ccc; padding: 10px 0;">🇫🇷 パリ 5日間 エッフェル塔を望むホテル</li>
+                            <li style="border-bottom: 1px dashed #ccc; padding: 10px 0;">🇯🇵 京都 3日間 伝統と美食の旅</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            userScreen.innerHTML = initialHtml;
+            userScreen.querySelector('#login-trigger').addEventListener('click', showLoginPage);
+        }
+
+        /**
+         * ログイン画面を表示
+         */
+        function showLoginPage() {
+            const loginHtml = `
+                <div class="website-header">
+                    <h1>✈️ WONDER TRIP</h1>
+                    <nav>
+                        <a href="#">ツアー検索</a>
+                        <a href="#">現地情報</a>
+                        <a href="#">マイページ</a>
+                    </nav>
+                    <div class="nav-right">
+                        <button style="background-color: #aaa; cursor: default;">ログイン中</button>
+                    </div>
+                </div>
+                <div class="website-content">
+                    <div class="login-form">
+                        <h3>メンバーログイン</h3>
+                        <input type="text" placeholder="ユーザーID" value="demo_user">
+                        <input type="password" placeholder="パスワード" value="********">
+                        <button>ログイン</button>
+                        
+                        <a href="javascript:void(0);" class="forgot-password" id="forgot-password-link" style="margin-bottom: 5px;" onclick="showAuthScreen(event)">パスワードを変更する (リンク)</a>
+                        
+                        <button id="start-auth-button" class="alt-button">認証フローを開始 (ボタン)</button>
+                    </div>
+                    <p style="text-align: center; margin-top: 20px; font-size: 12px; color: gray;">デモ用アカウントです。</p>
+                </div>
+            `;
+            userScreen.innerHTML = loginHtml;
+            
+            // 代替ボタンに確実にリスナーを設定する
+            const startAuthButton = userScreen.querySelector('#start-auth-button');
+            if (startAuthButton) {
+                startAuthButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showAuthScreen(e);
+                });
+            }
+        }
+
+        /**
+         * 本人認証画面を表示
+         * @param {Event} event - リンクから呼び出された場合に渡されるイベントオブジェクト
+         */
+        function showAuthScreen(event) {
+            // イベントオブジェクトが存在し、かつ preventDefault メソッドがあれば実行する
+            if (event && event.preventDefault) {
+                 event.preventDefault(); 
+            }
+            
+            const phoneNumber = inputPhoneNumber.value;
+            let authGuideHtml = '';
+
+            if (currentScenario === 'fixed') {
+                // 固定電話シナリオ: 音声通話認証
+                authGuideHtml = `
+                    <div class="auth-screen">
+                        <h3>📞 固定電話による本人認証</h3>
+                        <p>ご登録の固定電話番号（${phoneNumber}）から、以下のフリーダイヤルにお電話ください。</p>
+                        <p>お電話が確認でき次第、自動でパスワード変更画面へ遷移します。</p>
+                        <div class="phone-number-guide">
+                            認証ダイヤル: 0120-***-****
+                        </div>
+                        <p style="color: gray; font-size: 14px;">※Twilio Verify Voice APIにより、発信元電話番号を自動で認識します。</p>
+                    </div>
+                `;
+                simulatePhoneCallButton.disabled = false;
+            } else {
+                // 携帯電話シナリオ: LINE認証
+                authGuideHtml = `
+                    <div class="auth-screen">
+                        <h3>📱 LINEによる本人認証</h3>
+                        <p>ご登録の携帯電話番号（${phoneNumber}）に、WONDER TRIPのLINE公式アカウントより認証メッセージを送信しました。</p>
+                        <div class="line-auth-guide">
+                            <strong>[LINE認証]</strong><br>
+                            LINEアプリを開き、メッセージ内の「認証する」ボタンを押してください。<br>
+                            ${currentScenario === 'mobile-sms' ? '<span style="font-size: 12px; color: #555;">5秒経過してもLINEメッセージが未読の場合、自動でSMSに切り替わります。</span>' : ''}
+                        </div>
+                        <div class="line-auth-button" id="line-auth-trigger">LINEアプリを開く (シミュレーション)</div>
+                        <p style="color: gray; font-size: 14px; margin-top: 30px;">※Twilio Conversations/Messaging APIにより、LINE経由で認証メッセージを送信。</p>
+                    </div>
+                `;
+            }
+
+            const contentHtml = `
+                <div class="website-header">
+                    <h1>✈️ WONDER TRIP</h1>
+                    <nav>
+                        <a href="#">ツアー検索</a>
+                        <a href="#">現地情報</a>
+                        <a href="#">マイページ</a>
+                    </nav>
+                    <div class="nav-right">
+                        <button style="background-color: #aaa; cursor: default;">認証中</button>
+                    </div>
+                </div>
+                <div class="website-content">
+                    ${authGuideHtml}
+                </div>
+            `;
+            userScreen.innerHTML = contentHtml;
+
+            const isMobile = currentScenario === 'mobile-line' || currentScenario === 'mobile-sms';
+            if (isMobile) {
+                const lineAuthTrigger = userScreen.querySelector('#line-auth-trigger');
+                
+                if (currentScenario === 'mobile-line') {
+                    // LINE既読シナリオ
+                    lineAuthTrigger.addEventListener('click', showLineAppScreenLineFlow);
+                } else if (currentScenario === 'mobile-sms') {
+                    // LINE未読→SMSシナリオ
+                    smsAuthCode = generateAuthCode();
+                    smsCodeDisplay.textContent = smsAuthCode; // 管理画面にコードを表示
+                    lineAuthTrigger.addEventListener('click', showLineAppScreenSmsFlow);
+                    // 5秒タイマーを開始
+                    timerId = setTimeout(triggerSmsFallback, 5000);
+                }
+            }
+        }
+
+        /**
+         * [固定電話シナリオ] 電話応答による認証成功のシミュレーション
+         */
+        simulatePhoneCallButton.addEventListener('click', () => {
+            if (currentScenario === 'fixed' && !simulatePhoneCallButton.disabled) {
+                simulatePhoneCallButton.disabled = true;
+                alert('【📞管理者操作】電話応答を確認し、本人認証ができました。');
+                showPasswordResetScreen();
+            }
+        });
+
+
+        // --- [携帯電話（LINE既読）シナリオ] ---
+
+        /**
+         * LINEアプリ画面（既読シナリオ）を表示
+         */
+        function showLineAppScreenLineFlow() {
+            clearTimeout(timerId); // SMSフォールバックを防ぐためタイマーをクリア
+
+            // LINEアプリのHTML構造を挿入
+            const lineAppHtml = `
+                <div class="app-overlay line-app-container">
+                    <div class="line-header">
+                        <span style="cursor: pointer;" onclick="hideAppOverlay('.line-app-container')">&#9664;</span> <span>WONDER TRIP Bot</span>
+                    </div>
+                    <div class="line-chat-box">
+                        <div class="line-message line-bot-msg">
+                            <div class="bubble">
+                                <p><strong>【本人認証のお願い】</strong></p>
+                                <p>パスワード再設定のため、ご本人様確認が必要です。以下のボタンを押して認証を完了してください。</p>
+                                <p style="font-size: 12px; color: #555; margin-top: 10px;">有効期限: 5分</p>
+                                <div class="auth-action-buttons">
+                                    <button id="line-auth-confirm">認証する</button>
+                                </div>
+                            </div>
+                             <span class="read-status" id="line-read-status">未読</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            userScreen.insertAdjacentHTML('beforeend', lineAppHtml);
+            const lineAppContainer = userScreen.querySelector('.line-app-container');
+            lineAppContainer.style.display = 'flex';
+
+            // 管理パネルの「既読にする」ボタンを有効化
+            simulateLineReadButton.disabled = false;
+            simulateLineAuthButton.disabled = false;
+
+            // 「既読にする」ボタンの挙動
+            simulateLineReadButton.onclick = () => {
+                lineAppContainer.querySelector('#line-read-status').textContent = '既読';
+                simulateLineReadButton.disabled = true;
+                alert('【💬管理者操作】LINEメッセージが既読になりました。');
+            };
+
+            // 「認証する」ボタンの挙動
+            lineAppContainer.querySelector('#line-auth-confirm').onclick = () => {
+                hideAppOverlay('.line-app-container'); // LINE画面を閉じる
+                showPasswordResetScreen(); // パスワード変更画面へ遷移
+                alert('【✅LINE操作】本人認証が完了しました。');
+            };
+        }
+
+
+        // --- [携帯電話（LINE未読→SMS）シナリオ] ---
+
+        /**
+         * LINEアプリ画面（SMSフォールバックフロー）を表示
+         */
+        function showLineAppScreenSmsFlow() {
+            // このシナリオでは、LINE画面は開いても未読のまま5秒が経過することをシミュレート
+            const lineAppHtml = `
+                <div class="app-overlay line-app-container">
+                    <div class="line-header">
+                        <span style="cursor: pointer;" onclick="hideAppOverlay('.line-app-container')">&#9664;</span>
+                        <span>WONDER TRIP Bot</span>
+                    </div>
+                    <div class="line-chat-box">
+                        <div class="line-message line-bot-msg">
+                            <div class="bubble">
+                                <p><strong>【本人認証のお願い】</strong></p>
+                                <p>パスワード再設定のため、ご本人様確認が必要です。</p>
+                                <p style="font-size: 12px; color: #555; margin-top: 10px;">(未読が続くとSMSに切り替わります)</p>
+                            </div>
+                            <span class="read-status">未読</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            userScreen.insertAdjacentHTML('beforeend', lineAppHtml);
+            userScreen.querySelector('.line-app-container').style.display = 'flex';
+        }
+
+        /**
+         * 5秒経過後のSMSフォールバック処理
+         */
+        function triggerSmsFallback() {
+            // LINEアプリ画面がまだ表示されていたら閉じる
+            hideAppOverlay('.line-app-container');
+
+            alert('【📱Twilio操作】LINEメッセージが5秒間未読のため、SMSで認証コードを送信しました。');
+            showSmsAppScreen();
+        }
+
+        /**
+         * SMSアプリの受信画面を表示 (デザイン修正済み)
+         */
+        function showSmsAppScreen() {
+             const smsAppHtml = `
+                <div class="app-overlay sms-app-container">
+                    <div class="sms-status-bar">
+                         <span style="opacity: 0.7;">docomo LTE</span>
+                         <span>10:30 AM</span>
+                         <span style="font-size: 14px;">🔋</span>
+                    </div>
+                    <div class="sms-header">
+                        &#9664;
+                        <span>WONDER TRIP</span>
+                    </div>
+                    <div class="sms-inbox">
+                        <div class="sms-message-container">
+                            <div class="sms-message-bubble" id="new-sms-message">
+                                <strong>WONDER TRIP</strong>
+                                <p>パスワード再設定用の認証コードは <span style="color: red; font-weight: bold;">${smsAuthCode}</span> です。以下のURLをタップして認証を完了してください。</p>
+                                <p style="margin-top: 10px;">
+                                    <a href="javascript:void(0);" class="sms-auth-link" onclick="hideAppOverlay('.sms-app-container'); showSmsInputScreen(true); return false;">
+                                        https://www.wondertrip.com/auth-verify
+                                    </a>
+                                </p>
+                                <small>今</small>
+                            </div>
+                        </div>
+
+                        <div class="sms-message-container" style="opacity: 0.5; margin-top: 20px;">
+                            <div class="sms-message-bubble">
+                                <strong>〇〇銀行</strong>
+                                <p>【重要】口座情報を更新してください</p>
+                                <small>2025/11/26 9:00 AM</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            userScreen.insertAdjacentHTML('beforeend', smsAppHtml);
+            userScreen.querySelector('.sms-app-container').style.display = 'flex';
+        }
+
+        /**
+         * アプリオーバーレイを非表示にする汎用関数
+         */
+        function hideAppOverlay(selector) {
+             const overlay = userScreen.querySelector(selector);
+             if (overlay) overlay.remove();
+        }
+
+        /**
+         * SMS認証コード入力画面を表示 (ウェブサイトの一部)
+         * @param {boolean} autoPopulate - SMSからの遷移の場合にコードを自動認識するかどうか
+         */
+        function showSmsInputScreen(autoPopulate = false) {
+             const smsInputHtml = `
+                <div class="website-header">
+                    <h1>✈️ WONDER TRIP</h1>
+                    <nav>
+                        <a href="#">ツアー検索</a>
+                        <a href="#">現地情報</a>
+                        <a href="#">マイページ</a>
+                    </nav>
+                    <div class="nav-right">
+                        <button style="background-color: #aaa; cursor: default;">SMS認証中</button>
+                    </div>
+                </div>
+                <div class="website-content">
+                    <div class="login-form" style="border: 1px solid #ffaa00; background-color: #fffaf0;">
+                        <h3>🔑 認証コード入力</h3>
+                        <p>SMSで通知された6桁の認証コードを入力してください。</p>
+                        <p style="font-size: 12px; color: red;">(コード: ${smsAuthCode})</p>
+                        <input type="text" id="sms-code-input" maxlength="6" placeholder="------">
+                        <button id="sms-verify-button">認証コードを送信</button>
+                        <p style="margin-top: 15px; font-size: 12px; color: gray;">※Twilio Verify SMS APIによる認証フローを表現</p>
+                    </div>
+                </div>
+            `;
+            userScreen.innerHTML = smsInputHtml;
+            const smsCodeInput = userScreen.querySelector('#sms-code-input');
+            
+            // URLクリックで遷移した場合、認証コードを自動認識する挙動をシミュレート
+            if (autoPopulate) {
+                 smsCodeInput.value = smsAuthCode;
+            }
+
+
+            userScreen.querySelector('#sms-verify-button').onclick = () => {
+                if (smsCodeInput.value && smsCodeInput.value === smsAuthCode) {
+                    alert('【✅ウェブサイト操作】認証コードが一致しました。');
+                    showPasswordResetScreen();
+                } else {
+                    alert('【❌ウェブサイト操作】認証コードが異なります。');
+                }
+            };
+        }
+
+        /**
+         * パスワード変更画面を表示 (設定完了後、ログイン画面へ自動遷移)
+         */
+        function showPasswordResetScreen() {
+            const resetHtml = `
+                <div class="website-header">
+                    <h1>✈️ WONDER TRIP</h1>
+                    <nav>
+                        <a href="#">ツアー検索</a>
+                        <a href="#">現地情報</a>
+                        <a href="#">マイページ</a>
+                    </nav>
+                    <div class="nav-right">
+                        <button style="background-color: #aaa; cursor: default;">変更中</button>
+                    </div>
+                </div>
+                <div class="website-content">
+                    <div class="login-form">
+                        <h3>🔒 新しいパスワードの設定</h3>
+                        <p>セキュリティのため、新しいパスワードを設定してください。</p>
+                        <input type="password" id="new-password" placeholder="新しいパスワード (4文字以上)">
+                        <input type="password" id="confirm-password" placeholder="新しいパスワード（確認）">
+                        <button id="reset-password-button">パスワードを変更してログイン画面へ</button>
+                        <p style="margin-top: 15px; font-size: 12px; color: green;">🎉 本人確認が完了しました。</p>
+                    </div>
+                </div>
+            `;
+            userScreen.innerHTML = resetHtml;
+
+            userScreen.querySelector('#reset-password-button').onclick = () => {
+                const newPass = userScreen.querySelector('#new-password').value;
+                const confirmPass = userScreen.querySelector('#confirm-password').value;
+
+                if (newPass && newPass === confirmPass) {
+                    // 最終ゴール: パスワード設定完了後、ログイン画面に戻る
+                    alert('【✅ウェブサイト操作】パスワードが正常に変更されました。ログイン画面に戻ります。');
+                    showLoginPage(); 
+                } else if (newPass !== confirmPass) {
+                    alert('【❌ウェブサイト操作】パスワードが一致しません。');
+                } else {
+                    alert('【❌ウェブサイト操作】パスワードを入力してください。');
+                }
+            };
+        }
+
+
+        // --- イベントリスナーの初期設定 ---
+
+        // 💡 最終動作保証のためのイベント委譲（#user-screenコンテナでのキャッチ）
+        userScreen.addEventListener('click', function(e) {
+            // 'forgot-password-link' のリンクがクリックされた場合
+            const link = e.target.closest('#forgot-password-link');
+            if (link) {
+                e.preventDefault(); 
+                showAuthScreen(e); 
+            }
+        });
+
+        // 初期ロード時、およびセレクトボックス変更時に画面を更新
+        phoneTypeSelect.addEventListener('change', updateAdminAndScreenType);
+        startButton.addEventListener('click', updateAdminAndScreenType);
+
+        // 初期表示
+        updateAdminAndScreenType();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>トラベル・ドリーム | 電話 + LINE 2FA デモ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- CSS スタイル --- */
+
+        /* 基本設定 */
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f9;
+            color: #333;
+            line-height: 1.6;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* --- 2FAフローコンテナ --- */
+        .flow-container {
+            display: flex;
+            gap: 50px; 
+        }
+
+        /* --- ステップガイド (左側) --- */
+        .step-guide {
+            width: 300px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .step-guide h2 {
+            color: #007bff;
+            margin-top: 0;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .step-item {
+            padding: 10px;
+            border-left: 5px solid #ccc;
+            margin-bottom: 15px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .step-item.active {
+            border-left: 5px solid #28a745; 
+            background-color: #e9f5e9;
+            font-weight: 700;
+        }
+        .step-item strong {
+            font-size: 16px;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        /* --- スマートフォンモックアップ (中央) --- */
+        .phone-mockup {
+            width: 375px; 
+            height: 667px; 
+            border: 15px solid #333; 
+            border-radius: 40px;
+            background-color: black;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+            box-sizing: content-box;
+        }
+        .phone-screen-container {
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            position: relative;
+            border-radius: 25px; 
+            overflow: hidden;
+        }
+        
+        /* ステータスバー */
+        .status-bar {
+            height: 25px;
+            background-color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 0.8em;
+            color: #333;
+            font-weight: 600;
+            box-sizing: border-box;
+            position: absolute;
+            width: 100%;
+            z-index: 30;
+        }
+
+        /* 共通画面設定 */
+        .screen {
+            display: none;
+            position: absolute; 
+            width: 100%;
+            height: 100%; 
+            top: 0;
+            left: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            box-sizing: border-box;
+            background-color: #fff;
+        }
+        .screen.active {
+            display: block;
+            z-index: 10; 
+        }
+        
+        /* --- Webサイト画面のヘッダーとボタン --- */
+        .web-header {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 25px; /* ステータスバーの下 */
+            z-index: 20;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        /* ログイン済みのヘッダーの色を、通常時と区別するために薄い色にする */
+        .web-header.logged-in {
+            background-color: #0099ff; 
+        }
+        .web-header .logo-text {
+            flex-grow: 1;
+            text-align: left;
+            margin-left: 0;
+        }
+        
+        .login-btn {
+            background-color: #ffc107;
+            color: #333;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
+        }
+        .logout-btn {
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        /* Webコンテンツエリア */
+        .web-content {
+            padding: 20px;
+            padding-top: 10px; 
+            text-align: center;
+        }
+        
+        .section-title {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        /* カードデザイン */
+        .card {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            text-align: left;
+        }
+        .premium-card {
+            background-color: #fff3cd;
+            border-color: #ffc107;
+        }
+        
+        /* --- LINE画面モックアップ (ステップ②) --- */
+        #lineAuthScreen {
+             padding: 0; 
+             background-color: #f2f2f2;
+        }
+        .line-mockup {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+        .line-header {
+            background-color: #00c300; 
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            font-weight: 700;
+            position: sticky;
+            top: 25px; 
+            z-index: 20;
+        }
+        .line-header::before {
+            content: '＜';
+            position: absolute;
+            left: 15px;
+        }
+        .line-content {
+            padding: 20px;
+            flex-grow: 1;
+        }
+        .line-bot-message {
+            background-color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+        }
+        .line-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .line-green-btn {
+            background-color: #00c300;
+            color: white;
+        }
+
+        /* --- 電話着信/通話画面 (ステップ③・④・⑤) --- */
+        #callScreen {
+            background-color: #333;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            height: 100%;
+            top: 0; 
+        }
+        .call-content {
+            text-align: center;
+        }
+        .caller-id {
+            font-size: 38px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .call-status {
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #ccc;
+        }
+        .call-actions {
+            display: flex;
+            justify-content: center; /* 中央寄せ */
+            gap: 40px; /* ボタン間のスペース */
+            width: 80%;
+            margin-top: 50px;
+        }
+        .call-action-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .answer-btn {
+            background-color: #4CAF50;
+        }
+        .reject-btn {
+            background-color: #f44336;
+        }
+        .end-btn {
+            background-color: #f44336;
+            width: 100px;
+            height: 40px;
+            border-radius: 20px;
+            margin-top: 30px;
+            font-size: 16px;
+        }
+        .call-audio {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #555;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        /* --- コード入力フォーム (ステップ⑥) --- */
+        .verify-form {
+            max-width: 300px;
+            margin: 30px auto 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .auth-code-input-group {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0 20px 0;
+        }
+        .auth-code-input-box {
+            width: 13%; 
+            padding: 10px 0;
+            text-align: center;
+            font-size: 20px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .primary-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        .error-message {
+            color: #dc3545;
+            font-weight: 700;
+            margin-top: 15px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="flow-container">
+        
+        <div class="step-guide">
+            <h2>二要素認証 (2FA) フロー</h2>
+            <div id="step1" class="step-item active">
+                <strong>ステップ ①: Webサイト</strong>
+                ログインボタンを押す
+            </div>
+            <div id="step2" class="step-item">
+                <strong>ステップ ②: LINE</strong>
+                本人確認を許可する
+            </div>
+            <div id="step3" class="step-item">
+                <strong>ステップ ③: 電話着信</strong>
+                Twilioから電話が着信する
+            </div>
+            <div id="step4" class="step-item">
+                <strong>ステップ ④: 応答/コード聴取</strong>
+                電話に応答し、認証コードを聞く
+            </div>
+            <div id="step5" class="step-item">
+                <strong>ステップ ⑤: 電話切断</strong>
+                通話を終了する
+            </div>
+            <div id="step6" class="step-item">
+                <strong>ステップ ⑥: Webサイト</strong>
+                Webサイトに戻り、認証コードを入力
+            </div>
+            <div id="step7" class="step-item">
+                <strong>ステップ ⑦: ログイン完了</strong>
+                限定コンテンツを閲覧
+            </div>
+        </div>
+
+        <div class="phone-mockup">
+            <div class="phone-screen-container">
+                
+                <div class="status-bar" id="statusBar">
+                    <span>9:41 AM</span>
+                    <span>📶 🔋</span>
+                </div>
+                
+                <section id="homeScreen" class="screen active">
+                    <div class="web-header">
+                        <span class="logo-text">トラベル・ドリーム</span>
+                        <button id="loginButton" class="login-btn">ログイン</button>
+                    </div>
+                    <div class="web-content">
+                        <h2 class="section-title">✨ 夢を叶える旅へ出発！</h2>
+                        <p style="font-size: 14px;">世界中の魅力的なツアーをご紹介。</p>
+                        <div class="card">
+                            <h3>🌺 ハワイ 7日間</h3>
+                            <p>青い海と白い砂浜。最高のビーチリゾート。</p>
+                        </div>
+                        <div class="card">
+                            <h3>🏰 ヨーロッパ周遊 10日間</h3>
+                            <p>歴史と文化に触れる、感動の旅。</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="lineAuthScreen" class="screen">
+                    <div class="line-mockup">
+                        <div class="line-header">
+                            トラベル・ドリーム 認証
+                        </div>
+                        <div class="line-content">
+                            <p class="line-bot-message">
+                                💡 **本人確認のお知らせ**<br>
+                                トラベル・ドリームへのログイン認証を開始しました。続行するには、以下のボタンをタップしてください。
+                            </p>
+                            <button id="lineVerifyButton" class="line-btn line-green-btn">本人確認を許可する</button>
+                            <p style="font-size: 10px; color: #888; text-align: center; margin-top: 15px;">
+                                ※この操作に心当たりのない場合は、タップしないでください。
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="callScreen" class="screen">
+                    <div class="call-content">
+                        <p class="call-status">📞 **着信中...**</p>
+                        <p class="caller-id">Twilio 認証サービス</p>
+                        <p class="caller-number">非通知 または 050-XXXX-XXXX</p>
+                        <div class="call-actions">
+                            <button class="call-action-btn reject-btn">拒否</button>
+                            <button id="answerCallButton" class="call-action-btn answer-btn">応答</button>
+                        </div>
+                        
+                        <div id="callAudio" style="display:none; margin-top: 50px; text-align: center;">
+                            <p class="call-status" id="callStatusText" style="color: white; font-size: 18px;">📞 通話中 (コード読み上げ中...)</p>
+                            <p style="font-size: 20px; font-weight: bold; margin: 10px 0;">認証コード: <span id="authCodeDisplay">123456</span></p>
+                            <button id="endCallButton" class="end-btn">通話終了</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="verifyCodeScreen" class="screen">
+                    <div class="web-header">
+                        <span class="logo-text">トラベル・ドリーム</span>
+                        <button id="loginButtonHidden" class="login-btn" style="visibility: hidden;">ログイン</button>
+                    </div>
+                    <div class="web-content">
+                        <h2 class="section-title">🔐 セキュリティコードの入力</h2>
+                        <div class="verify-form">
+                            <p>電話で通知された6桁の認証コードを入力してください。</p>
+                            <div class="auth-code-input-group">
+                                <input type="text" class="auth-code-input-box" id="code1" maxlength="1" inputmode="numeric">
+                                <input type="text" class="auth-code-input-box" id="code2" maxlength="1" inputmode="numeric">
+                                <input type="text" class="auth-code-input-box" id="code3" maxlength="1" inputmode="numeric">
+                                <input type="text" class="auth-code-input-box" id="code4" maxlength="1" inputmode="numeric">
+                                <input type="text" class="auth-code-input-box" id="code5" maxlength="1" inputmode="numeric">
+                                <input type="text" class="auth-code-input-box" id="code6" maxlength="1" inputmode="numeric">
+                            </div>
+                            <button id="submitCodeButton" class="primary-btn">認証する</button>
+                            <p id="errorMessage" class="error-message" style="display:none;">エラー: 認証コードが違います。</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="loggedInScreen" class="screen">
+                    <div class="web-header logged-in">
+                        <span class="logo-text">トラベル・ドリーム</span>
+                        <button id="logoutButton" class="login-btn logout-btn">ログアウト</button>
+                    </div>
+                    <div class="web-content">
+                        <h2 class="section-title">🌎 会員限定！プレミアムツアー</h2>
+                        <p>あなただけの特別な旅をご用意しました。</p>
+                        <div class="card premium-card">
+                            <h3>👑 プレミアム限定：イースター島 8日間</h3>
+                            <p>特別価格でご案内！モアイ像を独り占めできる特別なツアー。</p>
+                        </div>
+                        <div class="card">
+                            <h3>🏞️ 会員限定：アイスランド秘境ツアー</h3>
+                            <p>オーロラ鑑賞に最適な時期を厳選した特別コース。</p>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- JavaScript ロジック ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // 認証コードのシミュレーション値
+            const SIMULATED_AUTH_CODE = '123456';
+
+            // DOM要素の取得
+            const screens = document.querySelectorAll('.screen');
+            const stepItems = document.querySelectorAll('.step-item');
+            const loginButton = document.getElementById('loginButton');
+            const lineVerifyButton = document.getElementById('lineVerifyButton');
+            const answerCallButton = document.getElementById('answerCallButton');
+            const endCallButton = document.getElementById('endCallButton');
+            const submitCodeButton = document.getElementById('submitCodeButton');
+            const authCodeDisplay = document.getElementById('authCodeDisplay');
+            const errorMessage = document.getElementById('errorMessage');
+            const logoutButton = document.getElementById('logoutButton');
+            const callAudio = document.getElementById('callAudio');
+            const statusBar = document.getElementById('statusBar');
+            
+            const codeInputs = document.querySelectorAll('.auth-code-input-box');
+
+            // --- 補助関数 ---
+
+            // 画面遷移関数
+            function showScreen(screenId) {
+                // 画面をリセット
+                screens.forEach(screen => {
+                    screen.classList.remove('active');
+                });
+                // 対象画面を表示
+                document.getElementById(screenId).classList.add('active');
+                
+                // ステータスバーの表示制御 (電話画面では非表示に)
+                statusBar.style.display = (screenId !== 'callScreen') ? 'flex' : 'none';
+            }
+
+            // ステップ更新関数
+            function updateStep(stepId) {
+                stepItems.forEach(item => {
+                    item.classList.remove('active');
+                });
+                const activeStep = document.getElementById(stepId);
+                if (activeStep) {
+                    activeStep.classList.add('active');
+                }
+            }
+
+            // 認証コード入力ボックスの連携
+            codeInputs.forEach((input, index) => {
+                input.addEventListener('input', () => {
+                    if (input.value.length === 1 && index < codeInputs.length - 1) {
+                        codeInputs[index + 1].focus();
+                    }
+                });
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && input.value.length === 0 && index > 0) {
+                        codeInputs[index - 1].focus();
+                    }
+                });
+            });
+
+            // 認証コードの組み立てと検証
+            function checkAuthCode() {
+                const enteredCode = Array.from(codeInputs).map(input => input.value).join('');
+                
+                if (enteredCode.length !== 6) {
+                    errorMessage.textContent = 'エラー: 6桁の認証コードを入力してください。';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+
+                if (enteredCode === SIMULATED_AUTH_CODE) {
+                    // 認証成功
+                    showScreen('loggedInScreen'); // ステップ⑦へ
+                    updateStep('step7');
+                    codeInputs.forEach(input => input.value = ''); // 入力欄をクリア
+                } else {
+                    // 認証失敗
+                    errorMessage.textContent = 'エラー: 認証コードが違います。';
+                    errorMessage.style.display = 'block';
+                    codeInputs.forEach(input => input.value = '');
+                    codeInputs[0].focus();
+                }
+            }
+
+
+            // --- 初期設定 ---
+            authCodeDisplay.textContent = SIMULATED_AUTH_CODE;
+            showScreen('homeScreen');
+            updateStep('step1');
+
+            // --- ステップフロー ---
+
+            // ① Webサイトのログインボタンを押す (homeScreen)
+            loginButton.addEventListener('click', () => {
+                // 遅延・準備中表示を削除し、即座に遷移
+                showScreen('lineAuthScreen'); // ステップ②へ
+                updateStep('step2');
+            });
+
+            // ② LINEの画面で、本人確認を行う (lineAuthScreen)
+            lineVerifyButton.addEventListener('click', () => {
+                lineVerifyButton.disabled = true;
+                lineVerifyButton.textContent = '確認済み...';
+                
+                setTimeout(() => {
+                    showScreen('callScreen'); // ステップ③へ
+                    updateStep('step3');
+                    // 通話画面の初期状態 (着信中)
+                    document.querySelector('.call-status').textContent = '📞 **着信中...**';
+                    document.querySelector('.caller-number').style.display = 'block';
+                    document.querySelector('.call-actions').style.display = 'flex';
+                    callAudio.style.display = 'none';
+                }, 1500);
+            });
+
+            // ③ 電話が着信する (callScreen - 着信中)
+
+            // ④ 応答すると、6桁の認証コードが流れる
+            answerCallButton.addEventListener('click', () => {
+                document.querySelector('.call-actions').style.display = 'none';
+                document.querySelector('.caller-number').style.display = 'none';
+                
+                document.querySelector('.call-status').textContent = '📞 通話中 (コード読み上げ中...)';
+
+                callAudio.style.display = 'block';
+                
+                updateStep('step4');
+            });
+            
+            // ⑤ 電話を切断する
+            endCallButton.addEventListener('click', () => {
+                // 電話画面の状態をリセット
+                document.querySelector('.call-status').textContent = '📞 **着信中...**';
+                document.querySelector('.call-actions').style.display = 'flex';
+                callAudio.style.display = 'none';
+
+                showScreen('verifyCodeScreen'); // ステップ⑥へ
+                updateStep('step6');
+                errorMessage.style.display = 'none';
+                codeInputs[0].focus();
+            });
+
+            // ⑥ 認証コードを入力し、認証する (verifyCodeScreen)
+            submitCodeButton.addEventListener('click', checkAuthCode);
+
+            // ログアウト処理 (loggedInScreen)
+            logoutButton.addEventListener('click', () => {
+                showScreen('homeScreen');
+                updateStep('step1');
+                // LINE認証/電話認証のボタン状態をリセット
+                lineVerifyButton.disabled = false;
+                lineVerifyButton.textContent = '本人確認を許可する';
+            });
+        });
+    </script>
+</body>
+</html>

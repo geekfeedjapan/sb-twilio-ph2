@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>電話応答後の情報提供デモ（Twilio連携）</title>
+    <style>
+        /* --- 基本レイアウトとリセット --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;   /* 横方向中央 */
+            align-items: center;       /* 縦方向中央 */
+            min-height: 100vh;
+            overflow-x: hidden;        /* 横スクロールを全体で禁止 */
+        }
+
+        .container {
+            display: flex;
+            gap: 40px;                 /* 管理画面とスマホ画面の間隔 */
+            width: auto;               /* 中身サイズに合わせる */
+            margin: 0 auto;            /* ブロック自体を中央寄せ */
+            align-items: flex-start;
+        }
+
+        /* --- 管理画面（左側） --- */
+        .control-panel {
+            flex: 0 0 54%;      /* ★ 横幅を1.5倍に（36% → 54%） */
+            max-width: 540px;   /* ★ 360px の1.5倍相当 */
+            background-color: #fff;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            min-width: 260px;
+            box-sizing: border-box;
+        }
+
+        .control-panel h2 {
+            border-bottom: 2px solid #555;
+            padding-bottom: 10px;
+            margin-bottom: 24px;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        /* フロー表示 */
+        .flow-container {
+            margin-bottom: 24px;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            border-radius: 8px;
+            background-color: #eee;
+            color: #555;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .flow-step.active {
+            background-color: #007bff; /* アクティブなステップの色 */
+            color: #fff;
+        }
+
+        .flow-step span:first-child {
+            margin-right: 12px;
+            font-size: 1.1em;
+        }
+        
+        /* シナリオ選択 */
+        .scenario-selection {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .scenario-btn {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .scenario-btn.line {
+            background-color: #00c300;
+            color: #fff;
+        }
+
+        .scenario-btn.sms {
+            background-color: #55acee;
+            color: #fff;
+        }
+
+        .scenario-btn:not(.active):hover {
+            opacity: 0.9;
+        }
+
+        .scenario-btn.active {
+            box-shadow: 0 0 0 3px #fff, 0 0 0 5px #ffc107; /* アクティブなシナリオの強調 */
+            transform: scale(1.02);
+        }
+        
+        .action-button {
+            padding: 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 100%;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 8px;
+        }
+
+        .action-button:hover:not(:disabled) {
+            background-color: #218838;
+        }
+
+        .action-button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        /* --- スマートフォン画面（右側） --- */
+        .smartphone-frame {
+            width: 360px;
+            height: 700px;
+            background-color: #000;
+            border-radius: 35px;
+            padding: 10px;
+            box-shadow: 0 0 0 1px #888, 0 20px 50px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .screen-content {
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            border-radius: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ステータスバー */
+        .status-bar {
+            height: 25px;
+            background-color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 0.8em;
+            color: #333;
+            font-weight: 600;
+            box-sizing: border-box;
+        }
+
+        /* 画面コンテンツのコンテナ */
+        .app-container {
+            width: 100%;
+            height: calc(100% - 25px); /* ステータスバーの高さ除く */
+            position: relative;
+        }
+        
+        .app-screen {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.5s;
+            background-color: #fff;
+            overflow-y: auto;
+            overflow-x: hidden; /* 横スクロール防止 */
+            box-sizing: border-box;
+        }
+
+        .app-screen.active {
+            opacity: 1;
+            z-index: 10;
+        }
+
+        /* --- ① 旅行サイト画面 (Webサイト) --- */
+        .travel-site {
+            background-color: #f7f9fc;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .travel-site h1 {
+            color: #007bff;
+            margin-top: 40px;
+            font-size: 1.4em;
+        }
+
+        .travel-site p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .featured-plan {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 12px;
+            margin: 14px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        .featured-plan h3 {
+            color: #333;
+            margin-top: 0;
+            font-size: 0.95rem;
+        }
+
+        .featured-plan img {
+            width: 100%;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .contact-info {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            background-color: #ffc107;
+            padding: 6px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-weight: bold;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8rem;
+        }
+        
+        .contact-info.calling {
+            background-color: #dc3545;
+            color: #fff;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1.0); }
+            to { transform: scale(1.05); }
+        }
+
+        /* --- ② 発信/通話画面 --- */
+        .calling-screen,
+        .on-call-screen {
+            background-color: #333;
+            text-align: center;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* スクロールバーを出さない */
+        }
+
+        .calling-screen h2,
+        .on-call-screen h2 {
+            margin-top: 80px;
+            font-size: 1.4em;
+        }
+
+        .calling-screen p,
+        .on-call-screen p {
+            margin-bottom: 120px;
+            font-size: 1.1em;
+            color: #ccc;
+        }
+
+        .avatar {
+            width: 90px;
+            height: 90px;
+            background-color: #007bff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5em;
+            font-weight: lighter;
+            margin-bottom: 16px;
+        }
+
+        /* --- ③ LINE/SMS 画面 (終了後) --- */
+
+        /* LINEの基本スタイル */
+        .line-chat {
+            background-color: #e6e6e6;
+            display: flex;
+            flex-direction: column;
+            padding-top: 50px; /* ヘッダー分 */
+        }
+
+        .line-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #00c300;
+            color: #fff;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 1.0em;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .line-header::before {
+            content: '←';
+            position: absolute;
+            left: 15px;
+        }
+        
+        .line-chat-content {
+            padding: 15px;
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-bottom: 60px; /* 入力欄分 */
+        }
+
+        .line-message {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            font-size: 0.85rem;
+        }
+
+        .line-operator {
+            background-color: #fff;
+            margin-right: auto;
+            border-bottom-left-radius: 3px;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .line-user {
+            background-color: #c9e8a7;
+            margin-left: auto;
+            border-bottom-right-radius: 3px;
+        }
+
+        .line-timestamp {
+            font-size: 0.7em;
+            color: #999;
+            text-align: right;
+            margin-top: -5px;
+            margin-bottom: 15px;
+        }
+
+        .line-material-card {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            text-align: left;
+            margin-top: 5px;
+        }
+
+        .line-material-card h4 {
+            color: #007bff;
+            margin: 0 0 5px 0;
+            font-size: 0.9rem;
+        }
+
+        .line-material-card p {
+            font-size: 0.75rem;
+            color: #666;
+            margin: 0;
+        }
+        
+        .line-input-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #f7f7f7;
+            border-top: 1px solid #ddd;
+            padding: 8px 12px;
+            box-sizing: border-box;
+        }
+        
+        /* SMSの基本スタイル */
+        .sms-chat {
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            padding-top: 50px;
+        }
+        
+        .sms-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #f6f6f6;
+            border-bottom: 1px solid #ddd;
+            color: #333;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 1.0em;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .sms-header::before {
+            content: '←';
+            position: absolute;
+            left: 15px;
+        }
+
+        .sms-chat-content {
+            padding: 15px;
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-bottom: 60px;
+        }
+        
+        .sms-message {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            font-size: 0.85rem;
+        }
+        
+        .sms-operator {
+            background-color: #e5e5ea; /* iOSのSMSバブルの色 */
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .sms-user {
+            background-color: #007aff;
+            color: #fff;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .sms-timestamp {
+            font-size: 0.7em;
+            color: #999;
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .sms-input-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #f7f7f7;
+            padding: 8px 12px;
+            box-sizing: border-box;
+            border-top: 1px solid #ddd;
+        }
+        
+        .sms-link {
+            color: #007aff;
+            text-decoration: underline;
+            word-break: break-all;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="control-panel">
+            <h2>📞 Twilio連携情報提供デモ - 管理操作パネル</h2>
+
+            <p style="font-size:0.9rem;"><strong>シナリオを選択してください:</strong></p>
+            <div class="scenario-selection">
+                <button class="scenario-btn line active" data-scenario="line">📞 電話 → 🟢 LINEでFAQ/資料送付</button>
+                <button class="scenario-btn sms" data-scenario="sms">📞 電話 → 💬 SMSでURL送付</button>
+            </div>
+            
+            <hr>
+            
+            <h3 style="font-size:1rem;">ステップフロー</h3>
+            <div class="flow-container">
+                <div class="flow-step active" data-step="1"><span>1.</span> 電話でお問い合わせ (サイトから発信)</div>
+                <div class="flow-step" data-step="2"><span>2.</span> オペレーターに接続 (Twilioで架電処理)</div>
+                <div class="flow-step" data-step="3"><span>3.</span> 通話終了 (オペレーターが切断)</div>
+                <div class="flow-step" data-step="4_line"><span>4.</span> LINEでFAQ/マニュアルを送付 (Twilio API連携)</div>
+                <div class="flow-step" data-step="4_sms" style="display:none;"><span>4.</span> SMSでマニュアルが見れるURLを送信 (Twilio API連携)</div>
+            </div>
+            
+            <hr>
+
+            <h3 style="font-size:1rem;">操作ボタン</h3>
+            <p id="current-operation-text" style="font-size:0.9rem;">
+                <strong>現在の操作:</strong> 「📞 問い合わせ発信する」ボタンをクリックしてください。
+            </p>
+            <button class="action-button" id="next-step-button">📞 問い合わせ発信する</button>
+            <button class="action-button" id="reset-button" style="background-color: #dc3545; margin-top: 10px;">最初に戻る</button>
+        </div>
+
+        <div class="smartphone-frame">
+            <div class="screen-content">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>📶 LTE 🔋100%</span>
+                </div>
+
+                <div class="app-container">
+                    
+                    <div class="app-screen travel-site active" data-screen="travel">
+                        <div class="contact-info" id="call-button">
+                            ☎️ 0120-XXX-XXXX
+                        </div>
+                        
+                        <h1>🚀 夢を叶える旅行サイト</h1>
+                        <p>国内・海外ツアーが最安値！お気軽にお問い合わせください。</p>
+                        
+                        <div class="featured-plan">
+                            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAACfCAMAAADjF+m4AAAAQlBMV…" alt="Featured Travel Image">
+                            <h3>【沖縄】絶景ビーチとグルメ満喫 4日間</h3>
+                            <p>今だけ限定価格！美しい海と琉球料理を堪能するツアー。</p>
+                        </div>
+                        <div class="featured-plan">
+                            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAACfCAMAAADjF+m4AAAAQlBMV…" alt="Featured Travel Image">
+                            <h3>【海外】パリのエッフェル塔を巡る 5日間</h3>
+                            <p>芸術と歴史に触れる優雅な旅。日本語ガイド付き。</p>
+                        </div>
+                    </div>
+
+                    <div class="app-screen calling-screen" data-screen="calling">
+                        <div class="avatar">S</div>
+                        <h2>ソフトバンク旅行</h2>
+                        <p>発信中...</p>
+                        <div style="margin-top: 60px;">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2QzM2MzOCIgd2lkdGg9IjcyIiBoZWlnaHQ9IjcyIj48cGF0aCBkPSJNMjEgMTVhMSAxIDAgMCAxIC0uNzI0LS4zMTRjLTEuMjcxLTEuMDQtMS44MTUtMi42NDMtMS44MTUtNC4wNzMgMC0uMjU0LjA1LS41MTIuMTMyLS43NzZhMSAxIDAgMCAxIC43NjgtLjg5NmwxLjMxMy0uMjY3YTEgMSAwIDAgMSAxLjExOS42MjNjLjA3Mi4xMzQuMTM2LjI3LjE4My40MDhjLjA5LjI2Mi4xNC41MzkuMTU0LjgxOXptLTIgMEExIDEgMCAwIDEgMjEgMTZ2NWExIDEgMCAwIDEtMS41ODUuODU1Yy0xLjQ3MS0uOTEyLTMuMTEyLTEuNzQ1LTQuOTMtMi41MDdjLS4yNjQtLjEwOC0uNTU5LS4xNjItLjg2Mi0uMTYyaC0zLjAxN2ExIDEgMCAwIDEtLjkyNy0uNTdjLS44OTctMS4xNDgtMi4wNzMtMi4wNTgtMy40MzQtMi43NTUtLjczLS4zNzItMS41MzEtLjYzNi0yLjM5LS44LS4xMzItLjAyNS0uMjY1LS4wMzctLjM5OC0uMDM3aC0uOTk2YTEgMSAwIDAgMS0uNzk0LTEuNDlMOC43NSA2LjE4YTEgMSAwIDAgMSAxLjk3OS0uMTA0bDEuMzEzIDMuODc0YTEgMSAwIDAgMS0uMjE0IDEuMTg3Yy0uNTYuNTk2LTEuMjMgMS4wMy0yLjAyNSAxLjMwN2ExIDEgMCAwIDEtMS4xNzUuMTQ1bC0uODk2LS40MTlhMSAxIDAgMCAxLS42OTEtLjg2OEM2LjE2OSA5LjUzNSA1LjUzIDguODQyIDQuNjM0IDcuOTk3YTEgMSAwIDAgMS0uNjczLTEuMTI3bC0uMzYzLTEuODA1YTEgMSAwIDAgMSAxLjU3Mi0uNDgybDEuMjg3LjUxNmExIDEgMCAwIDEtLjEyMSAxLjk3MmwtLjQwMi0uMTYzYy0uNzg3LjMtMS41Mi42ODItMi4xNDIgMS4wNzVhMSAxIDAgMCAxLS43MTEgMS40NDZjLS45MDUuMzc1LTEuNzY1Ljc2OC0yLjU3MyAxLjE4M0ExIDEgMCAwIDEgMSA5LjE2NlY2QTEgMSAwIDAgMSAyIDZoMy42NzNBMSAxIDAgMCAxIDYuNjUuNjAzYy42NzgtMS40MjcgMS41Ni0yLjk0NSAyLjYyNi00LjQwM0ExIDEgMCAwIDEgMTIgMSAwIDEgMCAwIDEgMTMuMTQ5LS4yMjFjMS43MTkuMTMgMy4zNjEuNDIgNC44MDguODQ4YTEgMSAwIDAgMSAuNjc3Ljk5NXYxMS44OTZBMSAxIDAgMCAxIDE5IDF6Ii8+PC9zdmc+" style="opacity: 0.8;"/>
+                            <p style="color: #ccc;">切断</p>
+                        </div>
+                    </div>
+                    
+                    <div class="app-screen on-call-screen" data-screen="on-call">
+                        <div class="avatar">S</div>
+                        <h2>ソフトバンク旅行</h2>
+                        <p id="timer">00:00</p>
+                        <div style="margin-top: 40px;">
+                             <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2QzM2MzOCIgd2lkdGg9IjcyIiBoZWdoHQ9IjcyIj48cGF0aCBkPSJNMjEgMTVhMSAxIDAgMCAxIC0uNzI0LS4zMTRjLTEuMjcxLTEuMDQtMS44MTUtMi42NDMtMS44MTUtNC4wNzMgMC0uMjU0LjA1LS41MTIuMTMyLS43NzZhMSAxIDAgMCAxIC43NjgtLjg5NmwxLjMxMy0uMjY3YTEgMSAwIDAgMSAxLjExOS42MjNjLjA3Mi4xMzQuMTM2LjI3LjE4My40MDhjLjA5LjI2Mi4xNC41MzkuMTU0LjgxOXptLTIgMEExIDEgMCAwIDEgMjEgMTZ2NWExIDEgMCAwIDEtMS41ODUuODU1Yy0xLjQ3MS0uOTEyLTMuMTEyLTEuNzQ1LTQuOTMtMi41MDdjLS4yNjQtLjEwOC0uNTU5LS4xNjItLjg2Mi0uMTYyaC0zLjAxN2ExIDEgMCAwIDEtLjkyNy0uNTdjLS44OTctMS4xNDgtMi4wNzMtMi4wNTgtMy40MzQtMi43NTUtLjczLS4zNzItMS41MzEtLjYzNi0yLjM5LS44LS4xMzItLjAyNS0uMjY1LS4wMzctLjM5OC0uMDM3aC0uOTk2YTEgMSAwIDAgMS0uNzk0LTEuNDlMOC43NSA2LjE4YTEgMSAwIDAgMSAxLjk3OS0uMTA0bDEuMzEzIDMuODc0YTEgMSAwIDAgMS0uMjE0IDEuMTg3Yy0uNTYuNTk2LTEuMjMgMS4wMy0yLjAyNSAxLjMwN2ExIDEgMCAwIDEtMS4xNzUuMTQ1bC0uODk2LS40MTlhMSAxIDAgMCAxLS42OTEtLjg2OEM2LjE2OSA5LjUzNSA1LjUzIDguODQyIDQuNjM0IDcuOTk3YTEgMSAwIDAgMS0uNjczLTEuMTI3bC0uMzYzLTEuODA1YTEgMSAwIDAgMSAxLjU3Mi0uNDgybDEuMjg3LjUxNmExIDEgMCAwIDEtLjEyMSAxLjk3MmwtLjQwMi0uMTYzYy0uNzg3LjMtMS41Mi42ODItMi4xNDIgMS4wNzVhMSAxIDAgMCAxLS43MTEgMS40NDZjLS45MDUuMzc1LTEuNzY1Ljc2OC0yLjU3MyAxLjE4M0ExIDEgMCAwIDEgMSA5LjE2NlY2QTEgMSAwIDAgMSAyIDZoMy42NzNBMSAxIDAgMCAxIDYuNjUuNjAzYy42NzgtMS40MjcgMS41Ni0yLjk0NSAyLjYyNi00LjQwM0ExIDEgMCAwIDEgMTIgMSAwIDEgMCAwIDEgMTMuMTQ5LS4yMjFjMS43MTkuMTMgMy4zNjEuNDIgNC44MDguODQ4YTEgMSAwIDAgMSAuNjc3Ljk5NXYxMS44OTZBMSAxIDAgMCAxIDE5IDF6Ii8+PC9zdmc+" style="opacity: 0.8;"/>
+                            <p style="color: #ccc;">ミュート</p>
+                        </div>
+                    </div>
+
+                    <div class="app-screen line-chat" data-screen="line">
+                        <div class="line-header">旅行サポートデスク</div>
+                        <div class="line-chat-content" id="line-content">
+                            <div class="line-timestamp">今日 15:52</div>
+                            
+                            <div class="line-message line-user">
+                                ありがとうございました！予約完了しました。
+                            </div>
+                            <div class="line-timestamp">既読</div>
+                            
+                            <div class="line-message line-operator">
+                                <span style="font-weight: bold;">【旅行サポートデスク】</span><br>
+                                お電話ありがとうございました！<br>
+                                予約内容の確認、キャンセル規定などについて、以下の資料をご確認ください。
+                            </div>
+                            <div class="line-message line-operator">
+                                <div class="line-material-card">
+                                    <h4>✅ 予約確認とFAQマニュアル</h4>
+                                    <p>オペレーターが通話内容に合わせて送付しました。</p>
+                                </div>
+                            </div>
+                            <div class="line-timestamp">15:53</div>
+                        </div>
+                        <div class="line-input-bar">
+                            <input type="text" placeholder="メッセージを入力" style="width: 100%; padding: 6px 10px; border-radius: 20px; border: 1px solid #ccc; box-sizing: border-box; font-size:0.85rem;">
+                        </div>
+                    </div>
+                    
+                    <div class="app-screen sms-chat" data-screen="sms">
+                        <div class="sms-header">旅行サポートデスク</div>
+                        <div class="sms-chat-content" id="sms-content">
+                            <div class="sms-timestamp">今日 15:52</div>
+                            
+                            <div class="sms-message sms-operator">
+                                <span style="font-weight: bold;">【旅行サポートデスク】</span><br>
+                                お電話ありがとうございました！<br>
+                                ご案内しましたマニュアルはこちらからご確認ください。<br>
+                                <a href="#" class="sms-link">https://support.travel.co.jp/manual/trip123</a>
+                            </div>
+                            <div class="sms-timestamp">15:53</div>
+                        </div>
+                        <div class="sms-input-bar">
+                            <input type="text" placeholder="iMessage" style="width: 100%; padding: 6px 10px; border-radius: 20px; border: 1px solid #ccc; box-sizing: border-box; font-size:0.85rem;">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const flowSteps = document.querySelectorAll('.flow-step');
+        const scenarioBtns = document.querySelectorAll('.scenario-btn');
+        const nextStepButton = document.getElementById('next-step-button');
+        const resetButton = document.getElementById('reset-button');
+        const currentOperationText = document.getElementById('current-operation-text');
+        const callButton = document.getElementById('call-button');
+        const appScreens = document.querySelectorAll('.app-screen');
+        const lineFlowStep = document.querySelector('[data-step="4_line"]');
+        const smsFlowStep = document.querySelector('[data-step="4_sms"]');
+
+        let currentStep = 1;
+        let currentScenario = 'line';
+        let timerInterval;
+
+        // --- 画面切り替え関数 ---
+        function switchScreen(screenName) {
+            appScreens.forEach(screen => {
+                screen.classList.remove('active');
+            });
+            const targetScreen = document.querySelector(`[data-screen="${screenName}"]`);
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+            }
+        }
+        
+        // --- ステップフロー更新関数 ---
+        function updateFlow(step) {
+            flowSteps.forEach(fs => {
+                fs.classList.remove('active');
+            });
+
+            // 共通のステップ1～3
+            const activeStep = document.querySelector(`[data-step="${step}"]`);
+            if (activeStep) {
+                activeStep.classList.add('active');
+            }
+
+            // ステップ4の表示切り替え
+            lineFlowStep.style.display = currentScenario === 'line' ? 'flex' : 'none';
+            smsFlowStep.style.display = currentScenario === 'sms' ? 'flex' : 'none';
+            
+            // シナリオに応じたステップ4のアクティブ化
+            if (step === 4) {
+                const finalStep = document.querySelector(`[data-step="4_${currentScenario}"]`);
+                if (finalStep) {
+                    finalStep.classList.add('active');
+                }
+            }
+        }
+
+        // --- タイマー関数（通話時間の擬似表現） ---
+        function startTimer() {
+            let seconds = 0;
+            const timerDisplay = document.getElementById('timer');
+            clearInterval(timerInterval); // 既存のタイマーをクリア
+
+            timerInterval = setInterval(() => {
+                seconds++;
+                const min = String(Math.floor(seconds / 60)).padStart(2, '0');
+                const sec = String(seconds % 60).padStart(2, '0');
+                timerDisplay.textContent = `${min}:${sec}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- シナリオ切り替えハンドラ ---
+        scenarioBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (currentStep > 1) return; // 既にデモが始まっていたら無視
+
+                scenarioBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentScenario = this.getAttribute('data-scenario');
+                
+                // 画面を初期状態に戻す
+                resetDemo();
+            });
+        });
+        
+        // --- メインステップ進行関数 ---
+        function proceedStep() {
+            if (currentStep === 1) {
+                // ステップ1: 電話でお問い合わせ -> ステップ2: 発信中
+                currentStep = 2;
+                callButton.classList.add('calling');
+                switchScreen('calling');
+                currentOperationText.innerHTML = `<strong>現在の操作:</strong> ソフトバンク旅行への発信中です。`;
+                nextStepButton.textContent = '📞 接続（ソフトバンク旅行が応答）';
+                nextStepButton.disabled = false;
+            
+            } else if (currentStep === 2) {
+                // ステップ2: 発信中 -> ステップ3: 通話中
+                currentStep = 3;
+                switchScreen('on-call');
+                startTimer();
+                currentOperationText.innerHTML = `<strong>現在の操作:</strong> 通話中です。終了操作をシミュレーションします。`;
+                nextStepButton.textContent = '👋 通話終了（Twilioから情報提供へ）';
+                nextStepButton.disabled = false;
+
+            } else if (currentStep === 3) {
+                // ステップ3: 通話終了 -> ステップ4: 情報提供
+                currentStep = 4;
+                stopTimer();
+                callButton.classList.remove('calling');
+                
+                if (currentScenario === 'line') {
+                    switchScreen('line');
+                    currentOperationText.innerHTML = `<strong>現在の操作:</strong> TwilioとLINE API連携により、<strong style="color: #00c300;">LINE</strong>で資料を送付しました。`;
+                    nextStepButton.textContent = 'デモ完了';
+                } else {
+                    switchScreen('sms');
+                    currentOperationText.innerHTML = `<strong>現在の操作:</strong> TwilioとSMS連携により、<strong style="color: #55acee;">SMS</strong>でURLを送付しました。`;
+                    nextStepButton.textContent = 'デモ完了';
+                }
+                nextStepButton.disabled = true;
+            }
+
+            updateFlow(currentStep);
+        }
+
+        // --- リセット関数 ---
+        function resetDemo() {
+            currentStep = 1;
+            stopTimer();
+            updateFlow(currentStep);
+            switchScreen('travel');
+            callButton.classList.remove('calling');
+            currentOperationText.innerHTML = `<strong>現在の操作:</strong> 「📞 問い合わせ発信する」ボタンをクリックしてください。`;
+            nextStepButton.textContent = '📞 問い合わせ発信する';
+            nextStepButton.disabled = false;
+        }
+
+        // --- イベントリスナー ---
+        nextStepButton.addEventListener('click', proceedStep);
+        resetButton.addEventListener('click', resetDemo);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateFlow(currentStep);
+        });
+    </script>
+
+</body>
+</html>
