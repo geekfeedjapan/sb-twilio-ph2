@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIアウトバウンドコール デモ</title>
+    <style>
+        /* CSSエリア */
+        :root {
+            --primary-color: #007bff; /* AI/システム */
+            --secondary-color: #28a745; /* 営業/メッセージ */
+            --warning-color: #ffc107; /* 顧客/CRM */
+            --bg-light: #f8f9fa;
+            --text-dark: #343a34;
+            --sms-bubble-bg: #e1ffc7; /* 相手のメッセージ背景 */
+            --phone-frame-bg: #333;
+            --flat-btn-bg: #3f51b5; /* フラットデザインのベースカラー */
+            --flat-btn-hover: #303f9f;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr; /* 3列レイアウト */
+            gap: 20px;
+        }
+        .panel {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            min-height: 550px; 
+            display: flex;
+            flex-direction: column;
+        }
+        h2 {
+            font-size: 1.3em;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #eee;
+            margin-top: 0;
+        }
+        .crm-panel h2 { color: var(--warning-color); }
+        .ai-panel h2 { color: var(--primary-color); }
+        .sms-panel h2 { color: var(--secondary-color); } 
+
+        /* CRMリスト */
+        .crm-list-item {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+        }
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
+        .status-badge.waiting { background-color: #f8d7da; color: #721c24; }
+        .status-badge.calling { background-color: #cce5ff; color: #004085; }
+        .status-badge.done { background-color: var(--sms-bubble-bg); color: #155724; }
+        .status-badge.failed { background-color: #ffcccc; color: #cc0000; }
+
+        /* コールログ/会話ログ */
+        .log-area {
+            flex-grow: 1;
+            background: #f1f1f1;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-y: auto;
+            border-radius: 4px;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+        .log-entry { display: block; margin-bottom: 5px; }
+        .log-entry.customer { color: var(--warning-color); text-align: right; }
+        .log-entry.ai { color: var(--primary-color); }
+        .log-entry.system { color: #6c757d; }
+
+        /* フラットデザインボタン */
+        button {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: background-color 0.3s, transform 0.1s;
+            box-shadow: none; /* フラット化 */
+        }
+        .btn-flat {
+            background-color: var(--flat-btn-bg);
+            color: white;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .btn-flat:hover {
+            background-color: var(--flat-btn-hover);
+        }
+        .btn-flat:active {
+            transform: translateY(1px);
+        }
+        .btn-disabled {
+            background-color: #a0a0a0;
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .highlight {
+            padding: 10px;
+            background-color: var(--warning-color);
+            color: white;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .hidden { display: none !important; }
+
+        /* --- SMSパネル専用スタイル (スマートフォン風フレーム) --- */
+        .phone-frame {
+            background-color: var(--phone-frame-bg);
+            border-radius: 25px;
+            box-shadow: 0 0 0 5px #ccc, 0 0 20px rgba(0,0,0,0.5);
+            padding: 10px;
+            width: 300px; /* 固定幅 */
+            height: 500px; /* 固定高 */
+            margin: 20px auto 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .sms-screen {
+            background: #fff;
+            flex-grow: 1;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .sms-header {
+            background-color: #f0f0f0;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--text-dark);
+            border-bottom: 1px solid #ddd;
+        }
+        .sms-message-list {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .sms-bubble-container {
+            display: flex;
+            margin-bottom: 10px;
+            justify-content: flex-start;
+        }
+        .sms-bubble {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            line-height: 1.4;
+            position: relative;
+        }
+        .sms-incoming {
+            background-color: var(--sms-bubble-bg);
+            color: var(--text-dark);
+            border-bottom-left-radius: 5px;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            border-bottom-right-radius: 15px;
+        }
+        .sms-time {
+            display: block;
+            font-size: 0.7em;
+            color: #999;
+            margin-top: 5px;
+            text-align: left;
+        }
+        .sms-link {
+            word-break: break-all;
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div class="panel crm-panel">
+            <h2>📊 CRM / 配信管理画面</h2>
+            
+            <div class="highlight">
+                配信リスト: **アポ獲得リスト (10件)**
+            </div>
+
+            <div id="crm-list" class="log-area" style="height: 350px;">
+                </div>
+            
+            <button id="startCallBtn" class="btn-flat" onclick="startCall()">② AIアウトバウンドコール開始 (2件実行)</button>
+            <button class="btn-flat" onclick="checkSMSStatus()" style="background-color: var(--secondary-color);">SMSフォローアップ状況確認</button>
+        </div>
+
+        <div class="panel ai-panel">
+            <h2>💬 お客様の電話画面 (AI対話シミュレーション)</h2>
+            
+            <div id="customer-phone" class="highlight hidden" style="background-color: var(--primary-color);">
+                📞 顧客 #1001 様 と AI が通話中...
+            </div>
+            
+            <div id="customer-log" class="log-area">
+                <span class="log-entry system">[電話待機中] AIからの着信を待っています。</span>
+            </div>
+        </div>
+
+        <div class="panel sms-panel">
+            <h2>📲 営業担当者 SMS受信画面 (⑧)</h2>
+            
+            <div class="phone-frame">
+                <div class="sms-screen">
+                    <div class="sms-header">
+                        AIシステム (自動通知)
+                    </div>
+                    <div id="sales-sms-log" class="sms-message-list">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScriptエリア
+        let callInterval;
+        const customerData = [
+            { id: 1001, name: "田中 太郎", status: "waiting", interest: "高" },
+            { id: 1002, name: "佐藤 花子", status: "waiting", interest: "中" },
+            { id: 1003, name: "鈴木 次郎", status: "waiting", interest: "低" },
+            { id: 1004, name: "高橋 恵", status: "waiting", interest: "高" },
+            { id: 1005, name: "小林 誠", status: "waiting", interest: "中" },
+            { id: 1006, name: "伊藤 結衣", status: "waiting", interest: "中" },
+            { id: 1007, name: "渡辺 健太", status: "waiting", interest: "低" },
+            { id: 1008, name: "山本 さくら", status: "waiting", interest: "高" },
+            { id: 1009, name: "中村 大地", status: "waiting", interest: "中" },
+            { id: 1010, name: "加藤 綾", status: "waiting", interest: "低" }
+        ];
+        
+        const MAX_CALLS = 2; // 実際にコール処理を行うのは2件まで
+        let processedCallCount = 0; // 実際に処理したコール数
+        let processedIndex = 0; 
+        let currentCallData = null;
+
+        // DOM要素
+        const crmList = document.getElementById('crm-list');
+        const customerLog = document.getElementById('customer-log');
+        const salesSmsLog = document.getElementById('sales-sms-log');
+        const customerPhone = document.getElementById('customer-phone');
+        const startCallBtn = document.getElementById('startCallBtn');
+
+        // --- 初期描画 ---
+        function initializeCRMList() {
+            crmList.innerHTML = '';
+            customerData.forEach(customer => {
+                const item = document.createElement('div');
+                item.className = 'crm-list-item';
+                item.id = `customer-${customer.id}`;
+                item.innerHTML = `
+                    <span>顧客 #${customer.id} (${customer.name})</span>
+                    <span class="status-badge waiting">${getStatusText(customer.status)}</span>
+                `;
+                crmList.appendChild(item);
+            });
+            // 営業SMS画面の初期メッセージは削除し、空のままにする
+        }
+
+        function getStatusText(status) {
+            switch(status) {
+                case 'waiting': return '待機中';
+                case 'calling': return '発信中(AI)';
+                case 'done': return '完了';
+                case 'failed': return '不在(SMS)';
+                default: return '不明';
+            }
+        }
+
+        function updateCRMStatus(id, newStatus) {
+            const customer = customerData.find(c => c.id === id);
+            if (customer) {
+                customer.status = newStatus;
+                const item = document.getElementById(`customer-${id}`);
+                const badge = item.querySelector('.status-badge');
+                badge.className = `status-badge ${newStatus}`;
+                badge.textContent = getStatusText(newStatus);
+            }
+        }
+        
+        // ログ出力関数 (AI/顧客パネル専用)
+        function log(targetElement, message, type = 'system') {
+            const entry = document.createElement('span');
+            entry.className = 'log-entry ' + type;
+            entry.textContent = `${message}`;
+            targetElement.appendChild(entry);
+            targetElement.scrollTop = targetElement.scrollHeight;
+        }
+
+        // SMS送信関数 (営業担当者パネル専用)
+        function sendSalesSMS(customer, summary, link, isSystemMessage = false) {
+            const time = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+            
+            let messageContent;
+            if (isSystemMessage) {
+                messageContent = summary;
+            } else {
+                 messageContent = `
+【AIコール履歴通知】
+顧客名: ${customer.name} (ID:${customer.id})
+要約: ${summary}
+興味度: ${customer.interest}
+通話詳細: ${link}
+`;
+            }
+
+            const bubbleContainer = document.createElement('div');
+            bubbleContainer.className = 'sms-bubble-container';
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'sms-bubble sms-incoming';
+            
+            const content = document.createElement('span');
+            // リンク部分のみHTMLで置き換え、それ以外はテキストとして扱う
+            content.innerHTML = messageContent.replace(link, `<a href="${link}" target="_blank" class="sms-link">${link}</a>`);
+            
+            const timeStamp = document.createElement('span');
+            timeStamp.className = 'sms-time';
+            timeStamp.textContent = time;
+
+            bubble.appendChild(content);
+            bubble.appendChild(timeStamp);
+            bubbleContainer.appendChild(bubble);
+
+            salesSmsLog.appendChild(bubbleContainer);
+            salesSmsLog.scrollTop = salesSmsLog.scrollHeight;
+        }
+
+        // --- コール制御ロジック ---
+        
+        function startCall() {
+            if (callInterval) return;
+            // ログの初期化
+            customerLog.innerHTML = '<span class="log-entry system">[電話待機中] AIからの着信を待っています。</span>';
+            salesSmsLog.innerHTML = ''; // 営業SMS画面を空にする
+
+            // CRMリストのステータスをリセット
+            customerData.forEach(customer => updateCRMStatus(customer.id, 'waiting'));
+
+            startCallBtn.classList.add('btn-disabled');
+            startCallBtn.textContent = 'AIコール実行中...';
+            processedCallCount = 0;
+            processedIndex = 0;
+            
+            callInterval = setInterval(() => {
+                if (processedCallCount >= MAX_CALLS || processedIndex >= customerData.length) {
+                    clearInterval(callInterval);
+                    startCallBtn.classList.remove('btn-disabled');
+                    startCallBtn.textContent = 'AIコール完了 (再実行)';
+                    return;
+                }
+
+                currentCallData = customerData[processedIndex];
+                updateCRMStatus(currentCallData.id, 'calling');
+                
+                // 顧客画面: AIからの着信表示
+                customerPhone.classList.remove('hidden');
+                customerPhone.textContent = `📞 顧客 #${currentCallData.id} (${currentCallData.name}) 様 と AI が通話中...`;
+                
+                log(customerLog, `[AI着信] ${currentCallData.name} 様、株式会社AIコールセンターです。`, 'ai');
+                
+                // シミュレーション: 応答/不在
+                const responseType = Math.random(); 
+                
+                if (responseType < 0.3) {
+                    // 不在 (30%): ④ SMS送信
+                    setTimeout(() => handleNoResponse(currentCallData), 2000);
+                    
+                } else {
+                    // 応答 (70%): ③ AI応答 -> 完了/営業共有
+                    setTimeout(() => handleResponse(currentCallData), 3000);
+                }
+                
+                processedCallCount++;
+                processedIndex++;
+            }, 6000); // 6秒ごとに次のコールをシミュレート
+        }
+
+        function handleNoResponse(customer) {
+            log(customerLog, `... (応答なし) ...`, 'customer');
+            
+            // UIリセット
+            customerPhone.classList.add('hidden');
+            customerLog.innerHTML = '<span class="log-entry system">[電話待機中] AIからの着信を待っています。</span>';
+
+            // ④ SMS送信シミュレーション (CRMステータスのみ更新)
+            updateCRMStatus(customer.id, 'failed');
+        }
+
+        function handleResponse(customer) {
+            // ③ AI応答
+            log(customerLog, `AI: いつもお世話になります。新サービスご案内でAIがご連絡いたしました。担当者に代わることも可能です。`, 'ai');
+            
+            // ⑤ 定型的な内容のAI対応シミュレーション
+            setTimeout(() => {
+                const summaryText = `AIによる初期説明を実施。顧客は${customer.interest}程度の興味を示し、料金体系の定型的な質問にAIが対応しました。`;
+                
+                log(customerLog, `AI: 定型的な内容はAIが対応します。料金プランは... (⑤ AI対応完了)`, 'ai');
+                
+                // ⑦ コール終了とフォローアップ
+                setTimeout(() => {
+                    log(customerLog, `[電話切断] ご利用ありがとうございました。`, 'system');
+                    
+                    // ⑦ フォローアップSMSを顧客へ送信 
+                    
+                    // ⑧ 営業担当者への共有 (SMS送信)
+                    const crmLink = `https://crm.example.com/record/${customer.id}`;
+                    sendSalesSMS(customer, summaryText, crmLink, false);
+                    
+                    // UIリセット
+                    customerPhone.classList.add('hidden');
+                    customerLog.innerHTML = '<span class="log-entry system">[電話待機中] AIからの着信を待っています。</span>';
+                    updateCRMStatus(customer.id, 'done');
+                    
+                }, 3000);
+            }, 3000);
+        }
+
+        // CRM画面の全体フォローアップ状況確認 (④, ⑥, ⑦)
+        function checkSMSStatus() {
+             const doneCount = customerData.filter(c => c.status === 'done').length;
+             const failedCount = customerData.filter(c => c.status === 'failed').length;
+             
+             // 営業SMS画面にログを表示
+             const message = `SMS送信状況:\n- フォローアップSMS (完了/応答あり): ${doneCount}件 \n- 不在通知SMS (不在): ${failedCount}件 \n合計 ${doneCount + failedCount}件のSMSが送信されました。`;
+            
+            sendSalesSMS(null, message, null, true);
+        }
+
+        // 初期化実行
+        initializeCRMList();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twilio オムニチャネルコミュニケーション デモ (最終確認版)</title>
+    
+    <style>
+        /* B. レイアウトとデザインの仕様 */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 3カラムレイアウトのコンテナ */
+        .demo-container {
+            display: flex;
+            width: 100%;
+            max-width: 1500px; 
+            margin: auto;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* 左カラム: 管理・操作パネル (シック) */
+        .control-panel {
+            flex: 0 0 300px;
+            background-color: #2c3e50; /* シックなイメージ */
+            color: #ecf0f1;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 2px solid #34495e;
+        }
+
+        .control-panel h2, .control-panel h3 {
+            font-size: 1.3em;
+            margin-top: 0;
+            border-bottom: 2px solid #34495e;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        .control-panel label {
+            display: block;
+            margin-top: 10px;
+            font-weight: 500;
+            color: #bdc3c7;
+        }
+
+        .control-panel input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 8px;
+            margin-top: 5px;
+            border: none;
+            border-radius: 4px;
+            background-color: #34495e;
+            color: #fff;
+        }
+
+        .control-panel button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        #reset-button {
+            background-color: #e74c3c;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        #reset-button:hover { background-color: #c0392b; }
+
+        .scenario-step-button {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .scenario-step-button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .scenario-step-button:not(:disabled):hover { background-color: #2980b9; }
+
+        .scenario-options div {
+            margin-bottom: 8px;
+        }
+
+        /* 中央カラム: オペレーター画面 (CRM風) */
+        .operator-screen {
+            flex: 1;
+            padding: 20px;
+            background-color: #f9fbfd; /* Salesforceをイメージ */
+            overflow-y: auto;
+        }
+
+        .crm-header {
+            background-color: #2a688b; /* Salesforceの青をイメージ */
+            color: white;
+            padding: 15px;
+            font-size: 1.6em;
+            text-align: center;
+            border-radius: 4px 4px 0 0;
+            margin: -20px -20px 20px -20px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .crm-content {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 700px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .customer-card {
+            border: 1px solid #cce5ff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 5px solid #007bff;
+            background-color: #eaf6ff;
+            border-radius: 4px;
+        }
+        
+        #auth-status {
+            margin-top:10px; 
+            padding:5px; 
+            border-radius:3px;
+        }
+
+        .chat-window {
+            height: 450px;
+            border: 1px solid #ddd;
+            overflow-y: scroll;
+            padding: 10px;
+            margin-top: 15px;
+            background: #fdfdfd;
+            border-radius: 4px;
+        }
+
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 15px;
+            max-width: 70%;
+            line-height: 1.4;
+            font-size: 0.9em;
+        }
+
+        .user-msg {
+            background-color: #d1ecf1;
+            margin-left: auto;
+            text-align: right;
+            border-bottom-right-radius: 0;
+        }
+
+        .operator-msg {
+            background-color: #e2f0e3;
+            margin-right: auto;
+            text-align: left;
+            border-bottom-left-radius: 0;
+        }
+
+        .system-msg {
+            text-align: center;
+            font-style: italic;
+            color: #777;
+            margin: 10px 0;
+            font-size: 0.8em;
+        }
+        
+        #operator-input-area {
+            display: flex;
+            margin-top: 15px;
+        }
+        
+        #operator-chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px 0 0 4px;
+        }
+        
+        #operator-input-area button {
+            padding: 10px 15px;
+            background-color: #28a745; /* 緑 */
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            width: auto;
+            margin-top: 0;
+        }
+
+
+        .call-status {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            margin-top: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        /* 右カラム: エンドユーザー画面 (スマートフォンモックアップ) */
+        .user-device {
+            flex: 0 0 350px;
+            padding: 20px;
+            background-color: #bdc3c7; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* スマートフォンモックアップのスタイル */
+        .smartphone-mockup {
+            width: 320px;
+            height: 640px;
+            border: 12px solid #000;
+            border-radius: 45px;
+            background-color: white;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+        }
+        
+        .mockup-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 25px;
+            background: #000;
+            border-radius: 0 0 15px 15px;
+            z-index: 10;
+        }
+
+        .screen-header {
+            background-color: #2c3e50; /* 金融系のシックなイメージ */
+            color: white;
+            padding: 15px 15px 10px 15px;
+            text-align: center;
+            font-size: 1.1em;
+            position: relative;
+            z-index: 5;
+        }
+
+        .user-app {
+            height: calc(100% - 46px); /* ヘッダー分を引く */
+            overflow-y: auto;
+            background-color: #fff;
+        }
+
+        .app-page {
+            padding: 15px;
+            display: none;
+            min-height: 100%;
+        }
+
+        .active-page {
+            display: block;
+        }
+
+        /* ログイン/初期画面 */
+        #login-page {
+            text-align: center;
+            padding-top: 150px;
+        }
+
+        #login-page button {
+            padding: 12px 25px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 30px;
+            box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3);
+        }
+
+        /* チャット画面 */
+        .user-chat-log {
+            height: 480px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding: 5px;
+            background-color: #fff;
+        }
+
+        .user-chat-input {
+            display: flex;
+            padding: 5px 0;
+            border-top: 1px solid #eee;
+        }
+
+        .user-chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            margin-right: 8px;
+        }
+
+        .user-chat-input button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 0;
+            width: auto;
+        }
+        
+        /* コール画面共通 */
+        #call-page, #outbound-call-page {
+            text-align: center;
+            padding-top: 100px;
+        }
+
+        .call-controls {
+            display: flex; /* 横並びにする */
+            justify-content: center;
+            margin-top: 80px;
+        }
+
+        .call-controls button {
+            padding: 20px;
+            margin: 15px;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            width: 80px;
+            height: 80px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        #call-answer {
+            background-color: #28a745;
+        }
+
+        #call-hangup {
+            background-color: #dc3545;
+        }
+
+        /* 発信画面のスタイル */
+        #outbound-call-page {
+            padding-top: 150px;
+        }
+        #outbound-call-page h3 {
+            color: #28a745;
+        }
+        #outbound-call-page .calling-number {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 10px 0 30px 0;
+            color: #007bff;
+        }
+        
+        /* WebRTC画面のスタイル */
+        #webrtc-page {
+            text-align: center;
+            padding-top: 50px;
+        }
+        #webrtc-video {
+            width: 280px;
+            height: 200px;
+            background: #2c3e50;
+            margin: 20px auto;
+            border-radius: 8px;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.9em;
+        }
+
+        /* SMS画面のスタイル */
+        #sms-page {
+            padding-top: 0;
+        }
+        .sms-header {
+            background-color: #000;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-size: 1.1em;
+            margin: -15px -15px 15px -15px;
+        }
+        .sms-header h4 {
+            margin: 0;
+            font-weight: normal;
+        }
+        .sms-message-bubble {
+            background-color: #e5e5ea; /* 相手からのメッセージの色 (iOS風) */
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 80%;
+            margin: 5px 0;
+            text-align: left;
+            font-size: 0.95em;
+        }
+        .sms-time {
+            font-size: 0.75em;
+            color: #888;
+            margin-top: 2px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="demo-container">
+
+    <div class="control-panel">
+        <button id="reset-button" onclick="resetDemo()">🔄 フロー開始/リセット</button>
+        
+        <hr style="border-color: #34495e;">
+
+        <h3>ステップ進行ボタン</h3>
+        <button id="btn-step1" class="scenario-step-button" onclick="startChat()">1. Webチャットを開始</button>
+        
+        <button id="btn-step2" class="scenario-step-button" onclick="promptCallTransition()" disabled>2. 電話への移行を促す</button>
+        
+        <button id="btn-step3" class="scenario-step-button" onclick="startVerificationCallout()" disabled>3. 電話発信による認証コード取得</button>
+
+        <button id="btn-step4" class="scenario-step-button" onclick="completeVerification()" disabled>4. 認証コードをチャットに入力完了</button>
+
+        <button id="btn-step5" class="scenario-step-button" onclick="promptWebRTC()" disabled>5. WebRTCへの移行を促すメッセージ送信</button>
+        
+        <button id="btn-step6" class="scenario-step-button" onclick="startWebRTC()" disabled>6. WebRTC通話開始</button>
+
+        <button id="btn-step7" class="scenario-step-button" onclick="sendSmsAfterCall()" disabled>7. 通話切断後、SMSを自動送信</button>
+
+        <hr style="border-color: #34495e;">
+        
+        <h3>シナリオ選択肢 (ステップ制御)</h3>
+        <div class="scenario-options">
+            <div><input type="radio" name="scenario" value="A" id="scenario-a"> <label for="scenario-a">A. チャットで顧客相談対応</label></div>
+            <div><input type="radio" name="scenario" value="B" id="scenario-b"> <label for="scenario-b">B. 電話への移行を促す</label></div>
+            <div><input type="radio" name="scenario" value="C" id="scenario-c"> <label for="scenario-c">C. 電話認証コード取得</label></div>
+            <div><input type="radio" name="scenario" value="D" id="scenario-d"> <label for="scenario-d">D. 認証コード入力完了</label></div>
+            <div><input type="radio" name="scenario" value="E" id="scenario-e"> <label for="scenario-e">E. WebRTCへの移行を促す</label></div>
+            <div><input type="radio" name="scenario" value="F" id="scenario-f"> <label for="scenario-f">F. WebRTC通話開始</label></div>
+        </div>
+
+        <hr style="border-color: #34495e;">
+
+        <h2>管理者・操作パネル</h2>
+        
+        <label for="registered-phone">登録電話番号 (Readonly)</label>
+        <input type="text" id="registered-phone" value="+81 90-1234-5678" readonly>
+
+        <label for="verification-call-number">Twilio発信番号 (顧客発信用)</label>
+        <input type="text" id="verification-call-number" value="050-XXXX-YYYY" readonly>
+        
+        <label for="callout-code-display">電話認証コード (6桁)</label>
+        <div style="background:#34495e; padding:10px; border-radius:4px; font-size:1.5em; text-align:center; color:#f1c40f;" id="callout-code-display">------</div>
+    </div>
+
+    <div class="operator-screen">
+        <div class="crm-header">🏦 住宅ローンサポート CRM画面 (オペレーター: 佐藤)</div>
+        <div class="crm-content">
+            
+            <div class="customer-card" id="customer-info-card" style="display:none;">
+                <h4>顧客情報 (ポップアップ)</h4>
+                <p><strong>氏名:</strong> 山田 太郎</p>
+                <p><strong>電話番号:</strong> +81 90-1234-5678</p>
+                <p><strong>前回契約:</strong> 住宅ローン (2020年契約)</p>
+                <div id="auth-status" style="margin-top:10px; padding:5px; background-color:#ffdbd3; border-radius:3px;">認証状況: **未認証**</div>
+            </div>
+
+            <h4 id="channel-title">現在のチャネル: Webチャット (Twilio Conversations)</h4>
+            
+            <div class="chat-window" id="operator-chat-log" style="display:none;">
+                </div>
+
+            <div class="call-status" id="operator-call-status">
+                <p>📹 WebRTCビデオ通話 着信中</p>
+                <button style="background:#2e8b57; color:white; border:none; padding:10px 20px; margin-top:10px;" onclick="answerWebRTC()">応答</button>
+            </div>
+            
+            <div id="operator-input-area" style="margin-top:15px; display:none;">
+                <input type="text" id="operator-chat-input" placeholder="メッセージを入力...">
+                <button onclick="sendOperatorMessage()">送信</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="user-device">
+        <div class="smartphone-mockup">
+            <div class="mockup-notch"></div>
+            <div class="screen-header">金融サポートアプリ</div>
+            <div class="user-app">
+                <div id="login-page" class="app-page active-page">
+                    <h3>ようこそ、山田 太郎様</h3>
+                    <p>最適なサポートを受けるには</p>
+                    <button onclick="startChat()">チャットで相談を始める</button>
+                </div>
+
+                <div id="chat-page" class="app-page">
+                    <h4>サポートチャット</h4>
+                    <div class="user-chat-log" id="user-chat-log">
+                        </div>
+                    <div class="user-chat-input">
+                        <input type="text" id="user-chat-input" placeholder="メッセージを入力..." onkeydown="if(event.key==='Enter') sendUserMessage()">
+                        <button onclick="sendUserMessage()">送信</button>
+                    </div>
+                </div>
+
+                <div id="outbound-call-page" class="app-page">
+                    <p style="color:#28a745; font-size:1.2em;">発信中...</p>
+                    <div class="calling-number">050-XXXX-YYYY</div>
+                    <p style="color:#555; font-size:0.9em;">（この通話で認証コードをお伝えします）</p>
+                    <div class="call-controls">
+                        <button id="outbound-hangup" onclick="hangupOutboundCall()">📞 切断</button>
+                    </div>
+                </div>
+                
+                <div id="webrtc-page" class="app-page">
+                    <h3>📹 ビデオ通話</h3>
+                    <div id="webrtc-video">
+                        WebRTC接続中... (Twilio Video API)
+                    </div>
+                    <p id="webrtc-status-message" style="margin-top:20px;">接続待機中...</p>
+                    <div class="call-controls">
+                         <button id="webrtc-hangup" onclick="hangupWebRTC()">🔴 切断</button>
+                    </div>
+                </div>
+
+                <div id="sms-page" class="app-page">
+                    <div class="sms-header">
+                        <h4>Twilio SMS (自動送信)</h4>
+                    </div>
+                    <div id="sms-log" style="padding: 10px;">
+                        </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // DOM要素のキャッシュ関数
+    const $ = id => document.getElementById(id);
+    
+    // グローバル変数の定義
+    let currentStep = 0;
+    let verificationCode = null;
+    let CALL_NUMBER = null; // window.onload で初期化する方が安全
+
+    // 画面切り替え関数
+    function showPage(pageId) {
+        document.querySelectorAll('.app-page').forEach(page => {
+            page.classList.remove('active-page');
+        });
+        $(pageId).classList.add('active-page');
+    }
+
+    // チャット/SMSメッセージ追加ヘルパー
+    function addMessage(logId, sender, text, isSms = false) {
+        const log = $(logId);
+        const div = document.createElement('div');
+
+        if (isSms) {
+            // SMS画面用
+            div.classList.add('sms-message-bubble');
+            div.textContent = text;
+            const timeDiv = document.createElement('div');
+            timeDiv.classList.add('sms-time');
+            timeDiv.textContent = new Date().toLocaleTimeString();
+            log.appendChild(div);
+            log.appendChild(timeDiv);
+
+        } else {
+            // チャット画面用
+            div.classList.add('chat-message');
+            if (sender === 'user') {
+                div.classList.add('user-msg');
+            } else if (sender === 'operator') {
+                div.classList.add('operator-msg');
+            } else if (sender === 'system') {
+                div.classList.add('system-msg');
+            }
+            div.textContent = text;
+            log.appendChild(div);
+        }
+
+        log.scrollTop = log.scrollHeight;
+    }
+
+    // デモを初期状態にリセット
+    function resetDemo() {
+        // CALL_NUMBERをここで確実に初期化
+        if (!CALL_NUMBER) {
+             CALL_NUMBER = $('verification-call-number').value;
+        }
+        
+        currentStep = 0;
+        verificationCode = null;
+
+        // UIリセット
+        showPage('login-page');
+        $('callout-code-display').textContent = '------';
+        $('customer-info-card').style.display = 'none';
+        $('operator-chat-log').style.display = 'none';
+        $('operator-chat-log').innerHTML = '';
+        $('user-chat-log').innerHTML = '';
+        $('sms-log').innerHTML = ''; 
+        $('operator-input-area').style.display = 'none';
+        $('operator-call-status').style.display = 'none';
+        $('auth-status').innerHTML = '認証状況: **未認証**';
+        $('auth-status').style.backgroundColor = '#ffdbd3';
+        $('channel-title').textContent = '現在のチャネル: なし';
+        $('webrtc-status-message').textContent = '接続待機中...';
+        $('webrtc-video').textContent = 'WebRTC接続中... (Twilio Video API)';
+
+
+        // ボタン制御リセット
+        // ★ Step 1 ボタンを有効化 (フロー開始) ★
+        $('btn-step1').disabled = false;
+        $('btn-step2').disabled = true;
+        $('btn-step3').disabled = true;
+        $('btn-step4').disabled = true;
+        $('btn-step5').disabled = true;
+        $('btn-step6').disabled = true;
+        $('btn-step7').disabled = true;
+
+        document.querySelectorAll('input[name="scenario"]').forEach(radio => radio.checked = false);
+    }
+
+    /* --- Step 1: チャット開始 (A) --- */
+    function startChat() {
+        // ボタンの有効化チェック（念のため）
+        if ($('btn-step1').disabled && currentStep !== 0) return;
+        
+        showPage('chat-page');
+        $('btn-step1').disabled = true;
+
+        // 顧客発話シミュレート
+        addMessage('user-chat-log', 'user', '繰り上げ返済について相談したい。');
+        addMessage('operator-chat-log', 'user', '繰り上げ返済について相談したい。');
+        
+        $('customer-info-card').style.display = 'block';
+        $('operator-chat-log').style.display = 'block';
+        $('operator-input-area').style.display = 'flex';
+        $('channel-title').textContent = '現在のチャネル: Webチャット (Twilio Conversations)';
+
+        // オペレーターが応答
+        setTimeout(() => {
+            addMessage('user-chat-log', 'operator', '山田様、お問い合わせありがとうございます。担当の佐藤です。');
+            addMessage('operator-chat-log', 'operator', '山田様、お問い合わせありがとうございます。担当の佐藤です。');
+            $('btn-step2').disabled = false; 
+            $('scenario-a').checked = true;
+        }, 1500);
+        currentStep = 1;
+    }
+    
+    // ユーザーからのメッセージシミュレート
+    function sendUserMessage() {
+        const input = $('user-chat-input');
+        const text = input.value.trim();
+        if (text) {
+            addMessage('user-chat-log', 'user', text);
+            addMessage('operator-chat-log', 'user', `(ユーザー) ${text}`);
+            input.value = '';
+
+            // Step 4: 認証コード入力チェックのロジックをここで実行
+            if (currentStep === 4 && text === String(verificationCode)) {
+                completeVerificationLogic();
+            } else if (currentStep === 4) {
+                 addMessage('operator-chat-log', 'system', `顧客から認証コード(${text})を受領。失敗。正しいコードは${verificationCode}です。`);
+                 addMessage('user-chat-log', 'system', '認証コードが違います。再度、電話でコードを聞き、正確に入力してください。');
+            }
+        }
+    }
+    
+    // オペレーターからのメッセージシミュレート
+    function sendOperatorMessage() {
+        const input = $('operator-chat-input');
+        const text = input.value.trim();
+        if (text) {
+            addMessage('operator-chat-log', 'operator', text);
+            addMessage('user-chat-log', 'operator', `(オペレーター) ${text}`);
+            input.value = '';
+        }
+    }
+
+
+    /* --- Step 2: 電話への移行を促す (B) --- */
+    function promptCallTransition() {
+        if (currentStep < 1) return;
+        $('btn-step2').disabled = true;
+        $('scenario-b').checked = true;
+
+        const promptMsg = '山田様、ご相談内容が重要事項に関わるため、ご本人様確認が必要です。セキュリティ確保のため、一時的に**電話認証プロセス**へ移行します。';
+        
+        // チャットに追加
+        addMessage('operator-chat-log', 'operator', promptMsg);
+        addMessage('user-chat-log', 'operator', promptMsg);
+        
+        setTimeout(() => {
+            addMessage('user-chat-log', 'operator', `認証コードを取得するため、[電話発信による認証コード取得] ボタンをクリック後、表示される電話番号 (${CALL_NUMBER}) に発信してください。電話で認証コードが読み上げられます。`);
+            addMessage('operator-chat-log', 'operator', '認証コードを取得するため、電話認証に進みます。');
+
+            $('btn-step3').disabled = false; // 次のステップへ
+        }, 1500);
+        currentStep = 2;
+    }
+
+
+    /* --- Step 3: 電話発信による認証コード取得 (C) --- */
+    function startVerificationCallout() {
+        if (currentStep < 2) return;
+        $('btn-step3').disabled = true;
+        $('scenario-c').checked = true;
+
+        // 認証コードを生成 (6桁の乱数)
+        verificationCode = Math.floor(100000 + Math.random() * 900000);
+        $('callout-code-display').textContent = verificationCode;
+        
+        // オペレーター側
+        addMessage('operator-chat-log', 'system', 'Twilio電話認証を発信しました。顧客にTwilio発信番号 ' + CALL_NUMBER + ' へ発信を促します。');
+
+        // ユーザー画面を**発信中画面**へ遷移
+        showPage('outbound-call-page');
+        $('outbound-call-page').querySelector('.calling-number').textContent = CALL_NUMBER;
+        
+        setTimeout(() => {
+            // 電話が着信・応答し、認証コードが読み上げられたことをシミュレート
+            $('outbound-call-page').querySelector('p:first-child').textContent = '📞 通話中... 認証コード：' + verificationCode;
+        }, 3000);
+
+        // 認証コードを聞いたら、切断してチャットに戻る
+        $('outbound-hangup').onclick = () => {
+            hangupOutboundCall(verificationCode);
+        };
+        currentStep = 3;
+    }
+
+    function hangupOutboundCall(code) {
+        // 通話切断
+        showPage('chat-page');
+        
+        // チャットに次のアクションを促すメッセージを追加
+        addMessage('user-chat-log', 'operator', `電話での認証コード（${code}）を覚えましたか？**コードを下のメッセージ入力欄にそのまま入力して送信**してください。`);
+        addMessage('operator-chat-log', 'system', `顧客が電話を切断しました。認証コード（${code}）のチャット入力を待ちます。`);
+
+        $('btn-step4').disabled = false;
+        currentStep = 4; // 認証コード入力待ちステップへ
+    }
+
+    /* --- Step 4: 認証コード入力完了 (D) --- */
+    // 認証コード入力チェックのロジックは sendUserMessage() 内で実行される
+    function completeVerificationLogic() {
+        // 認証成功
+        addMessage('user-chat-log', 'system', '✅ 認証成功！ご本人様確認が完了しました。');
+        
+        // オペレーター側
+        $('auth-status').innerHTML = '認証状況: **認証済み**';
+        $('auth-status').style.backgroundColor = '#d4edda';
+        addMessage('operator-chat-log', 'system', '本人認証（電話認証 → チャット入力）が完了しました。');
+
+        $('btn-step5').disabled = false; // 次のステップへ
+        $('scenario-d').checked = true;
+        currentStep = 5;
+    }
+
+    function completeVerification() {
+        // 管理パネルから手動で認証成功をシミュレートする場合
+        if (currentStep !== 4) return;
+        
+        // チャットに成功メッセージを追加（sendUserMessageを通さない）
+        addMessage('user-chat-log', 'user', verificationCode);
+        addMessage('operator-chat-log', 'user', verificationCode);
+        
+        completeVerificationLogic();
+    }
+
+
+    /* --- Step 5: WebRTC移行の促し (E) --- */
+    function promptWebRTC() {
+        if (currentStep < 5) return;
+        $('btn-step5').disabled = true;
+        $('scenario-e').checked = true;
+
+        const webrtcPrompt = '繰り上げ返済の試算について、より詳細な画面を共有し、顔を見ながらご説明します。WebRTC（ビデオ通話）に切り替えましょう。';
+        
+        // チャットに追加
+        addMessage('operator-chat-log', 'operator', webrtcPrompt);
+        addMessage('user-chat-log', 'operator', webrtcPrompt);
+        
+        // WebRTC開始を促すリンクやボタンをシミュレート
+        setTimeout(() => {
+            const webrtcLink = document.createElement('div');
+            webrtcLink.innerHTML = '<p style="text-align:center; margin-top:15px;"><button style="background:#dc3545; color:white; border:none; padding:10px 20px; border-radius:5px;" onclick="startWebRTC(); return false;">📹 ビデオ通話を開始する</button></p>';
+            $('user-chat-log').appendChild(webrtcLink);
+            $('user-chat-log').scrollTop = $('user-chat-log').scrollHeight;
+        }, 1000);
+
+        $('btn-step6').disabled = false; // 次のステップへ
+        currentStep = 6;
+    }
+
+    /* --- Step 6: WebRTC通話開始 (F) --- */
+    function startWebRTC() {
+        if (currentStep < 5) return;
+        
+        // ユーザー画面をWebRTCページへ遷移
+        showPage('webrtc-page');
+        $('webrtc-status-message').textContent = 'WebRTC接続中...';
+        
+        // オペレーター側
+        $('operator-call-status').style.display = 'block';
+        $('operator-call-status').innerHTML = '<p>📹 WebRTCビデオ通話 着信中</p><button style="background:#2e8b57; color:white; border:none; padding:10px 20px; margin-top:10px;" onclick="answerWebRTC()">応答</button>';
+        $('channel-title').textContent = '現在のチャネル: WebRTCビデオ通話 (Twilio Video)';
+        
+        $('btn-step6').disabled = true;
+        $('scenario-f').checked = true;
+    }
+
+    function answerWebRTC() {
+        // オペレーターが応答ボタンをクリック
+        $('operator-call-status').innerHTML = '<p style="color:#28a745; font-weight:bold;">📹 ビデオ通話中 (画面共有・顧客情報連携済み)</p><button onclick="hangupWebRTC()" style="background:#dc3545; color:white; border:none; padding:8px 15px; margin-top:10px; border-radius:4px;">通話終了</button>';
+        
+        // ユーザー側
+        $('webrtc-status-message').textContent = '通話開始... オペレーターが応答しました。';
+        $('webrtc-video').textContent = 'オペレーターの映像と画面共有がここに表示されます。';
+        
+        $('btn-step7').disabled = false; // 次のステップへ
+    }
+
+    function hangupWebRTC() {
+        // 通話終了処理
+        $('operator-call-status').style.display = 'none';
+        $('channel-title').textContent = '現在のチャネル: 通話終了';
+
+        // ユーザー側
+        showPage('chat-page'); // WebRTC終了後、チャット画面に戻る
+        addMessage('user-chat-log', 'system', 'ビデオ通話が終了しました。');
+        
+        // SMS自動送信ステップへ移行
+        sendSmsAfterCall();
+    }
+    
+    /* --- Step 7: 通話切断後のSMS自動送信 --- */
+    function sendSmsAfterCall() {
+        // Twilio SMS送信をシミュレート
+        const smsMessage = '本日は住宅ローン繰り上げ返済のご相談ありがとうございました。関連資料として「優遇金利プランのご案内」を添付いたします。ご不明点があれば再度チャットからお問い合わせください。';
+        
+        // ユーザー画面をSMSページへ遷移
+        showPage('sms-page');
+        
+        // SMSログにメッセージを追加
+        setTimeout(() => {
+            addMessage('sms-log', 'system', smsMessage, true);
+            
+            // デモ終了状態へ
+            setTimeout(() => {
+                // 最終的にリセット
+                resetDemo();
+            }, 5000);
+        }, 1500);
+        
+        currentStep = 7;
+        $('btn-step7').disabled = true;
+    }
+
+    // 初期化 (ページロード時に実行)
+    // window.onload は DOM構築完了後に実行されることを保証
+    window.onload = resetDemo;
+</script>
+
+</body>
+</html>
