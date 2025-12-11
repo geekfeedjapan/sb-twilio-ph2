@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM連携アウトバウンドデモ</title>
+    <style>
+        /* --- 全体レイアウト (3画面横並び) --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f6f9;
+            color: #333;
+            display: flex; 
+            gap: 15px; 
+            overflow-x: auto; 
+        }
+
+        /* --- 共通コンテナスタイル --- */
+        .panel-container {
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            height: 80vh; 
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        /* --- 1. デモ管理パネル --- */
+        .control-panel {
+            width: 300px;
+            background-color: #ffffff;
+            border-left: 5px solid #007bff;
+        }
+        .control-panel h2 {
+            color: #007bff;
+            border-bottom: 1px solid #007bff;
+        }
+
+        /* --- 2. CRM画面 (Salesforce風) --- */
+        .crm-container {
+            flex-grow: 1;
+            min-width: 600px;
+            background-color: #fcfcfc;
+            border: 1px solid #ddd;
+        }
+        .crm-header {
+            background-color: #0076bf; /* Salesforce Blue */
+            color: white;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 8px 8px 0 0;
+            margin: -20px -20px 20px -20px;
+        }
+        .crm-data-card {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .crm-data-card h3 {
+            color: #0076bf;
+            border-bottom: 2px solid #f2f2f2;
+            padding-bottom: 5px;
+            margin-top: 0;
+        }
+
+        /* --- 共通フォーム・ボタン --- */
+        input[type="text"], textarea, select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            transition: background-color 0.2s ease;
+        }
+
+        button.call-btn { background-color: #00a184; }
+        button.email-btn { background-color: #f48c00; }
+        button.end-call-fail { background-color: #d9534f; }
+
+        button:hover { opacity: 0.9; }
+
+        .section { display: none; padding-top: 10px; }
+        .section.active { display: block; }
+        .recommendation { font-weight: bold; color: #d9534f; margin-top: 10px; }
+        .status-message { padding: 10px; border-radius: 4px; margin-top: 15px; }
+        .status-message.success { background-color: #d4edda; color: #155724; }
+
+        /* --- 3. スマートフォン画面 (UI強化) --- */
+        .smartphone-container {
+            width: 300px;
+            background-color: #222; 
+            border-radius: 30px; 
+            padding: 15px;
+            box-shadow: 0 0 0 10px #222, 0 6px 20px rgba(0, 0, 0, 0.2);
+            position: sticky; 
+            top: 20px;
+            height: 650px; 
+            display: block; 
+        }
+
+        .smartphone-screen {
+            background-color: #f0f0f0; 
+            height: 620px; 
+            border-radius: 20px;
+            overflow: hidden; 
+            position: relative; 
+        }
+        
+        /* 待機画面の要素 */
+        .sp-lock-screen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url('https://picsum.photos/300/620?blur=1'); 
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s;
+        }
+        .sp-lock-screen h1 { font-size: 3em; margin-bottom: 10px; margin-top: 0; }
+        .sp-lock-screen p { font-size: 1.2em; margin-top: 0; }
+
+        /* ヘッダー (時間と電波) */
+        .sp-status-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 15px;
+            font-size: 0.8em;
+            color: white;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+        .sp-status-bar.dark {
+            color: black;
+            text-shadow: none;
+        }
+
+        /* 着信画面 */
+        .sp-call-screen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #000;
+            display: none;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            color: white;
+            padding: 50px 0;
+        }
+        .sp-call-screen h2 { color: white; font-size: 2.5em; margin: 0; }
+        .sp-call-screen p { font-size: 1.2em; color: #ccc; }
+        .sp-call-actions {
+            display: flex;
+            gap: 50px;
+        }
+        .sp-call-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 0.7em;
+            cursor: pointer;
+        }
+        .sp-call-btn i { font-size: 2em; margin-bottom: 5px; }
+        .sp-call-btn.accept { background-color: #00a184; }
+        .sp-call-btn.reject { background-color: #d9534f; }
+        
+        /* SMSスレッド画面 */
+        .sp-sms-thread, .sp-email-inbox {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #fff;
+            display: none;
+            padding: 10px;
+            overflow-y: auto;
+        }
+        .sp-sms-messages {
+            padding-top: 10px; 
+            padding-bottom: 20px;
+        }
+        .sp-message {
+            margin-bottom: 15px;
+            max-width: 80%;
+            padding: 10px;
+            border-radius: 15px;
+            line-height: 1.4;
+        }
+        .sp-message.crm-sent {
+            background-color: #cfe9ba; 
+            margin-left: auto;
+            border-bottom-right-radius: 2px;
+            text-align: left; 
+        }
+        .sp-message.customer-received {
+            background-color: #e0e0e0; 
+            margin-right: auto;
+            border-bottom-left-radius: 2px;
+            text-align: left;
+        }
+        
+        /* メールボックス/受信トレイ（Gmail風） */
+        .sp-email-inbox {
+            background-color: #fff;
+            padding: 0;
+            display: none;
+        }
+        .sp-email-header {
+            background-color: #fff;
+            padding: 10px 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #d93025; /* Gmail Red */
+            border-bottom: 1px solid #eee;
+        }
+        .sp-email-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sp-email-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.1s;
+        }
+        .sp-email-item:hover {
+            background-color: #f5f5f5;
+        }
+        .sp-email-item.unread {
+            font-weight: bold;
+            background-color: #ffe;
+        }
+        .sp-email-subject {
+            font-size: 0.95em;
+            color: #222;
+        }
+        .sp-email-snippet {
+            font-size: 0.8em;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* メール本文画面 */
+        .sp-email-detail {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #fff;
+            display: none;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .sp-detail-header {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .sp-detail-body {
+            line-height: 1.6;
+            font-size: 0.9em;
+        }
+
+        /* Font Awesomeのアイコンをシミュレート */
+        @font-face {
+            font-family: 'FontAwesomeSim';
+            src: url(data:application/octet-stream;base64,AAAAAA==) format('truetype');
+        }
+        .fa::before { font-family: 'FontAwesomeSim'; content: attr(data-icon); font-style: normal; }
+        .fa-phone::before { content: "📞"; }
+        .fa-times::before { content: "✖"; }
+        .fa-envelope::before { content: "📧"; }
+        .fa-arrow-left::before { content: "⬅"; }
+    </style>
+</head>
+<body>
+
+    <div class="panel-container control-panel">
+        <h2>📊 デモ管理画面</h2>
+        
+        <label for="scenarioSelect">デモシナリオ選択:</label>
+        <select id="scenarioSelect" onchange="loadScenario(this.value)">
+            <option value="CUST001">CUST001: 電話推奨（応答なし）</option>
+            <option value="CUST002">CUST002: メール推奨（送信完了）</option>
+        </select>
+        
+        <div class="crm-data-card">
+            <h3>顧客情報設定</h3>
+            <label for="initialId">顧客ID:</label>
+            <input type="text" id="initialId" value="CUST001" readonly>
+            <label for="initialName">顧客名:</label>
+            <input type="text" id="initialName" value="山田 太郎" readonly>
+        </div>
+
+        <div class="crm-data-card">
+            <h3>プロセスの状態</h3>
+            <p><strong>現在のステップ:</strong> <span id="currentStepStatus">認証待機中</span></p>
+            <p><strong>最終結果:</strong> <span id="lastResultStatus">---</span></p>
+        </div>
+
+        <button onclick="resetDemo()" style="background-color: #6c757d; margin-top: 20px;">🔄 デモをリセット</button>
+    </div>
+
+    <div class="panel-container crm-container">
+        <div class="crm-header">
+            🏢 Customer 360 - アウトバウンドウィザード
+        </div>
+
+        <div id="crm-step1" class="section active">
+            <h2>1. 認証とコンタクト情報取得</h2>
+            <div class="crm-data-card">
+                <label for="crmCustomerId">顧客ID検索:</label>
+                <input type="text" id="crmCustomerId" value="CUST001" placeholder="顧客IDを入力">
+                <button onclick="searchCustomer()">顧客情報検索</button>
+            </div>
+
+            <div id="crmCustomerInfo" class="crm-data-card" style="display: none;">
+                <h3><span id="crm-display-name"></span>様の基本情報</h3>
+                <p><strong>電話番号:</strong> <span id="crm-display-phone"></span></p>
+                <p><strong>最終コンタクト:</strong> <span id="crm-display-last-contact"></span></p>
+                <p><strong>電話反応率:</strong> <span id="crm-display-call-rate"></span></p>
+                <p><strong>メール反応率:</strong> <span id="crm-display-email-rate"></span></p>
+                <p class="recommendation">
+                    📢 **CRM推奨手段:** <span id="crm-display-recommendation"></span>
+                </p>
+            </div>
+        </div>
+
+        <div id="crm-step2" class="section">
+            <h2>2. アウトバウンドアクション実行</h2>
+            <div class="crm-data-card">
+                <p><strong>対象顧客:</strong> <span id="crm-chosen-customer-name"></span>様</p>
+                <p class="recommendation">
+                     **推奨手段:** <span id="crm-execute-recommendation"></span>
+                </p>
+                <hr>
+
+                <button onclick="startCall()" id="crm-btn-start-call" class="call-btn">📞 コール実行</button>
+                <button onclick="showEmailForm()" id="crm-btn-start-email" class="email-btn">📧 メール送信</button>
+
+                <div id="crm-callSimulation" style="display: none; margin-top: 20px;">
+                    <h3 style="color: #00a184;">通話コントロールパネル</h3>
+                    <p>📞 **発信中...**</p>
+                    <p>経過時間: <span id="crm-call-timer">0秒</span></p>
+                    <button onclick="endCall(true)">通話終了（応答あり）</button>
+                    <button onclick="endCall(false)" class="end-call-fail">通話終了（応答なし）</button>
+                </div>
+
+                <div id="crm-emailForm" style="display: none; margin-top: 20px;">
+                    <h3 style="color: #f48c00;">メール作成</h3>
+                    <label for="crmEmailSubject">件名:</label>
+                    <input type="text" id="crmEmailSubject" value="重要なお知らせ">
+                    <label for="crmEmailBody">本文:</label>
+                    <textarea id="crmEmailBody" rows="5">いつもお世話になります。重要なお知らせがあり、ご連絡いたしました。</textarea>
+                    <button onclick="sendEmail()">📧 メール送信</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="crm-step3" class="section">
+            <h2>3. フォローアップSMS自動送信</h2>
+            <div class="crm-data-card">
+                <p style="font-weight: bold;">トリガーに基づき、自動でSMSキューに登録されました。</p>
+                <p><strong>トリガー:</strong> <span id="crm-sms-trigger"></span></p>
+                <p><strong>送信先:</strong> <span id="crm-sms-phone"></span></p>
+            </div>
+
+            <div class="crm-data-card" style="background-color: #fffdd0;">
+                <h3>SMS送信内容プレビュー</h3>
+                <p id="crm-sms-content"></p>
+            </div>
+
+            <button onclick="simulateSMSSend()" style="background-color: #0076bf;">✉️ SMS送信API実行</button>
+        </div>
+
+        <div id="crm-step4" class="section">
+            <h2>4. コンタクト完了</h2>
+            <p class="status-message success">✅ プロセス全体が完了しました。CRM履歴に記録されました。</p>
+        </div>
+
+    </div>
+
+    <div class="smartphone-container" id="smartphone-view">
+        <div class="smartphone-screen" id="smartphone-screen">
+            <div class="sp-lock-screen" id="sp-lock-screen">
+                <div class="sp-status-bar">
+                    <p>サービスエリア</p>
+                    <p id="sp-current-time-lock">10:00</p>
+                </div>
+                <h1 id="sp-clock">10:00</h1>
+                <p id="sp-date">火曜日、12月9日</p>
+            </div>
+
+            <div class="sp-call-screen" id="sp-call-screen">
+                <div>
+                    <h2>CRMシステム</h2>
+                    <p id="sp-caller-id">090-XXXX-XXXX</p>
+                </div>
+                <div class="sp-call-actions">
+                    <div class="sp-call-btn reject" onclick="simulateCallReject()">
+                        <span class="fa fa-times"></span>
+                        拒否
+                    </div>
+                    <div class="sp-call-btn accept" onclick="alert('応答はCRM画面での操作のみをシミュレートします。')">
+                        <span class="fa fa-phone"></span>
+                        応答
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sp-sms-thread" id="sp-sms-thread">
+                <div id="sp-sms-messages">
+                    </div>
+            </div>
+
+            <div class="sp-email-inbox" id="sp-email-inbox">
+                <div class="sp-email-header">📧 受信トレイ</div>
+                <ul class="sp-email-list" id="sp-email-list">
+                    <li class="sp-email-item" onclick="showEmailDetail('Previous Campaign', '以前のキャンペーンに関するお知らせです。')">
+                        <p class="sp-email-subject">以前のキャンペーンに関するお知らせ</p>
+                        <p class="sp-email-snippet">以前のキャンペーンでご案内した内容のフォローアップです...</p>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sp-email-detail" id="sp-email-detail">
+                <div class="sp-detail-header">
+                    <span class="fa fa-arrow-left" onclick="showEmailInbox()"></span> 
+                    &nbsp;&nbsp;&nbsp;
+                    <span id="sp-detail-subject"></span>
+                </div>
+                <div class="sp-detail-body">
+                    <strong>送信元: CRMシステム</strong><br>
+                    <p id="sp-detail-content"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<script>
+    // --- JavaScript ロジック ---
+
+    // 顧客データ（デモ用）
+    const CUSTOMER_DATA = {
+        'CUST001': {
+            name: '山田 太郎',
+            lastContact: '電話 (3日前)',
+            callRate: '80%',
+            emailRate: '40%',
+            recommendation: '電話',
+            phone: '090-1234-5678'
+        },
+        'CUST002': {
+            name: '佐藤 花子',
+            lastContact: 'メール (1日前)',
+            callRate: '30%',
+            emailRate: '95%',
+            recommendation: 'メール',
+            phone: '080-9876-5432'
+        }
+    };
+
+    let currentCustomer = null;
+    let contactResult = { method: null, success: null };
+    let timerInterval = null;
+    let smsContentForSmartphone = '';
+    let currentScenarioId = 'CUST001';
+    let latestEmail = { subject: '', body: '' }; // 最新のメール情報を格納
+
+    // ----------------------------------------------------
+    // デモ管理パネル (Control Panel) 関連
+    // ----------------------------------------------------
+
+    function updateControlPanelStatus(step, result = '---') {
+        document.getElementById('currentStepStatus').textContent = step;
+        document.getElementById('lastResultStatus').textContent = result;
+    }
+
+    function loadScenario(id) {
+        currentScenarioId = id;
+        const data = CUSTOMER_DATA[id];
+        if (data) {
+            document.getElementById('initialId').value = id;
+            document.getElementById('initialName').value = data.name;
+            document.getElementById('crmCustomerId').value = id;
+        }
+        resetDemo();
+    }
+
+    function resetDemo() {
+        currentCustomer = null;
+        contactResult = { method: null, success: null };
+        latestEmail = { subject: '', body: '' };
+        
+        // CRM UIリセット
+        document.getElementById('crmCustomerInfo').style.display = 'none';
+        document.getElementById('crm-callSimulation').style.display = 'none';
+        document.getElementById('crm-emailForm').style.display = 'none';
+        document.getElementById('crm-btn-start-call').style.display = 'inline-block';
+        document.getElementById('crm-btn-start-email').style.display = 'inline-block';
+        document.getElementById('crmCustomerId').value = currentScenarioId;
+
+        showCRMSection('crm-step1');
+        
+        // スマホUIリセット
+        showLockScreen(); 
+        clearSmsThread(); 
+        clearEmailInbox(); 
+        
+        // 管理パネル更新
+        updateControlPanelStatus('認証待機中');
+    }
+
+    // ----------------------------------------------------
+    // CRM画面 (Salesforce UI) 関連
+    // ----------------------------------------------------
+    
+    function showCRMSection(stepId) {
+        document.querySelectorAll('.crm-container .section').forEach(section => {
+            section.classList.remove('active');
+        });
+        document.getElementById(stepId).classList.add('active');
+    }
+
+    function searchCustomer() {
+        const id = document.getElementById('crmCustomerId').value.toUpperCase();
+        currentCustomer = CUSTOMER_DATA[id];
+
+        if (!currentCustomer) {
+            alert('顧客情報が見つかりません。');
+            document.getElementById('crmCustomerInfo').style.display = 'none';
+            return;
+        }
+
+        // CRM情報更新
+        document.getElementById('crm-display-name').textContent = currentCustomer.name;
+        document.getElementById('crm-display-phone').textContent = currentCustomer.phone;
+        document.getElementById('crm-display-last-contact').textContent = currentCustomer.lastContact;
+        document.getElementById('crm-display-call-rate').textContent = currentCustomer.callRate;
+        document.getElementById('crm-display-email-rate').textContent = currentCustomer.emailRate;
+        document.getElementById('crmCustomerInfo').style.display = 'block';
+
+        document.getElementById('crm-chosen-customer-name').textContent = currentCustomer.name;
+        document.getElementById('crm-execute-recommendation').textContent = currentCustomer.recommendation;
+        
+        // スマホ画面の初期設定
+        document.getElementById('sp-caller-id').textContent = currentCustomer.phone;
+        
+        // 即座にステップ2へ遷移
+        showCRMSection('crm-step2'); 
+        updateControlPanelStatus('CRM情報取得完了');
+    }
+
+    // --- 電話シミュレーション ---
+    function startCall() {
+        contactResult.method = 'Call';
+        document.getElementById('crm-btn-start-email').style.display = 'none';
+        document.getElementById('crm-callSimulation').style.display = 'block';
+        updateControlPanelStatus('コール実行中');
+
+        let seconds = 0;
+        document.getElementById('crm-call-timer').textContent = `${seconds}秒`;
+        showCallScreen(); 
+
+        timerInterval = setInterval(() => {
+            seconds++;
+            document.getElementById('crm-call-timer').textContent = `${seconds}秒`;
+        }, 1000);
+    }
+
+    function endCall(success) {
+        clearInterval(timerInterval);
+        document.getElementById('crm-callSimulation').style.display = 'none';
+        document.getElementById('crm-btn-start-email').style.display = 'inline-block';
+
+        contactResult.success = success;
+        hideCallScreen(); 
+        
+        if (success) {
+            alert('通話完了: 応答あり。プロセス終了。');
+            updateControlPanelStatus('通話完了', '応答あり');
+            showCRMSection('crm-step4');
+        } else {
+            alert('通話完了: 応答なし。SMSフォローアップへ移行します。');
+            updateControlPanelStatus('通話完了', '応答なし');
+            showNotification('不在着信', `CRMシステム (${currentCustomer.phone})`); 
+            setupSMSFollowUp(); 
+        }
+    }
+
+    function simulateCallReject() {
+        alert('顧客側で通話が拒否されました。CRM側で「応答なし」として処理します。');
+        endCall(false); 
+    }
+
+    // --- メールシミュレーション ---
+    function showEmailForm() {
+        contactResult.method = 'Email';
+        document.getElementById('crm-btn-start-call').style.display = 'none';
+        document.getElementById('crm-emailForm').style.display = 'block';
+    }
+
+    function sendEmail() {
+        document.getElementById('crm-emailForm').style.display = 'none';
+        document.getElementById('crm-btn-start-call').style.display = 'inline-block';
+
+        contactResult.success = true;
+        
+        const subject = document.getElementById('crmEmailSubject').value;
+        const body = document.getElementById('crmEmailBody').value;
+        latestEmail = { subject: subject, body: body };
+
+        // メール送信完了時の動作変更
+        showNotification('📧 新着メール', subject); // ロック画面に通知
+        addEmailToInbox(subject, body, true); // 受信トレイに未読メールを追加
+
+        alert('メール送信完了。SMSフォローアップへ移行します。');
+        updateControlPanelStatus('メール送信完了');
+        setupSMSFollowUp(); 
+    }
+
+    // --- SMSフォローアップ ---
+    function setupSMSFollowUp() {
+        if (!currentCustomer) return;
+
+        let smsMessage = '';
+        let trigger = '';
+
+        if (contactResult.method === 'Call' && !contactResult.success) {
+            trigger = '📞 電話（応答なし）';
+            smsMessage = `【着信あり】${currentCustomer.name}様、重要なお知らせにつきお電話差し上げましたが、お出になりませんでした。恐れ入りますが、折り返しをお願いいたします。`;
+        } else if (contactResult.method === 'Email' && contactResult.success) {
+            trigger = '📧 メール（送信完了）';
+            smsMessage = `【重要】${currentCustomer.name}様へ、本日重要なメールを送信しました。お手数ですが、ご確認をお願いいたします。`;
+        }
+        
+        document.getElementById('crm-sms-trigger').textContent = trigger;
+        document.getElementById('crm-sms-phone').textContent = currentCustomer.phone;
+        document.getElementById('crm-sms-content').textContent = smsMessage;
+        smsContentForSmartphone = smsMessage;
+
+        showCRMSection('crm-step3');
+        updateControlPanelStatus('SMSキュー登録済み');
+    }
+
+    function simulateSMSSend() {
+        updateControlPanelStatus('SMS送信完了', 'SMS送信完了');
+        
+        // SMSスレッドにメッセージを追加して表示
+        addSmsMessage(smsContentForSmartphone, 'crm-sent');
+        showSmsThread(); 
+        
+        // CRM画面側：すぐに完了ステップへ遷移
+        showCRMSection('crm-step4');
+    }
+
+    // ----------------------------------------------------
+    // スマートフォン画面 (UI強化) 関連
+    // ----------------------------------------------------
+
+    function showLockScreen() {
+        document.getElementById('sp-lock-screen').style.display = 'flex';
+        document.getElementById('sp-call-screen').style.display = 'none';
+        document.getElementById('sp-sms-thread').style.display = 'none';
+        document.getElementById('sp-email-inbox').style.display = 'none';
+        document.getElementById('sp-email-detail').style.display = 'none';
+    }
+    
+    // 着信画面の表示/非表示
+    function showCallScreen() {
+        document.getElementById('sp-lock-screen').style.display = 'none';
+        document.getElementById('sp-call-screen').style.display = 'flex';
+        document.getElementById('sp-sms-thread').style.display = 'none';
+        document.getElementById('sp-email-inbox').style.display = 'none';
+        document.getElementById('sp-email-detail').style.display = 'none';
+    }
+    function hideCallScreen() {
+        document.getElementById('sp-call-screen').style.display = 'none';
+        showLockScreen();
+    }
+    
+    // SMSスレッドの表示/非表示
+    function showSmsThread() {
+        document.getElementById('sp-lock-screen').style.display = 'none';
+        document.getElementById('sp-call-screen').style.display = 'none';
+        document.getElementById('sp-sms-thread').style.display = 'flex';
+        document.getElementById('sp-email-inbox').style.display = 'none';
+        document.getElementById('sp-email-detail').style.display = 'none';
+    }
+
+    // メールボックス（受信トレイ）の表示/非表示
+    function showEmailInbox() {
+        document.getElementById('sp-lock-screen').style.display = 'none';
+        document.getElementById('sp-call-screen').style.display = 'none';
+        document.getElementById('sp-sms-thread').style.display = 'none';
+        document.getElementById('sp-email-inbox').style.display = 'block';
+        document.getElementById('sp-email-detail').style.display = 'none';
+    }
+
+    // メール本文（詳細）の表示
+    function showEmailDetail(subject, content) {
+        document.getElementById('sp-detail-subject').textContent = subject;
+        document.getElementById('sp-detail-content').textContent = content;
+        document.getElementById('sp-email-inbox').style.display = 'none';
+        document.getElementById('sp-email-detail').style.display = 'block';
+
+        // 未読を既読にする処理 (デモ用)
+        const item = document.querySelector(`.sp-email-item.unread[data-subject="${subject.replace(/"/g, '\\"')}"]`);
+        if (item) {
+            item.classList.remove('unread');
+        }
+    }
+
+
+    function clearSmsThread() {
+        document.getElementById('sp-sms-messages').innerHTML = '';
+    }
+
+    function clearEmailInbox() {
+        const list = document.getElementById('sp-email-list');
+        list.innerHTML = `
+            <li class="sp-email-item" onclick="showEmailDetail('Previous Campaign', '以前のキャンペーンに関するお知らせです。')">
+                <p class="sp-email-subject">以前のキャンペーンに関するお知らせ</p>
+                <p class="sp-email-snippet">以前のキャンペーンでご案内した内容のフォローアップです...</p>
+            </li>
+        `;
+    }
+
+    /**
+     * 受信トレイにメールアイテムを追加する
+     */
+    function addEmailToInbox(subject, body, isUnread) {
+        const list = document.getElementById('sp-email-list');
+        const item = document.createElement('li');
+        item.className = 'sp-email-item' + (isUnread ? ' unread' : '');
+        
+        // 引用符のエスケープを確実にするため、JavaScriptの文字列リテラルとして関数に渡す
+        const escapedSubject = subject.replace(/'/g, "\\'");
+        const escapedBody = body.replace(/'/g, "\\'");
+        
+        item.setAttribute('onclick', `showEmailDetail('${escapedSubject}', '${escapedBody}')`);
+        item.setAttribute('data-subject', subject);
+        
+        item.innerHTML = `
+            <p class="sp-email-subject">${subject}</p>
+            <p class="sp-email-snippet">${body.substring(0, 50)}...</p>
+        `;
+        list.prepend(item); // 最新を一番上に追加
+    }
+
+    /**
+     * SMSスレッドにメッセージを追加する
+     */
+    function addSmsMessage(text, senderClass) {
+        const container = document.getElementById('sp-sms-messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `sp-message ${senderClass}`;
+        messageDiv.textContent = text;
+        container.appendChild(messageDiv);
+        container.scrollTop = container.scrollHeight; 
+    }
+
+    /**
+     * ロック画面に通知を表示する
+     */
+    function showNotification(title, content) {
+        const lockScreen = document.getElementById('sp-lock-screen');
+        const typeClass = title.includes('メール') ? 'email-notification' : 'call-notification'; // 通知のタイプを判別
+        
+        // 通知タップ時に handleNotificationClick を呼び出す
+        let notificationHtml = `<div class="notification ${typeClass}" style="position:absolute; top:40px; width:80%; opacity:0.9; cursor: pointer;" onclick="handleNotificationClick('${title}')"><strong>${title}</strong>: ${content}</div>`;
+        
+        const existingNotif = lockScreen.querySelector('.notification');
+        if (existingNotif) existingNotif.remove();
+        lockScreen.insertAdjacentHTML('beforeend', notificationHtml);
+        
+        // 5秒後に通知をフェードアウト
+        setTimeout(() => {
+            const currentNotif = lockScreen.querySelector('.notification');
+            if (currentNotif) currentNotif.remove();
+        }, 5000);
+    }
+    
+    // 通知タップ時の動作ハンドリング
+    function handleNotificationClick(title) {
+        if (title.includes('メール')) {
+            // ★★★ 修正済み: メール通知タップ -> 受信トレイを表示 ★★★
+            showEmailInbox();
+            
+        } else if (title.includes('不在着信')) {
+            // 不在着信タップ -> ロック画面に戻る 
+            showLockScreen(); 
+        }
+    }
+
+
+    /**
+     * 現在時刻を更新する
+     */
+    function updateTime() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const month = now.getMonth() + 1;
+        const day = now.getDate();
+        const dayNames = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'];
+        const dayName = dayNames[now.getDay()];
+
+        const timeString = `${hours}:${minutes}`;
+        const dateString = `${dayName}、${month}月${day}日`;
+        
+        document.getElementById('sp-clock').textContent = timeString;
+        document.getElementById('sp-current-time-lock').textContent = timeString;
+        document.getElementById('sp-date').textContent = dateString;
+    }
+
+    // 初期化
+    document.addEventListener('DOMContentLoaded', () => {
+        updateTime(); 
+        setInterval(updateTime, 1000); 
+        loadScenario(document.getElementById('scenarioSelect').value);
+    });
+</script>
+
+</body>
+</html>
