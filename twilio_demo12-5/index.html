@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スイッチリトライ認証デモ (最終修正版)</title>
+    <style>
+        /* 全体レイアウト */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        /* コンテナ（2列構成） */
+        #container {
+            display: flex;
+            width: 90%;
+            max-width: 1400px;
+            gap: 20px;
+        }
+
+        /* 左パネル：フロー説明 */
+        #flow-description {
+            flex: 1;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-height: 770px; 
+            overflow-y: auto;
+        }
+
+        #flow-description h2 {
+            color: #007bff;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .flow-step {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-left: 4px solid #ccc;
+            background-color: #fafafa;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .flow-step.active {
+            border-left-color: #28a745;
+            background-color: #e6f7ea;
+            box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+        }
+
+        .step-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        /* 右パネル：スマートフォンデモ */
+        #smartphone-demo {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .smartphone {
+            width: 375px;
+            height: 750px;
+            background-color: #000;
+            border-radius: 40px;
+            padding: 10px;
+            box-shadow: 0 0 0 5px #ccc, 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .screen {
+            background-color: #fff;
+            width: 100%;
+            height: 100%;
+            border-radius: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.5s;
+        }
+
+        /* 共通スタイル */
+        .title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        input[type="text"], input[type="password"] {
+            width: 80%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        .btn {
+            padding: 12px 20px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            width: 80%;
+            transition: background-color 0.3s;
+        }
+        .padding-content {
+            padding: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+
+        /* 1. ログイン画面A (初期Webサイト) */
+        #login-a {
+            background-color: #f0f4f8; 
+            padding-top: 50px;
+        }
+        #login-a .title { color: #333; margin-bottom: 30px; }
+        #login-a .btn-primary {
+            background-color: #4a90e2;
+            color: white;
+        }
+        #login-a .btn-primary:hover { background-color: #357ae8; }
+
+        /* 2. ミニアプリ画面 (LINE風) */
+        #line-mini-app {
+            background-color: #fff;
+            text-align: center;
+        }
+        .app-header {
+            width: 100%;
+            background-color: #00b900; 
+            color: white;
+            padding: 15px 0;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .app-title {
+            color: #333;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .line-btn {
+            width: 90%;
+            padding: 15px;
+            margin: 10px 0;
+            font-size: 1.1em;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        #btn-sms { background-color: #34c759; color: white; }
+        #btn-call { background-color: #5856d6; color: white; }
+        #btn-unknown { background-color: #e0e0e0; color: #555; }
+        .line-text { margin: 20px 20px; line-height: 1.5; color: #555; font-size: 0.9em;}
+        .line-warning { font-weight: bold; color: #d9534f; }
+
+        /* 3-A. SMS 画面 - リアルなデザイン */
+        #sms-screen {
+            background-color: #f7f7f7;
+            padding: 0;
+        }
+        .sms-header {
+            width: 100%;
+            background-color: #e0e0e0;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            color: #555;
+            box-sizing: border-box;
+        }
+        .sms-thread {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+        .message-box {
+            max-width: 80%;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+        .message-received {
+            background-color: #fff;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            border: 1px solid #ddd;
+        }
+        .message-sent {
+            background-color: #e1ffc7;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .message-auth {
+            background-color: #daf5ff;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+        .sms-link { color: #007bff; text-decoration: underline; cursor: pointer; font-weight: bold; }
+        .sms-code { font-size: 1.3em; font-weight: bold; color: #d9534f; margin: 5px 0; display: block;}
+        .sms-time { font-size: 0.7em; color: #999; margin-top: 5px;}
+
+        /* 3-B. コール画面 (フェイク) */
+        #call-screen {
+            background-color: #000;
+            color: white;
+            justify-content: center;
+        }
+        .call-header { font-size: 2em; margin-top: 100px; }
+        .call-status { font-size: 1.2em; color: #28a745; margin-bottom: 50px; }
+        .call-company { font-size: 1.5em; font-weight: bold; color: #fff; margin-bottom: 100px;}
+        .hangup-btn {
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            cursor: pointer;
+        }
+        .code-announcement {
+            margin-top: 30px;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 10px;
+            border-radius: 8px;
+            background-color: rgba(255,255,255,0.1);
+        }
+        .code-display { font-size: 1.8em; color: yellow; font-weight: bold; }
+
+        /* 4-A/B. ログイン画面B (金融系Webサイト) */
+        #login-b {
+            background-color: #fff;
+            border: none;
+        }
+        #login-b .header {
+            width: 100%;
+            background-color: #004d99; 
+            color: white;
+            padding: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+        }
+        #login-b .title { color: #004d99; font-size: 1.8em; margin-top: 30px;}
+        #login-b label { align-self: flex-start; margin-left: 10%; font-weight: 500; margin-top: 15px;}
+        .code-input { 
+            letter-spacing: 15px; 
+            text-align: center; 
+            font-size: 1.5em; 
+            background-color: #f8f9fa;
+        }
+        #login-b .btn-primary {
+            background-color: #28a745;
+            color: white;
+            margin-top: 30px;
+        }
+        #login-b .btn-primary:hover { background-color: #1e7e34; }
+        .message-error { color: #d9534f; font-weight: bold; margin-top: 15px; }
+
+
+        /* 5-A/B. マイページ画面 - 中央寄せ適用 */
+        #mypage-screen {
+            background-color: #f0f4f8;
+            padding: 0;
+            text-align: center; /* 全体中央寄せ */
+        }
+        .mypage-header {
+            width: 100%;
+            background-color: #004d99;
+            color: white;
+            padding: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .menu-icon { font-size: 1.5em; cursor: pointer; }
+        .welcome-section {
+            width: 100%;
+            background-color: #fff;
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            text-align: center; /* 中央寄せ */
+        }
+        .card-container {
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* 中央寄せ */
+            gap: 15px;
+        }
+        .dashboard-card {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            text-align: center; /* 中央寄せ */
+            width: 90%; /* カード幅を調整 */
+            max-width: 300px;
+        }
+        .card-title {
+            font-size: 1em;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .card-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #004d99;
+        }
+        .btn-logout {
+            margin-top: 30px;
+            background-color: #ccc;
+            color: #333;
+            width: 90%; /* ログアウトボタンも中央寄せ */
+            max-width: 300px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="container">
+        <div id="flow-description">
+            <h2>認証フロー ステップ</h2>
+            <div id="step-1" class="flow-step active">
+                <div class="step-title">1. 初期ログイン (WebサイトA)</div>
+                <p>ユーザーがIDと携帯電話番号を入力し、ログインを試みます。</p>
+            </div>
+            <div id="step-2" class="flow-step">
+                <div class="step-title">2. ミニアプリ風画面での選択</div>
+                <p>LINEで作成したミニアプリ風の画面に遷移し、「SMS承諾」「コール承諾」「知らない」のいずれかを選択させます。</p>
+            </div>
+            <div id="step-3a" class="flow-step">
+                <div class="step-title">3-A. SMS承諾ルート</div>
+                <p>SMS承諾ボタンでSMS画面に遷移。6桁のコードと認証URLを送信します。</p>
+            </div>
+            <div id="step-4a" class="flow-step">
+                <div class="step-title">4-A. 認証Webサイトへの遷移 (WebサイトB)</div>
+                <p>SMS内のURLをクリックし、異なるWebサイト（金融系サイト風）へ遷移します。</p>
+            </div>
+            <div id="step-5a" class="flow-step">
+                <div class="step-title">5-A. コード入力・ログイン完了</div>
+                <p>コードを入力し認証を完了後、WebサイトBのマイページへ遷移します。</p>
+            </div>
+            <div id="step-3b" class="flow-step">
+                <div class="step-title">3-B. コール承諾ルート (ソフトバンク)</div>
+                <p>コール承諾ボタンで発信（企業名：ソフトバンク）。自動音声で6桁のコードをアナウンスします。</p>
+            </div>
+            <div id="step-4b" class="flow-step">
+                <div class="step-title">4-B. 認証Webサイトへの遷移 (WebサイトB)</div>
+                <p>通話終了ボタンを押すことで、自動的に認証Webサイト（WebサイトB）へ遷移します。</p>
+            </div>
+            <div id="step-5b" class="flow-step">
+                <div class="step-title">5-B. コード入力・ログイン完了</div>
+                <p>アナウンスされたコードを入力し認証を完了後、WebサイトBのマイページへ遷移します。</p>
+            </div>
+        </div>
+
+        <div id="smartphone-demo">
+            <div class="smartphone">
+                <div class="screen" id="current-screen">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const screens = {
+            'login-a': `
+                <div id="login-a" class="screen">
+                    <div class="padding-content" style="padding-top: 50px;">
+                        <div class="title">WebサイトA ログイン</div>
+                        <input type="text" id="input-id" placeholder="ユーザーID" value="user123">
+                        <input type="text" id="input-phone" placeholder="携帯電話番号" value="09012345678">
+                        <button class="btn btn-primary" onclick="startLineAuth()">ログイン</button>
+                    </div>
+                </div>
+            `,
+            'line-mini-app': (code) => `
+                <div id="line-mini-app" class="screen">
+                    <div class="app-header">認証サービス</div>
+                    <div class="padding-content">
+                        <div class="app-title">外部サービスへのログイン確認</div>
+                        <p class="line-text" style="color: #333; font-weight: bold; margin-bottom: 30px;">
+                            上記内容を確認のうえ、承認する場合はボタンを押してください。
+                        </p>
+                        <button class="btn line-btn" id="btn-sms" onclick="startSmsFlow('${code}')">
+                            SMS承諾
+                        </button>
+                        <button class="btn line-btn" id="btn-call" onclick="startCallFlow('${code}')">
+                            コール承諾
+                        </button>
+                        <button class="btn line-btn" id="btn-unknown" onclick="alert('認証がキャンセルされました。不正利用の可能性があります。'); resetDemo()">
+                            知らない
+                        </button>
+                    </div>
+                </div>
+            `,
+            'sms-screen': (code) => `
+                <div id="sms-screen" class="screen">
+                    <div class="sms-header">090-XXXX-XXXX</div>
+                    <div class="sms-thread">
+                        <div class="message-box message-received">
+                            <p>宅配BOXの暗証番号は1234です。ご確認お願いします。</p>
+                            <div class="sms-time">12:00</div>
+                        </div>
+                        <div class="message-box message-sent">
+                            <p>了解しました。</p>
+                            <div class="sms-time">12:05</div>
+                        </div>
+                        <div class="message-box message-auth" style="margin-top: 20px;">
+                            <p style="font-weight: bold;">[認証サービス] 認証コードのお知らせ</p>
+                            <p>WebサイトBにログインするための認証コードは</p>
+                            <span class="sms-code">${code}</span>
+                            <p>です。以下のリンクからコードを入力し、ログインを完了してください。</p>
+                            <a class="sms-link" onclick="goToLoginB('${code}')">
+                                https://auth.separate-domain.com/login
+                            </a>
+                            <div class="sms-time">13:10</div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            'call-screen': (code) => `
+                <div id="call-screen" class="screen">
+                    <div class="call-status">通話中...</div>
+                    <div class="call-header">ソフトバンク</div>
+                    <div class="call-company">携帯電話</div>
+                    <div class="code-announcement">
+                        <p style="font-size: 1.1em; text-align: center;">自動音声アナウンス:</p>
+                        <p style="text-align: center;">「認証コードは、</p>
+                        <p class="code-display">${code}</p>
+                        <p>です。通話終了後、認証画面に戻ります。」</p>
+                    </div>
+                    <div style="margin-top: auto; display: flex; flex-direction: column; align-items: center; margin-bottom: 50px;">
+                        <div class="hangup-btn" onclick="goToLoginB('${code}')">
+                            <span style="transform: rotate(135deg);">📞</span>
+                        </div>
+                        <p style="margin-top: 10px;">通話終了</p>
+                    </div>
+                </div>
+            `,
+            'login-b': (code) => `
+                <div id="login-b" class="screen">
+                    <div class="header">
+                        <span style="font-size: 1.5em; margin-right: 10px;">🏦</span>〇〇ファイナンス
+                    </div>
+                    <div class="padding-content">
+                        <div class="title">二段階認証コード入力</div>
+                        <p style="font-size: 0.9em; color: #555;">
+                            セキュリティ強化のため、コードを入力してください。
+                        </p>
+                        <label for="code-input">認証コード (6桁):</label>
+                        <input type="text" id="code-input" class="code-input" maxlength="6" placeholder="------">
+                        <button class="btn btn-primary" onclick="verifyCode('${code}')">認証</button>
+                        <p id="auth-status" class="message-error hidden"></p>
+                    </div>
+                </div>
+            `,
+            'mypage-screen': `
+                <div id="mypage-screen" class="screen">
+                    <div class="mypage-header">
+                        <div class="menu-icon">≡</div>
+                        <div>〇〇ファイナンス マイページ</div>
+                        <div class="menu-icon">👤</div>
+                    </div>
+                    <div class="welcome-section">
+                        <h2>ようこそ、User123 様</h2>
+                        <p style="color: #555; font-size: 0.9em;">最終ログイン: 2025/12/11 13:15</p>
+                    </div>
+                    <div class="card-container">
+                        <div class="dashboard-card">
+                            <div class="card-title">保有資産合計</div>
+                            <div class="card-value">¥ 5,850,000</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="card-title">直近の取引</div>
+                            <div style="font-size: 0.9em;">
+                                <p>12/10 株式買付 +¥50,000</p>
+                                <p>12/05 投資信託積立 -¥30,000</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-logout" onclick="resetDemo()">ログアウト</button>
+                    </div>
+                </div>
+            `
+        };
+
+        const currentScreenElement = document.getElementById('current-screen');
+        const flowSteps = document.querySelectorAll('.flow-step');
+
+        let currentCode = ''; 
+
+        // ----------------------------------------------------
+        // ユーティリティ関数
+        // ----------------------------------------------------
+
+        function generateCode() {
+            // ユーザーが入力したコードを代入
+            return "111537";
+            // return Math.floor(100000 + Math.random() * 900000).toString(); // ランダムコードに戻す場合はこちら
+        }
+
+        function updateScreen(screenName, code = null) {
+            currentScreenElement.innerHTML = screens[screenName] instanceof Function ? screens[screenName](code) : screens[screenName];
+        }
+
+        function setActiveStep(stepId) {
+            flowSteps.forEach(step => step.classList.remove('active'));
+            if (stepId) {
+                const stepElement = document.getElementById(stepId);
+                if (stepElement) {
+                    stepElement.classList.add('active');
+                    stepElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        // ----------------------------------------------------
+        // フロー関数
+        // ----------------------------------------------------
+
+        function resetDemo() {
+            currentCode = '';
+            updateScreen('login-a');
+            setActiveStep('step-1');
+        }
+
+        function startLineAuth() {
+            currentCode = generateCode();
+            updateScreen('line-mini-app', currentCode);
+            setActiveStep('step-2');
+        }
+
+        function startSmsFlow(code) {
+            updateScreen('sms-screen', code);
+            setActiveStep('step-3a');
+        }
+
+        function startCallFlow(code) {
+            updateScreen('call-screen', code);
+            setActiveStep('step-3b');
+        }
+
+        function goToLoginB(code) {
+            updateScreen('login-b', code);
+            const isSms = document.getElementById('step-3a').classList.contains('active');
+            const stepId = isSms ? 'step-4a' : 'step-4b';
+            setActiveStep(stepId);
+        }
+
+        function verifyCode(expectedCode) {
+            const inputElement = document.getElementById('code-input');
+            const statusElement = document.getElementById('auth-status');
+            const enteredCode = inputElement.value.trim();
+            statusElement.classList.add('hidden');
+
+            if (enteredCode === expectedCode) {
+                // 認証成功
+                updateScreen('mypage-screen');
+                const isSms = document.getElementById('step-4a').classList.contains('active');
+                const stepId = isSms ? 'step-5a' : 'step-5b';
+                setActiveStep(stepId);
+            } else {
+                // 認証失敗
+                statusElement.textContent = '認証コードが異なります。再度ご確認ください。';
+                statusElement.classList.remove('hidden');
+                inputElement.value = '';
+            }
+        }
+
+        // 初期表示
+        resetDemo();
+
+    </script>
+</body>
+</html>
