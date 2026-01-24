@@ -110,6 +110,9 @@ body {
     border-radius: 4px 4px 0 0;
     margin: -20px -20px 20px -20px;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .crm-content {
@@ -251,8 +254,9 @@ body {
     padding: 15px 15px 10px 15px;
     text-align: center;
     font-size: 1.1em;
-    position: relative;
-    z-index: 5;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .user-app {
@@ -403,6 +407,9 @@ body {
     text-align: left;
     font-size: 1.1em;
     margin: -15px -15px 15px -15px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .sms-header h4 {
